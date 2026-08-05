@@ -209,6 +209,7 @@ React
 TypeScript
 Vite
 MSAL
+RTK Query
 The frontend is untrusted.
 Frontend authorization is for user experience only.
 Backend authorization is authoritative.
