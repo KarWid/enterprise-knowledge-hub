@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Api/">
+    <Project Path="src/Api/EnterpriseKnowledgeHub.Api/EnterpriseKnowledgeHub.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Chat/">
+    <Project Path="src/Modules/Chat/EnterpriseKnowledgeHub.Modules.Chat/EnterpriseKnowledgeHub.Modules.Chat.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/EnterpriseKnowledgeHub.Modules.Identity/EnterpriseKnowledgeHub.Modules.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Knowledge/">
+    <Project Path="src/Modules/Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Organizations/">
+    <Project Path="src/Modules/Organizations/EnterpriseKnowledgeHub.Modules.Organizations/EnterpriseKnowledgeHub.Modules.Organizations.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/Architecture/">
+    <Project Path="tests/Architecture/EnterpriseKnowledgeHub.ArchitectureTests/EnterpriseKnowledgeHub.ArchitectureTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Integration/">
+    <Project Path="tests/Integration/EnterpriseKnowledgeHub.IntegrationTests/EnterpriseKnowledgeHub.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Unit/">
+    <Project Path="tests/Unit/EnterpriseKnowledgeHub.UnitTests/EnterpriseKnowledgeHub.UnitTests.csproj" />
+  </Folder>
+</Solution>
