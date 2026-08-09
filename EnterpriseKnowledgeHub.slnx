@@ -3,6 +3,9 @@
   <Folder Name="/src/Api/">
     <Project Path="src/Api/EnterpriseKnowledgeHub.Api/EnterpriseKnowledgeHub.Api.csproj" />
   </Folder>
+  <Folder Name="/src/Contracts/">
+    <Project Path="src/Contracts/EnterpriseKnowledgeHub.Contracts/EnterpriseKnowledgeHub.Contracts.csproj" />
+  </Folder>
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
   </Folder>

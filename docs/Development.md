@@ -130,7 +130,7 @@ enterprise-knowledge-hub/
 │
 ├── src/
 │   ├── Api/
-│   ├── Api.Contract/
+│   ├── Contracts/
 │   │
 │   ├── Web/
 │   │
@@ -220,32 +220,53 @@ The application should modify aggregates through their defined behavior rather t
 Do not make every database table an aggregate automatically.
 
 10. Application Layer
-The application layer coordinates use cases.
-Examples:
-CreateOrganization
-GetCurrentOrganization
-InviteUser
-AcceptInvitation
-UploadDocument
-AskQuestion
+The application layer coordinates use cases using CQRS implemented with MediatR.
 
-Application handlers/services should:
+CQRS Pattern
+Use cases are expressed as either commands or queries.
+
+Command — a write operation that changes application state.
+Examples: CreateOrganizationCommand, InviteUserCommand, UploadDocumentCommand
+
+Query — a read operation that returns data without changing state.
+Examples: GetCurrentOrganizationQuery, GetCurrentUserQuery, GetHealthQuery
+
+Each command and query has a single dedicated handler:
+public sealed class CreateOrganizationCommandHandler
+    : IRequestHandler<CreateOrganizationCommand, CreateOrganizationResult>
+
+Naming convention:
+<UseCase>Command and <UseCase>CommandHandler for write operations.
+<UseCase>Query and <UseCase>QueryHandler for read operations.
+Result types are named <UseCase>Result.
+All three files live together in the same folder inside the module's Application layer.
+
+Handlers should:
 validate use-case input,
 establish organization context,
 invoke domain behavior,
 coordinate persistence,
 call infrastructure abstractions where required.
-Business rules should not be hidden inside controllers.
+
+Controllers dispatch to handlers through IMediator.Send().
+Controllers translate HTTP context into commands or queries and map results to Contracts DTOs.
+Business rules must not be placed inside controllers.
+Commands, queries, and result types are internal to the module.
+Only Contracts DTOs cross the API boundary.
 
 11. API Layer
-ASP.NET Core endpoints/controllers should remain thin.
+The API layer uses ASP.NET Core Controllers.
+Minimal API is not used.
+Controllers should remain thin.
 They should primarily:
 Receive HTTP input.
 Validate request shape.
 Resolve authenticated context.
 Invoke an application use case.
-Return an HTTP response.
+Return an HTTP response using response DTOs from the Contracts project.
 Avoid placing business logic directly in controllers.
+Request and response types are defined in the Contracts project.
+Do not define inline anonymous response types in controllers.
 
 12. Entity Framework Core
 Entity Framework Core is the persistence technology.

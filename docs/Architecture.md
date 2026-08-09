@@ -150,10 +150,13 @@ All authorization decisions are enforced by the backend.
 9. Backend
 The backend is an ASP.NET Core REST API.
 The application starts as a modular monolith.
+The API layer uses ASP.NET Core Controllers for endpoint definitions.
+Minimal API is not used.
+The application layer uses CQRS through MediatR.
 Recommended conceptual structure:
 src/
   Api/
-  Api.Contract/
+  Contracts/
   Application/
   Domain/
   Infrastructure/
@@ -161,6 +164,28 @@ src/
 
 Modules should own their domain logic and application use cases.
 Infrastructure concerns should remain outside the domain layer.
+
+Contracts Project
+The Contracts project (EnterpriseKnowledgeHub.Contracts) is a dedicated, dependency-free library containing:
+Request DTOs,
+Response DTOs,
+external-facing data models.
+Contracts do not contain domain logic.
+Contracts do not reference domain entities.
+They form a stable communication boundary between the API, modules, workers, and the frontend.
+
+CQRS
+The application layer uses CQRS implemented with MediatR.
+Use cases are expressed as commands or queries:
+Command — a write operation that changes state.
+Query — a read operation that returns data.
+Each command and query has a dedicated handler:
+IRequestHandler<TCommand, TResult>
+IRequestHandler<TQuery, TResult>
+Controllers dispatch use cases through IMediator.Send().
+Handlers live inside the module that owns the relevant domain concept.
+Commands and queries are internal to the module.
+Contracts (request/response DTOs) are the public surface exposed through the API.
 
 10. Persistence
 The primary relational database is:

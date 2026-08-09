@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using EnterpriseKnowledgeHub.Contracts.Health;
 
 namespace EnterpriseKnowledgeHub.IntegrationTests;
 
@@ -25,5 +26,3 @@ public class HealthEndpointTests(ApiWebApplicationFactory factory)
         Assert.Equal("healthy", body?.Database);
     }
 }
-
-internal sealed record HealthResponse(string Status, string Database);
