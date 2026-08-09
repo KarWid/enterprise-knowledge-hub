@@ -130,6 +130,7 @@ enterprise-knowledge-hub/
 │
 ├── src/
 │   ├── Api/
+│   ├── Api.Contract/
 │   │
 │   ├── Web/
 │   │

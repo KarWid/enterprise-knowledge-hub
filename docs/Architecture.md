@@ -3,7 +3,7 @@ Enterprise Knowledge Hub — Architecture
 Enterprise Knowledge Hub is a multi-tenant SaaS application implemented initially as a modular monolith.
 The architecture separates:
 Identity
-Application / API
+Application / API / API Contract
 Domain
 Persistence
 Knowledge processing
@@ -153,6 +153,7 @@ The application starts as a modular monolith.
 Recommended conceptual structure:
 src/
   Api/
+  Api.Contract/
   Application/
   Domain/
   Infrastructure/

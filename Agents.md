@@ -87,6 +87,9 @@ AI Is Not a Security Boundary
 Azure OpenAI and Azure AI Search must never determine whether a user is authorized to access data.
 Authorization and tenant filtering happen before information is sent to the AI model.
 
+Contracts Project
+The solution includes a dedicated Contracts project containing Request/Response DTOs and external-facing data models. Contracts do not contain domain logic and do not reference domain entities. They serve as stable communication boundaries between API, modules, workers, and frontend.
+
 4. Architecture
 The application is a modular monolith.
 Initial modules:
