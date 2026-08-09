@@ -60,6 +60,9 @@ AI is not a security boundary and must not decide access rights.
 
 Tenant isolation is mandatory. Never trust OrganizationId from the frontend.
 
+Contracts Project
+The solution includes a dedicated Contracts project containing Request/Response DTOs and external-facing data models. Contracts do not contain domain logic and do not reference domain entities. They serve as stable communication boundaries between API, modules, workers, and frontend.
+
 4. Development Rules
 Prefer vertical slices and end‑to‑end feature development.
 
