@@ -5,5 +5,5 @@ export function HealthStatus() {
 
   if (isError) return <p>API unreachable</p>;
   if (isLoading) return <p>Checking API…</p>;
-  return <p>API: {data?.status}</p>;
+  return <p>API: {data?.status} | DB: {data?.database}</p>;
 }
