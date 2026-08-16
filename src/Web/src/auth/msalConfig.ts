@@ -1,17 +1,22 @@
-import { Configuration, PublicClientApplication } from '@azure/msal-browser';
+import { Configuration } from '@azure/msal-browser';
 
-const msalConfig: Configuration = {
+export const msalConfig: Configuration = {
   auth: {
     clientId: import.meta.env.VITE_ENTRA_CLIENT_ID ?? '',
     authority: import.meta.env.VITE_ENTRA_AUTHORITY ?? '',
-    redirectUri: window.location.origin,
+    knownAuthorities: [
+      new URL(import.meta.env.VITE_ENTRA_AUTHORITY).host,
+      import.meta.env.VITE_ENTRA_ISSUER_HOST,
+  ],
+    redirectUri: import.meta.env.VITE_ENTRA_REDIRECT_URI ?? ''
   },
   cache: {
     cacheLocation: 'sessionStorage',
-  },
+  }
 };
 
-export const msalInstance = new PublicClientApplication(msalConfig);
-
 // Scopes requested when acquiring a token for the API.
-export const apiScopes: string[] = [import.meta.env.VITE_API_SCOPE ?? ''];
+export const apiScopes = {
+  login: ["openid", "profile"],
+  backend: []
+}

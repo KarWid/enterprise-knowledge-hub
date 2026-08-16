@@ -1,13 +1,22 @@
 import { HealthStatus } from './features/health/HealthStatus';
-import { LoginButton } from './features/auth/LoginButton';
+import { AuthenticatedApp } from './app/AuthenticatedApp';
+import { UnauthenticatedApp } from './app/UnauthenticatedApp';
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
 
 function App() {
   return (
-    <div>
-      <h1>Enterprise Knowledge Hub</h1>
-      <LoginButton />
+    <>
+      {/* Health status to remove */}
       <HealthStatus />
-    </div>
+
+      <UnauthenticatedTemplate>
+        <UnauthenticatedApp />
+      </UnauthenticatedTemplate>
+
+      <AuthenticatedTemplate>
+        <AuthenticatedApp />
+      </AuthenticatedTemplate>
+    </>
   );
 }
 

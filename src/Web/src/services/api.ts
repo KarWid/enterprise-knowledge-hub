@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { msalInstance, apiScopes } from '../auth/msalConfig';
+import { apiScopes } from '../auth/msalConfig';
+import { msalInstance } from '../auth/msalInstance';
 
 const baseQueryWithAuth = fetchBaseQuery({
   baseUrl: '/api',
@@ -8,7 +9,7 @@ const baseQueryWithAuth = fetchBaseQuery({
     if (accounts.length > 0) {
       try {
         const result = await msalInstance.acquireTokenSilent({
-          scopes: apiScopes,
+          scopes: apiScopes.backend,
           account: accounts[0],
         });
         headers.set('Authorization', `Bearer ${result.accessToken}`);

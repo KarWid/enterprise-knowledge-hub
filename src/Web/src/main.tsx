@@ -1,19 +1,28 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { MsalProvider } from '@azure/msal-react'
-import { Provider } from 'react-redux'
-import { store } from './services/store'
-import { msalInstance } from './auth/msalConfig'
-import App from './App.tsx'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { MsalProvider } from "@azure/msal-react";
+import { Provider } from "react-redux";
+import { store } from "./services/store";
 
-msalInstance.initialize().then(() => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <MsalProvider instance={msalInstance}>
+import App from "./App";
+import { msalInstance } from "./auth/msalInstance";
+import { initializeAuth } from "./auth/authBootstrap";
+import "./i18n";
+
+async function bootstrap(): Promise<void> {
+  await initializeAuth();
+
+  ReactDOM.createRoot(
+    document.getElementById("root")!
+  ).render(
+    <React.StrictMode>
+      <MsalProvider instance={msalInstance}>  
         <Provider store={store}>
           <App />
         </Provider>
       </MsalProvider>
-    </StrictMode>,
+    </React.StrictMode>
   );
-});
+}
+
+bootstrap();
