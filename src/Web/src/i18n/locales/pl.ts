@@ -1,6 +1,7 @@
 const pl = {
   app: {
     title: 'Enterprise Knowledge Hub',
+    pleaseWait: 'Proszę czekać...',
   },
   auth: {
     logIn: 'Zaloguj się',
@@ -14,7 +15,8 @@ const pl = {
     unreachable: 'API niedostępne',
     checking: 'Sprawdzanie API\u2026',
     status: 'API: {{status}} | DB: {{database}}',
-  },  landing: {
+  },  
+  landing: {
     nav: {
       logIn: 'Zaloguj się',
     },
