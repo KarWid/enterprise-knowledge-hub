@@ -1,4 +1,4 @@
-import { HealthStatus } from './features/health/HealthStatus';
+// import { HealthStatus } from './features/health/HealthStatus';
 import { AuthenticatedApp } from './app/AuthenticatedApp';
 import { UnauthenticatedApp } from './app/UnauthenticatedApp';
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
@@ -6,8 +6,8 @@ import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-reac
 function App() {
   return (
     <>
-      {/* Health status to remove */}
-      <HealthStatus />
+      {/* TODO @KWidla: Health status to remove */}
+      {/* <HealthStatus /> */}
 
       <UnauthenticatedTemplate>
         <UnauthenticatedApp />

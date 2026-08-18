@@ -7,7 +7,7 @@ export const msalConfig: Configuration = {
     knownAuthorities: [
       new URL(import.meta.env.VITE_ENTRA_AUTHORITY).host,
       import.meta.env.VITE_ENTRA_ISSUER_HOST,
-  ],
+    ],
     redirectUri: import.meta.env.VITE_ENTRA_REDIRECT_URI ?? ''
   },
   cache: {

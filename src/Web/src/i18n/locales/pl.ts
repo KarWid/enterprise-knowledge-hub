@@ -14,7 +14,50 @@ const pl = {
     unreachable: 'API niedostępne',
     checking: 'Sprawdzanie API\u2026',
     status: 'API: {{status}} | DB: {{database}}',
-  },
-} as const;
+  },  landing: {
+    nav: {
+      logIn: 'Zaloguj się',
+    },
+    hero: {
+      headline: 'Wiedza Twojej firmy, dostępna natychmiast.',
+      subheadline:
+        'Zadawaj pytania dotyczące dokumentów, spotkań i wewnętrznych procesów — i otrzymuj odpowiedzi w kilka sekund.',
+      cta: 'Zacznij',
+    },
+    howItWorks: {
+      title: 'Jak to działa',
+      step1: 'Połącz',
+      step2: 'Zapytaj',
+      step3: 'Otrzymaj odpowiedzi',
+    },
+    useCases: {
+      title: 'Do czego możesz tego używać?',
+      documents: {
+        title: 'Dokumenty',
+        description: 'Znajdź informacje w dokumentacji firmowej.',
+      },
+      meetings: {
+        title: 'Spotkania',
+        description: 'Zamień rozmowy w przeszukiwalną wiedzę.',
+      },
+      processes: {
+        title: 'Procesy',
+        description: 'Szybko dowiedz się, jak działa Twoja organizacja.',
+      },
+    },
+    cta: {
+      headline: 'Przestań szukać. Zacznij pytać.',
+      button: 'Zacznij',
+    },
+    footer: {
+      copyright: '© 2026 Enterprise Knowledge Hub. Wszelkie prawa zastrzeżone.',
+    },
+    chatMockup: {
+      userMessage: 'Jaka jest polityka urlopowa?',
+      aiMessage:
+        'Na podstawie dokumentacji HR pracownicy mają prawo do 26 dni płatnego urlopu w roku. Niewykorzystane dni można przenosić na kolejny rok, maksymalnie 10 dni.',
+      aiLabel: 'Knowledge Hub',
+    },
+  },} as const;
 
 export default pl;
