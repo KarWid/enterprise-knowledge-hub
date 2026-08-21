@@ -1,5 +1,7 @@
+@import '../../../styles/variables.less';
+
 .window {
-  background: #ffffff;
+  background: @surface-white;
   border-radius: 16px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
   width: 100%;
@@ -14,7 +16,7 @@
   gap: 6px;
   padding: 12px 16px;
   background: #f3f4f6;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid @border-light;
 }
 
 .dot {
@@ -22,17 +24,17 @@
   height: 10px;
   border-radius: 50%;
   background: #d1d5db;
-}
 
-.dot:nth-child(1) { background: #f87171; }
-.dot:nth-child(2) { background: #fbbf24; }
-.dot:nth-child(3) { background: #34d399; }
+  &:nth-child(1) { background: #f87171; }
+  &:nth-child(2) { background: #fbbf24; }
+  &:nth-child(3) { background: #34d399; }
+}
 
 .titleBarLabel {
   margin-left: 8px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #6b7280;
+  color: @text-muted;
 }
 
 .messages {
@@ -45,16 +47,16 @@
 
 .userMessage {
   align-self: flex-end;
-  background: #2563eb;
-  color: #ffffff;
+  background: @color-accent;
+  color: @text-on-dark;
   border-radius: 18px 18px 4px 18px;
   padding: 10px 14px;
   max-width: 80%;
-}
 
-.userMessage p {
-  margin: 0;
-  line-height: 1.4;
+  p {
+    margin: 0;
+    line-height: 1.4;
+  }
 }
 
 .aiMessage {
@@ -62,6 +64,16 @@
   display: flex;
   gap: 10px;
   max-width: 88%;
+
+  p {
+    margin: 0;
+    background: #f9fafb;
+    border: 1px solid @border-light;
+    border-radius: 4px 18px 18px 18px;
+    padding: 10px 14px;
+    color: @text-primary;
+    line-height: 1.5;
+  }
 }
 
 .aiAvatar {
@@ -70,7 +82,7 @@
   height: 28px;
   border-radius: 50%;
   background: #eff6ff;
-  color: #2563eb;
+  color: @color-accent;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -78,22 +90,12 @@
   margin-top: 2px;
 }
 
-.aiMessage p {
-  margin: 0;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px 18px 18px 18px;
-  padding: 10px 14px;
-  color: #111827;
-  line-height: 1.5;
-}
-
 .inputBar {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid @border-light;
   background: #f9fafb;
 }
 
@@ -107,8 +109,8 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #2563eb;
-  color: #ffffff;
+  background: @color-accent;
+  color: @text-on-dark;
   border: none;
   cursor: pointer;
   font-size: 14px;

@@ -1,0 +1,61 @@
+@import '../../styles/variables.less';
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: @color-accent;
+  color: @text-on-dark;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: @text-on-dark;
+  line-height: 1.2;
+}
+
+.email {
+  font-size: 0.75rem;
+  color: @text-muted-on-dark;
+  line-height: 1.2;
+}
+
+.logoutButton {
+  margin-left: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background @transition-fast, color @transition-fast, border-color @transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: @text-on-dark;
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+}

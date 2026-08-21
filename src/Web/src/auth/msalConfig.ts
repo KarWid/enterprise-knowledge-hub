@@ -18,5 +18,5 @@ export const msalConfig: Configuration = {
 // Scopes requested when acquiring a token for the API.
 export const apiScopes = {
   login: ["openid", "profile"],
-  backend: []
+  backend: [import.meta.env.VITE_ENTRA_API_CLIENT_ID ?? '']
 }

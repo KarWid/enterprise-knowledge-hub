@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import styles from './ChatMockup.module.css';
+import styles from './ChatMockup.module.less';
 
 export function ChatMockup() {
   const { t } = useTranslation();

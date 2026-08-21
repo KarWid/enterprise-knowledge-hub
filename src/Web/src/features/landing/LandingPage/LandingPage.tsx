@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { login } from '../../auth/authService';
-import { ChatMockup } from './ChatMockup';
-import styles from './LandingPage.module.css';
+import { login } from '../../../auth/authService';
+import { ChatMockup } from '../ChatMockup/ChatMockup';
+import styles from './LandingPage.module.less';
 
 export function LandingPage() {
   const { t } = useTranslation();

@@ -11,6 +11,11 @@ const en = {
   authenticated: {
     welcome: 'Welcome!',
   },
+  nav: {
+    main: 'Menu',
+    chats: 'Chats',
+    documents: 'Documents',
+  },
   health: {
     unreachable: 'API unreachable',
     checking: 'Checking API\u2026',

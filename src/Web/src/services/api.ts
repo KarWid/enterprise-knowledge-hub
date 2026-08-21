@@ -3,7 +3,7 @@ import { apiScopes } from '../auth/msalConfig';
 import { msalInstance } from '../auth/msalInstance';
 
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: '/api',
+  baseUrl: `${import.meta.env.VITE_API_URL}/api`,
   prepareHeaders: async (headers) => {
     const accounts = msalInstance.getAllAccounts();
     if (accounts.length > 0) {
