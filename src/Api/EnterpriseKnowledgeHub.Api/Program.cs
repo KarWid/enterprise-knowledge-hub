@@ -1,5 +1,9 @@
+using EnterpriseKnowledgeHub.Api.Authentication;
+using EnterpriseKnowledgeHub.BuildingBlocks.Application.Abstractions;
 using EnterpriseKnowledgeHub.Modules.Identity;
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
+using EnterpriseKnowledgeHub.Modules.Organizations;
+using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi;
@@ -23,9 +27,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 builder.Services.AddIdentityModule();
+builder.Services.AddOrganizationsModule();
 
 builder.Services.AddDbContext<IdentityDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("EnterpriseKnowledgeHubDbConnectionString")));
+
+builder.Services.AddDbContext<OrganizationsDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("EnterpriseKnowledgeHubDbConnectionString")));
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -47,15 +55,23 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     // Apply pending migrations automatically in development.
     using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-    if (db.Database.IsRelational())
-        await db.Database.MigrateAsync();
+
+    var identityDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+    if (identityDb.Database.IsRelational())
+        await identityDb.Database.MigrateAsync();
+
+    var organizationsDb = scope.ServiceProvider.GetRequiredService<OrganizationsDbContext>();
+    if (organizationsDb.Database.IsRelational())
+        await organizationsDb.Database.MigrateAsync();
 }
 
 app.UseHttpsRedirection();
