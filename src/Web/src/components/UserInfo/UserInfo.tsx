@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useGetMeQuery } from '../../services/api';
+import { useGetMeQuery } from '../../services/api/baseApi';
 import { logout } from '../../auth/authService';
 import styles from './UserInfo.module.less';
 

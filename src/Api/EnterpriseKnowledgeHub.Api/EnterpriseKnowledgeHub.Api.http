@@ -1,6 +1,0 @@
-@EnterpriseKnowledgeHub.Api_HostAddress = http://localhost:5228
-
-GET {{EnterpriseKnowledgeHub.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,5 +1,5 @@
 using EnterpriseKnowledgeHub.Api.Authentication;
-using EnterpriseKnowledgeHub.BuildingBlocks.Application.Abstractions;
+using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Identity;
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
 using EnterpriseKnowledgeHub.Modules.Organizations;
@@ -49,6 +49,8 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Enter your JWT token"
     });
 
+    options.EnableAnnotations();
+
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
         [new OpenApiSecuritySchemeReference("Bearer", document)] = []
@@ -57,22 +59,23 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    // Apply pending migrations automatically in development.
-    using var scope = app.Services.CreateScope();
+//if (app.Environment.IsDevelopment())
+//{
+//    // Apply pending migrations automatically in development.
+//    using var scope = app.Services.CreateScope();
 
-    var identityDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-    if (identityDb.Database.IsRelational())
-        await identityDb.Database.MigrateAsync();
+//    var identityDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+//    if (identityDb.Database.IsRelational())
+//        await identityDb.Database.MigrateAsync();
 
-    var organizationsDb = scope.ServiceProvider.GetRequiredService<OrganizationsDbContext>();
-    if (organizationsDb.Database.IsRelational())
-        await organizationsDb.Database.MigrateAsync();
-}
+//    var organizationsDb = scope.ServiceProvider.GetRequiredService<OrganizationsDbContext>();
+//    if (organizationsDb.Database.IsRelational())
+//        await organizationsDb.Database.MigrateAsync();
+//}
 
 app.UseHttpsRedirection();
 app.UseSwagger();

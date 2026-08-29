@@ -1,3 +1,5 @@
+using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
+
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Domain;
 
 public sealed class Organization
@@ -14,10 +16,12 @@ public sealed class Organization
 
     public static Organization Create(string name)
     {
+        DomainGuard.Required(name, nameof(Name), 256);
+
         return new Organization
         {
             Id = Guid.NewGuid(),
-            Name = name,
+            Name = name.Trim(),
             Status = OrganizationStatus.Active,
             CreatedAt = DateTime.UtcNow
         };

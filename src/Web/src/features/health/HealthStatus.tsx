@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useGetHealthQuery } from '../../services/api';
+import { useGetHealthQuery } from '../../services/api/baseApi';
 
 export function HealthStatus() {
   const { t } = useTranslation();

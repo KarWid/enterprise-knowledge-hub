@@ -2,6 +2,7 @@ using EnterpriseKnowledgeHub.Contracts.Health;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.Health;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace EnterpriseKnowledgeHub.Api.Controllers;
 
@@ -10,6 +11,7 @@ namespace EnterpriseKnowledgeHub.Api.Controllers;
 public class HealthController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
+    [SwaggerOperation(OperationId = "GetHealth")]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetHealthQuery(), cancellationToken);

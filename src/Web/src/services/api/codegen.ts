@@ -1,0 +1,15 @@
+import type { ConfigFile } from '@rtk-query/codegen-openapi';
+
+const config: ConfigFile = {
+  schemaFile: './src/services/api/enterprise-knowledge-hub-swagger.json',
+
+  apiFile: './src/services/api/baseApi.ts',
+  apiImport: 'baseApi',
+
+  outputFile: './src/services/api/generated/api.ts',
+
+  exportName: 'api',
+  hooks: true,
+};
+
+export default config;

@@ -1,5 +1,8 @@
-﻿namespace EnterpriseKnowledgeHub.BuildingBlocks.Application.Abstractions
+﻿namespace EnterpriseKnowledgeHub.BuildingBlocks.Application.Security
 {
+    /// <summary>
+    /// Handles JWT information
+    /// </summary>
     public interface ICurrentUser
     {
         string? ExternalId { get; }

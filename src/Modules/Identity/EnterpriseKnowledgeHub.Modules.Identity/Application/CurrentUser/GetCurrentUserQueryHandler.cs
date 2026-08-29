@@ -1,4 +1,4 @@
-using EnterpriseKnowledgeHub.BuildingBlocks.Application.Abstractions;
+using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Identity.Domain;
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
 using MediatR;

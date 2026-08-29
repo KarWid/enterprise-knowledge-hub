@@ -4,19 +4,19 @@ using EnterpriseKnowledgeHub.Modules.Organizations.Application.GetUserOrganizati
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace EnterpriseKnowledgeHub.Api.Controllers;
 
 [Route("api/organizations")]
 [Authorize]
-public class OrganizationsController(IMediator mediator) : ApiControllerBase(mediator)
+public class OrganizationsController(IMediator _mediator) : ApiControllerBase()
 {
     [HttpGet]
+    [SwaggerOperation(OperationId = "GetOrganizations")]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        var userId = await ResolveUserIdAsync(cancellationToken);
-
-        var result = await Mediator.Send(new GetUserOrganizationsQuery(userId), cancellationToken);
+        var result = await _mediator.Send(new GetUserOrganizationsQuery(), cancellationToken);
 
         var response = result.Organizations
             .Select(o => new OrganizationResponse(o.Id, o.Name, o.Role.ToString()))
@@ -26,27 +26,17 @@ public class OrganizationsController(IMediator mediator) : ApiControllerBase(med
     }
 
     [HttpPost]
+    [SwaggerOperation(OperationId = "CreateOrganization")]
     public async Task<IActionResult> Create(
         [FromBody] CreateOrganizationRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest("Organization name is required.");
-
-        var userId = await ResolveUserIdAsync(cancellationToken);
-
-        var result = await Mediator.Send(
-            new CreateOrganizationCommand(userId, request.Name.Trim()),
+        var result = await _mediator.Send(
+            new CreateOrganizationCommand(request.Name),
             cancellationToken);
 
-        var response = new OrganizationResponse(result.Id, result.Name, "OrganizationOwner");
+        var response = new OrganizationResponse(result.Id, result.Name, "OrganizationOwner"); // TODO @KWidla
 
         return CreatedAtAction(nameof(Get), response);
-    }
-
-    private async Task<Guid> ResolveUserIdAsync(CancellationToken cancellationToken)
-    {
-        var user = await GetCurrentUserAsync(cancellationToken);
-        return user.Id;
     }
 }

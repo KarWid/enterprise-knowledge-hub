@@ -1,3 +1,6 @@
+using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
+using EnterpriseKnowledgeHub.Modules.Identity.Domain.Exceptions;
+
 namespace EnterpriseKnowledgeHub.Modules.Identity.Domain;
 
 public sealed class ApplicationUser
@@ -13,6 +16,10 @@ public sealed class ApplicationUser
 
     public static ApplicationUser Create(string externalIdentityId, string email, string displayName)
     {
+        DomainGuard.Required(externalIdentityId, nameof(ExternalIdentityId), 256);
+        DomainGuard.Required(email, nameof(Email), 256);
+        DomainGuard.Required(displayName, nameof(DisplayName), 256);
+
         return new ApplicationUser
         {
             Id = Guid.NewGuid(),

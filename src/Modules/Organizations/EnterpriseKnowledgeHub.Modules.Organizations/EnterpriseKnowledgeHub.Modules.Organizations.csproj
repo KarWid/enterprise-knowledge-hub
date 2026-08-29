@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
+  </ItemGroup>
+
 </Project>
