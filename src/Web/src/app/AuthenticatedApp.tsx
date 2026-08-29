@@ -1,9 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { UserInfo } from '../components/UserInfo/UserInfo';
 import styles from './AuthenticatedApp.module.less';
+import { useGetMeQuery } from '../services/api/generated/api';
+import { UserOnboardingStatusType } from '../services/api/enums';
 
 export function AuthenticatedApp() {
   const { t } = useTranslation();
+  const { data } = useGetMeQuery();
+
+  if (data?.onboardingStatus === UserOnboardingStatusType.CreateOrganization){
+    return <div>{t('onboarding.createOrganization')}</div>;
+  }
 
   return (
     <div className={styles.shell}>

@@ -30,6 +30,7 @@ internal sealed class GetCurrentUserQueryHandler(
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        return new GetCurrentUserResult(user.Id, user.Email, user.DisplayName);
+        // TODO @KWidla: UserOnboardingState to be done
+        return GetCurrentUserMapper.MapToGetCurrentUserResult(user, Enums.UserOnboardingState.CreateOrganization);
     }
 }

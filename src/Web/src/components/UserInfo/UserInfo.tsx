@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useGetMeQuery } from '../../services/api/baseApi';
 import { logout } from '../../auth/authService';
+import { useGetMeQuery } from '../../services/api/generated/api';
 import styles from './UserInfo.module.less';
 
 export function UserInfo() {
@@ -13,7 +13,7 @@ export function UserInfo() {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.avatar} title={data?.name}>
+      <div className={styles.avatar} title={data?.name ?? ''}>
         {initials}
       </div>
       <div className={styles.info}>

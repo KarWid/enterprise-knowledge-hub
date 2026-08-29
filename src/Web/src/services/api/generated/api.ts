@@ -29,13 +29,21 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api };
 export type GetHealthApiResponse = unknown;
 export type GetHealthApiArg = void;
-export type GetMeApiResponse = unknown;
+export type GetMeApiResponse = /** status 200 OK */ CurrentUserResponse;
 export type GetMeApiArg = void;
 export type GetOrganizationsApiResponse = unknown;
 export type GetOrganizationsApiArg = void;
 export type CreateOrganizationApiResponse = unknown;
 export type CreateOrganizationApiArg = {
   createOrganizationRequest: CreateOrganizationRequest;
+};
+export type UserOnboardingStatus =
+  "Complete" | "CreateOrganization" | "AcceptInvitation";
+export type CurrentUserResponse = {
+  id?: string;
+  email?: string | null;
+  name?: string | null;
+  onboardingStatus?: UserOnboardingStatus;
 };
 export type CreateOrganizationRequest = {
   name?: string | null;

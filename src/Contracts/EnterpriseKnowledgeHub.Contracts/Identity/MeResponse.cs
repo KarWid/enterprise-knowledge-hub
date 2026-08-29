@@ -1,3 +1,9 @@
+using EnterpriseKnowledgeHub.Contracts.Enums;
+
 namespace EnterpriseKnowledgeHub.Contracts.Identity;
 
-public sealed record MeResponse(Guid Id, string? Email, string? Name);
+public sealed record CurrentUserResponse(
+    Guid Id, 
+    string? Email, 
+    string? Name, 
+    UserOnboardingStatus OnboardingStatus);
