@@ -6,6 +6,9 @@
   <Folder Name="/src/Contracts/">
     <Project Path="src/Contracts/EnterpriseKnowledgeHub.Contracts/EnterpriseKnowledgeHub.Contracts.csproj" />
   </Folder>
+  <Folder Name="/src/Application/">
+    <Project Path="EnterpriseKnowledgeHub.Application/EnterpriseKnowledgeHub.Application.csproj" Id="572a3c7a-7897-4704-aaef-3541a4c9e517" />
+  </Folder>
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
   </Folder>

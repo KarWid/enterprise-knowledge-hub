@@ -1,6 +1,7 @@
 using EnterpriseKnowledgeHub.Api.Authentication;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Identity;
+using EnterpriseKnowledgeHub.Application;
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
 using EnterpriseKnowledgeHub.Modules.Organizations;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
@@ -34,6 +35,7 @@ builder.Services
 
 builder.Services.AddIdentityModule();
 builder.Services.AddOrganizationsModule();
+builder.Services.AddEnterpriseKnowledgeHubApplicationModule();
 
 builder.Services.AddDbContext<IdentityDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("EnterpriseKnowledgeHubDbConnectionString")));

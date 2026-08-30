@@ -11,6 +11,16 @@ const pl = {
   authenticated: {
     welcome: 'Witaj!',
   },
+  onboarding: {
+    createOrganization: 'Utwórz organizację',
+    createOrganizationSubtitle: 'Skonfiguruj swoją organizację, aby rozpocząć.',
+    companyNameLabel: 'Nazwa firmy',
+    companyNamePlaceholder: 'np. Acme Corp',
+    createOrganizationButton: 'Utwórz organizację',
+    createOrganizationError: 'Coś poszło nie tak. Spróbuj ponownie.',
+    acceptInvitationErrorHeading: 'Zaproszenia nieobsługiwane',
+    acceptInvitationError: 'Dołączanie przez zaproszenie nie jest jeszcze dostępne. Skontaktuj się z administratorem.',
+  },
   nav: {
     main: 'Menu',
     chats: 'Czaty',

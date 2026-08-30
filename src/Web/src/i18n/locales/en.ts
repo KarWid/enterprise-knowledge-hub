@@ -11,6 +11,16 @@ const en = {
   authenticated: {
     welcome: 'Welcome!',
   },
+  onboarding: {
+    createOrganization: 'Create your organization',
+    createOrganizationSubtitle: 'Set up your organization to get started.',
+    companyNameLabel: 'Company Name',
+    companyNamePlaceholder: 'e.g. Acme Corp',
+    createOrganizationButton: 'Create organization',
+    createOrganizationError: 'Something went wrong. Please try again.',
+    acceptInvitationErrorHeading: 'Invitation not supported',
+    acceptInvitationError: 'Joining via invitation is not available yet. Please contact your administrator.',
+  },
   nav: {
     main: 'Menu',
     chats: 'Chats',

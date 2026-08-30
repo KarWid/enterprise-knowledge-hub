@@ -19,18 +19,20 @@ internal sealed class GetCurrentUserQueryHandler(
         var user = await db.ApplicationUsers
             .FirstOrDefaultAsync(u => u.ExternalIdentityId == currentUser.ExternalId, cancellationToken);
 
-        if (user is null)
+        if (user is not null)
         {
-            user = ApplicationUser.Create(
-                currentUser.ExternalId,
-                currentUser.Email ?? string.Empty,
-                currentUser.Name ?? string.Empty);
-
-            db.ApplicationUsers.Add(user);
-            await db.SaveChangesAsync(cancellationToken);
+            return GetCurrentUserMapper.MapToGetCurrentUserResult(user);
         }
 
-        // TODO @KWidla: UserOnboardingState to be done
-        return GetCurrentUserMapper.MapToGetCurrentUserResult(user, Enums.UserOnboardingState.CreateOrganization);
+        user = ApplicationUser.Create(
+            currentUser.ExternalId,
+            currentUser.Email ?? string.Empty,
+            currentUser.Name ?? string.Empty);
+
+        db.ApplicationUsers.Add(user);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // TODO @KWidla: refactor
+        return GetCurrentUserMapper.MapToGetCurrentUserResult(user);
     }
 }

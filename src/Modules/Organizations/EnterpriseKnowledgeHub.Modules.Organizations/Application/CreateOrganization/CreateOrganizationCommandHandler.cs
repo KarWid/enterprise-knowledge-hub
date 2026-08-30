@@ -1,5 +1,6 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain;
+using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Exceptions;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
 using MediatR;
 
@@ -14,6 +15,12 @@ internal sealed class CreateOrganizationCommandHandler(
         CreateOrganizationCommand request, CancellationToken cancellationToken)
     {
         var currentUserId = await _userContext.GetUserIdAsync(cancellationToken);
+
+        var isUserAdminAlready = _db.Memberships.Any(x => x.UserId == currentUserId && x.Status == MembershipStatus.Active && x.Role == OrganizationRole.OrganizationOwner);
+        if (isUserAdminAlready)
+        {
+            throw new OrganizationsDomainException("User is already an admin of the registered company and can not create another one");
+        }
 
         var organization = Organization.Create(request.Name);
         organization.AddOwner(currentUserId);

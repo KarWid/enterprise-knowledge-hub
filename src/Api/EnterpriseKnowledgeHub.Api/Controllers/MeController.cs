@@ -1,7 +1,7 @@
 using System.Net;
 using EnterpriseKnowledgeHub.Api.Mappers;
+using EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview;
 using EnterpriseKnowledgeHub.Contracts.Identity;
-using EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +18,7 @@ public class MeController(IMediator _mediator) : ApiControllerBase()
     [ProducesResponseType(typeof(CurrentUserResponse), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetCurrentUserQuery(), cancellationToken);
+        var result = await _mediator.Send(new GetCurrentUserOverviewQuery(), cancellationToken);
         return Ok(CurrentUserMapper.MapToCurrentUserResponse(result));
     }
 }

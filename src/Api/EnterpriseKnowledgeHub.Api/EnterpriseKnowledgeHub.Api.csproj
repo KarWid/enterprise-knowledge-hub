@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\EnterpriseKnowledgeHub.Application\EnterpriseKnowledgeHub.Application.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\EnterpriseKnowledgeHub.Modules.Identity\EnterpriseKnowledgeHub.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\Modules\Organizations\EnterpriseKnowledgeHub.Modules.Organizations\EnterpriseKnowledgeHub.Modules.Organizations.csproj" />

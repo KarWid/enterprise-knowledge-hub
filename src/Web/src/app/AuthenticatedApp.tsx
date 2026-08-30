@@ -3,13 +3,25 @@ import { UserInfo } from '../components/UserInfo/UserInfo';
 import styles from './AuthenticatedApp.module.less';
 import { useGetMeQuery } from '../services/api/generated/api';
 import { UserOnboardingStatusType } from '../services/api/enums';
+import { CreateOrganizationPage } from '../features/onboarding/CreateOrganizationPage';
+import { AcceptInvitationPage } from '../features/onboarding/AcceptInvitationPage';
+import { AuthLoadingPage } from './AuthLoadingPage';
 
 export function AuthenticatedApp() {
   const { t } = useTranslation();
   const { data } = useGetMeQuery();
+  const status = data?.onboardingStatus;
 
-  if (data?.onboardingStatus === UserOnboardingStatusType.CreateOrganization){
-    return <div>{t('onboarding.createOrganization')}</div>;
+  if (data === undefined) {
+    return <AuthLoadingPage message={t('app.pleaseWait')} />;
+  }
+
+  if (status === UserOnboardingStatusType.CreateOrganization) {
+    return <CreateOrganizationPage />;
+  }
+
+  if (status === UserOnboardingStatusType.AcceptInvitation) {
+    return <AcceptInvitationPage />;
   }
 
   return (

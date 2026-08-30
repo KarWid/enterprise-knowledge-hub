@@ -1,4 +1,5 @@
-﻿using EnterpriseKnowledgeHub.Contracts.Enums;
+﻿using EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview;
+using EnterpriseKnowledgeHub.Contracts.Enums;
 using EnterpriseKnowledgeHub.Contracts.Identity;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser;
 using EnterpriseKnowledgeHub.Modules.Identity.Enums;
@@ -8,12 +9,12 @@ namespace EnterpriseKnowledgeHub.Api.Mappers
     internal static class CurrentUserMapper
     {
         internal static CurrentUserResponse MapToCurrentUserResponse(
-            GetCurrentUserResult currentUserResult)
+            GetCurrentUserOverviewQueryResult currentUserResult)
         {
             return new CurrentUserResponse(
-                currentUserResult.Id, 
-                currentUserResult.Email, 
-                currentUserResult.Name, 
+                currentUserResult.Id,
+                currentUserResult.Email,
+                currentUserResult.Name,
                 MapToUserOnboardingStatus(currentUserResult.OnboardingState));
         }
 

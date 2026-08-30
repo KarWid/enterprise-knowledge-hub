@@ -1,0 +1,36 @@
+@import '../../styles/authenticated.less';
+@import '../../styles/variables.less';
+
+.page {
+  .authenticated-page();
+}
+
+.card {
+  .authenticated-card();
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.logout {
+  .authenticated-logout();
+}
+
+.icon {
+  font-size: 2.5rem;
+}
+
+.heading {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: @text-primary;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.message {
+  font-size: 0.95rem;
+  color: @text-muted;
+  margin: 0;
+  line-height: 1.6;
+}
