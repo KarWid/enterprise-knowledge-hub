@@ -1,0 +1,49 @@
+@import "../../../styles/variables.less";
+
+.Input--container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .input {
+    padding: 12px 14px;
+    border: 1.5px solid @border-light;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: @text-primary;
+    font-family: @font-stack;
+    transition:
+      border-color @transition-fast,
+      box-shadow @transition-fast;
+    outline: none;
+
+    &::placeholder {
+      color: @text-muted;
+    }
+
+    &:focus {
+      border-color: @color-accent;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    &:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
+    }
+  }
+
+  .inputError {
+    border-color: #dc2626;
+
+    &:focus {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+  }
+
+  .errorMessage {
+    font-size: 0.85rem;
+    color: #dc2626;
+    margin: 0;
+  }
+}

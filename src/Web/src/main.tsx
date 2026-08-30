@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { MsalProvider } from "@azure/msal-react";
 import { Provider } from "react-redux";
+import { BrowserRouter } from "react-router-dom";
 import { store } from "./services/store";
 
 import App from "./App";
@@ -18,7 +19,9 @@ async function bootstrap(): Promise<void> {
     <React.StrictMode>
       <MsalProvider instance={msalInstance}>  
         <Provider store={store}>
-          <App />
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
         </Provider>
       </MsalProvider>
     </React.StrictMode>
