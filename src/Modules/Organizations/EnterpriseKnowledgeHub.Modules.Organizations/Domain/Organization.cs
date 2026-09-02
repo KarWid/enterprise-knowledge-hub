@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
+using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Domain;
 

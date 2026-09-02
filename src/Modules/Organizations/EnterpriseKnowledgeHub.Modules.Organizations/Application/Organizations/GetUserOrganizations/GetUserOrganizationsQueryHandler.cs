@@ -1,10 +1,10 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
-using EnterpriseKnowledgeHub.Modules.Organizations.Domain;
+using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.GetUserOrganizations;
+namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 
 internal sealed class GetUserOrganizationsQueryHandler(
     IUserContext _userContext, 

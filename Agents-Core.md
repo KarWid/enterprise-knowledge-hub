@@ -1,6 +1,7 @@
 Agent Core Instructions
+
 1. Purpose
-You are an AI agent assisting in the development of Enterprise Knowledge Hub, a modular monolith SaaS application built with:
+   You are an AI agent assisting in the development of Enterprise Knowledge Hub, a modular monolith SaaS application built with:
 
 .NET / ASP.NET Core
 
@@ -27,24 +28,23 @@ Azure Application Insights
 Your role is to help implement, refactor, and maintain code while respecting the existing architecture, domain rules, and security model.
 
 2. Documentation Usage
-Do not read all documentation by default.  
-Read only the documents relevant to the current task.
+   Do not read all documentation by default.  
+   Read only the documents relevant to the current task.
 
 Documentation map:
 
-Area	                        Document
-Product vision	                docs/Vision.md
-Architecture & structure	    docs/Architecture.md
-Domain model & business rules	docs/Domain.md
-AI / RAG	                    docs/AI.md
-Security	                    docs/Security.md
-Development workflow	        docs/Development.md
-
+Area Document
+Product vision docs/Vision.md
+Architecture & structure docs/Architecture.md
+Domain model & business rules docs/Domain.md
+AI / RAG docs/AI.md
+Security docs/Security.md
+Development workflow docs/Development.md
 
 Prefer existing code and module‑level conventions over unrelated global documentation.
 
 3. Core Architectural Principles
-The system is a modular monolith.
+   The system is a modular monolith.
 
 Organization is the tenant boundary.
 
@@ -64,7 +64,7 @@ Contracts Project
 The solution includes a dedicated Contracts project containing Request/Response DTOs and external-facing data models. Contracts do not contain domain logic and do not reference domain entities. They serve as stable communication boundaries between API, modules, workers, and frontend.
 
 4. Development Rules
-Prefer vertical slices and end‑to‑end feature development.
+   Prefer vertical slices and end‑to‑end feature development.
 
 Implement the smallest useful change.
 
@@ -77,7 +77,7 @@ Build the solution and run relevant tests after modifications.
 All changes must be understandable and aligned with architecture.
 
 5. Entity Framework Core
-Do not introduce generic repositories without a concrete reason.
+   Do not introduce generic repositories without a concrete reason.
 
 A module may own its own DbContext.
 
@@ -86,7 +86,7 @@ Modules should not casually query each other’s tables.
 Module boundaries matter more than abstract patterns.
 
 6. Security
-Security is mandatory.
+   Security is mandatory.
 
 Never:
 
@@ -111,12 +111,12 @@ Managed Identity for Azure‑to‑Azure authentication,
 Key Vault for secrets that cannot be eliminated.
 
 7. Azure
-Add Azure resources only when required by the current milestone.
+   Add Azure resources only when required by the current milestone.
 
 Do not place Azure‑specific implementation details in the domain layer.
 
 8. AI / RAG
-AI functionality is organization‑scoped.
+   AI functionality is organization‑scoped.
 
 RAG pipeline (future milestone):
 
@@ -126,7 +126,7 @@ Every retrieval operation must be scoped to the current Organization.
 Do not rely on prompts to enforce tenant isolation.
 
 9. Coding Style
-Prefer:
+   Prefer:
 
 clear names,
 
@@ -159,7 +159,7 @@ speculative frameworks.
 Use the canonical tenant term: Organization.
 
 10. Definition of Done
-A feature is complete only when:
+    A feature is complete only when:
 
 architecture is respected,
 
@@ -182,7 +182,7 @@ no secrets were introduced,
 the implementation is understandable.
 
 11. When in Doubt
-Prefer:
+    Prefer:
 
 the simplest solution,
 
@@ -196,3 +196,15 @@ a small working solution over speculative extensibility.
 
 Do not optimize for hypothetical future requirements.
 Build what the current milestone actually needs.
+
+12. Database migration and update
+    From "src" folder to add a new migration run the command for each project:
+    - Organizations
+      --- dotnet ef migrations add {migrationName} --project Modules/Organizations/EnterpriseKnowledgeHub.Modules.Organizations --startup-project Api/EnterpriseKnowledgeHub.Api --context OrganizationsDbContext
+    - Identity
+      --- dotnet ef migrations add {migrationName} --project Modules/Identity/EnterpriseKnowledgeHub.Modules.Identity --startup-project Api/EnterpriseKnowledgeHub.Api --context IdentityDbContext
+
+    From "src" folder to update the database:
+    - Organizations
+      --- dotnet ef database update --context OrganizationsDbContext
+      --- dotnet ef database update --context IdentityDbContext

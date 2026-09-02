@@ -1,5 +1,5 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
-using EnterpriseKnowledgeHub.Modules.Identity.Domain.Exceptions;
+using EnterpriseKnowledgeHub.Modules.Identity.Domain.Enums;
 
 namespace EnterpriseKnowledgeHub.Modules.Identity.Domain;
 

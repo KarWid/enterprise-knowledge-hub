@@ -13,5 +13,7 @@ public class OrganizationsDbContext(DbContextOptions<OrganizationsDbContext> opt
     {
         modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
         modelBuilder.ApplyConfiguration(new MembershipConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationInvitationConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationOwnerInvitationConfiguration());
     }
 }

@@ -1,6 +1,6 @@
 ﻿using EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser;
 using EnterpriseKnowledgeHub.Modules.Identity.Enums;
-using EnterpriseKnowledgeHub.Modules.Organizations.Application.GetUserOrganizations;
+using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 using MediatR;
 
 namespace EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview

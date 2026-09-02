@@ -1,6 +1,6 @@
 ﻿using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
 
-namespace EnterpriseKnowledgeHub.Modules.Organizations.Domain.Exceptions
+namespace EnterpriseKnowledgeHub.Modules.Organizations.Exceptions
 {
     internal class OrganizationsDomainException : DomainException
     {

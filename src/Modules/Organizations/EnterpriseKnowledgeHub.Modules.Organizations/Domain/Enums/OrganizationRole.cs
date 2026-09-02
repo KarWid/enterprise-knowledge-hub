@@ -1,4 +1,4 @@
-namespace EnterpriseKnowledgeHub.Modules.Organizations.Domain;
+namespace EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 
 public enum OrganizationRole
 {

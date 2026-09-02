@@ -1,6 +1,6 @@
-using EnterpriseKnowledgeHub.Modules.Organizations.Domain;
+using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 
-namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.GetUserOrganizations;
+namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 
 public sealed record UserOrganizationItem(Guid Id, string Name, DateTime CreatedAt, OrganizationRole Role);
 

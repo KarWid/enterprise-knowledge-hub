@@ -1,10 +1,11 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain;
-using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Exceptions;
+using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
+using EnterpriseKnowledgeHub.Modules.Organizations.Exceptions;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
 using MediatR;
 
-namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.CreateOrganization;
+namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.CreateOrganization;
 
 internal sealed class CreateOrganizationCommandHandler(
     OrganizationsDbContext _db,

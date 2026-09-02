@@ -1,3 +1,5 @@
+using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
+
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Domain;
 
 public sealed class Membership

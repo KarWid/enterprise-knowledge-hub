@@ -1,6 +1,6 @@
 using EnterpriseKnowledgeHub.Contracts.Organizations;
-using EnterpriseKnowledgeHub.Modules.Organizations.Application.CreateOrganization;
-using EnterpriseKnowledgeHub.Modules.Organizations.Application.GetUserOrganizations;
+using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.CreateOrganization;
+using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
