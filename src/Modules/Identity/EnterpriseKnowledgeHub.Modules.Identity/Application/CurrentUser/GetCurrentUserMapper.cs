@@ -10,7 +10,11 @@ namespace EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser
             return new GetCurrentUserResult(
                 applicationUser.Id, 
                 applicationUser.Email, 
-                applicationUser.DisplayName);
+                applicationUser.DisplayName,
+                Found: true);
         }
+
+        internal static GetCurrentUserResult NotFound()
+            => new(Guid.Empty, null, null, Found: false);
     }
 }

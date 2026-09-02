@@ -8,6 +8,8 @@ public class OrganizationsDbContext(DbContextOptions<OrganizationsDbContext> opt
 {
     public DbSet<Organization> Organizations { get; set; }
     public DbSet<Membership> Memberships { get; set; }
+    public DbSet<OrganizationInvitation> OrganizationInvitations { get; set; }
+    public DbSet<OrganizationOwnerInvitation> OrganizationOwnerInvitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

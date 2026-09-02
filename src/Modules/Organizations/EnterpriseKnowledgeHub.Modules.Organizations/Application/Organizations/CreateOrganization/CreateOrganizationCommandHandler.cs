@@ -23,6 +23,15 @@ internal sealed class CreateOrganizationCommandHandler(
             throw new OrganizationsDomainException("User is already an admin of the registered company and can not create another one");
         }
 
+        var currentUserEmail = (await _userContext.GetUserEmailAsync(cancellationToken)).Trim().ToLowerInvariant();
+
+        var isInvitedOwner = _db.OrganizationOwnerInvitations.Any(
+            x => x.Email == currentUserEmail && x.Status == InvitationStatus.Accepted);
+        if (!isInvitedOwner)
+        {
+            throw new OrganizationsDomainException("Only invited users can create an organization.");
+        }
+
         var organization = Organization.Create(request.Name);
         organization.AddOwner(currentUserId);
 

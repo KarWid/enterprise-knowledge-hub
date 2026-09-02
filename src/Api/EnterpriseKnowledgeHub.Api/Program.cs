@@ -1,7 +1,8 @@
 using EnterpriseKnowledgeHub.Api.Authentication;
+using EnterpriseKnowledgeHub.Application;
+using EnterpriseKnowledgeHub.BuildingBlocks.Application;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Identity;
-using EnterpriseKnowledgeHub.Application;
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
 using EnterpriseKnowledgeHub.Modules.Organizations;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;

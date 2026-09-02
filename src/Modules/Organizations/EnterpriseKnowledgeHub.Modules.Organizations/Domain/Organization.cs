@@ -30,6 +30,14 @@ public sealed class Organization
 
     public void AddOwner(Guid userId)
     {
-        _memberships.Add(Membership.Create(userId, Id, OrganizationRole.OrganizationOwner));
+        AddMember(userId, OrganizationRole.OrganizationOwner);
+    }
+
+    public void AddMember(Guid userId, OrganizationRole role)
+    {
+        if (_memberships.Any(m => m.UserId == userId))
+            return;
+
+        _memberships.Add(Membership.Create(userId, Id, role));
     }
 }

@@ -19,20 +19,9 @@ internal sealed class GetCurrentUserQueryHandler(
         var user = await db.ApplicationUsers
             .FirstOrDefaultAsync(u => u.ExternalIdentityId == currentUser.ExternalId, cancellationToken);
 
-        if (user is not null)
-        {
-            return GetCurrentUserMapper.MapToGetCurrentUserResult(user);
-        }
-
-        user = ApplicationUser.Create(
-            currentUser.ExternalId,
-            currentUser.Email ?? string.Empty,
-            currentUser.Name ?? string.Empty);
-
-        db.ApplicationUsers.Add(user);
-        await db.SaveChangesAsync(cancellationToken);
-
-        // TODO @KWidla: refactor
-        return GetCurrentUserMapper.MapToGetCurrentUserResult(user);
+        // Provisioning of a new ApplicationUser is gated by invitations; this query never creates one.
+        return user is not null
+            ? GetCurrentUserMapper.MapToGetCurrentUserResult(user)
+            : GetCurrentUserMapper.NotFound();
     }
 }

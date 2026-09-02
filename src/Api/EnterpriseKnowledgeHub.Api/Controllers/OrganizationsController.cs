@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.Contracts.Organizations;
+using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.InviteUserToOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.CreateOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 using MediatR;
@@ -38,5 +39,22 @@ public class OrganizationsController(IMediator _mediator) : ApiControllerBase()
         var response = new OrganizationResponse(result.Id, result.Name, "OrganizationOwner"); // TODO @KWidla
 
         return CreatedAtAction(nameof(Get), response);
+    }
+
+    [HttpPost("{organizationId:guid}/invitations")]
+    [SwaggerOperation(OperationId = "InviteUserToOrganization")]
+    public async Task<IActionResult> Invite(
+        Guid organizationId,
+        [FromBody] InviteUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new InviteUserToOrganizationCommand(organizationId, request.Email),
+            cancellationToken);
+
+        var response = new OrganizationInvitationResponse(
+            result.Id, result.OrganizationId, result.Email, result.ExpiresAt);
+
+        return Ok(response);
     }
 }

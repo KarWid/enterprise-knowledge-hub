@@ -1,4 +1,4 @@
-﻿using EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser;
+﻿using EnterpriseKnowledgeHub.Application.Commands.ResolveCurrentUser;
 using EnterpriseKnowledgeHub.Modules.Identity.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 using MediatR;
@@ -9,7 +9,7 @@ namespace EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview
     {
         public async Task<GetCurrentUserOverviewQueryResult> Handle(GetCurrentUserOverviewQuery request, CancellationToken cancellationToken)
         {
-            var currentUserResult = await _mediator.Send(new GetCurrentUserQuery(), cancellationToken);
+            var currentUserResult = await _mediator.Send(new ResolveCurrentUserCommand(), cancellationToken);
             var userOrganizationsResult = await _mediator.Send(new GetUserOrganizationsQuery(), cancellationToken);
 
             // TODO @KWidla
@@ -20,3 +20,4 @@ namespace EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview
         }
     }
 }
+
