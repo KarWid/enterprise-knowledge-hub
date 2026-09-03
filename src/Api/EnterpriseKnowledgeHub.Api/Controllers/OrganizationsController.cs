@@ -32,9 +32,7 @@ public class OrganizationsController(IMediator _mediator) : ApiControllerBase()
         [FromBody] CreateOrganizationRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(
-            new CreateOrganizationCommand(request.Name),
-            cancellationToken);
+        var result = await _mediator.Send(new CreateOrganizationCommand(request.Name), cancellationToken);
 
         var response = new OrganizationResponse(result.Id, result.Name, "OrganizationOwner"); // TODO @KWidla
 

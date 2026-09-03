@@ -1,0 +1,3 @@
+namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetMembershipsForUser;
+
+public sealed record GetMembershipsForUserQueryResult(IReadOnlyCollection<Guid>? OrganizationIds);

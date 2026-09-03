@@ -9,6 +9,7 @@ using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi;
+using Scrutor;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,8 @@ builder.Services.AddCors(options =>
 builder.Services
     .AddAuthentication()
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddAuthorization();
 
@@ -68,7 +71,8 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
-builder.Services.AddScoped<IUserContext, UserContext>();
+builder.Services.Decorate<IUserInfoService, CachedUserInfoService>();
+
 
 var app = builder.Build();
 

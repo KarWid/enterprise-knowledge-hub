@@ -12,7 +12,7 @@ namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.I
 
 internal sealed class InviteUserToOrganizationCommandHandler(
     OrganizationsDbContext _db,
-    IUserContext _userContext,
+    IUserInfoService _userInfoService,
     IPublisher _publisher)
     : IRequestHandler<InviteUserToOrganizationCommand, InviteUserToOrganizationResult>
 {
@@ -21,7 +21,8 @@ internal sealed class InviteUserToOrganizationCommandHandler(
     public async Task<InviteUserToOrganizationResult> Handle(
         InviteUserToOrganizationCommand request, CancellationToken cancellationToken)
     {
-        var currentUserId = await _userContext.GetUserIdAsync(cancellationToken);
+        var userInfo = await _userInfoService.GetUserInfoAsync(cancellationToken);
+        var currentUserId = userInfo.UserId;
 
         var isOwner = await _db.Memberships.AnyAsync(
             x => x.UserId == currentUserId

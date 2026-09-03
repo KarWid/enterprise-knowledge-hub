@@ -1,13 +1,10 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/Api/">
+    <Project Path="src/Api/EnterpriseKnowledgeHub.Infrastructure/EnterpriseKnowledgeHub.Infrastructure.csproj" Id="af6bc205-4914-4358-8255-da8840816261" />
     <Project Path="src/Api/EnterpriseKnowledgeHub.Api/EnterpriseKnowledgeHub.Api.csproj" />
-  </Folder>
-  <Folder Name="/src/Contracts/">
-    <Project Path="src/Contracts/EnterpriseKnowledgeHub.Contracts/EnterpriseKnowledgeHub.Contracts.csproj" />
-  </Folder>
-  <Folder Name="/src/Application/">
-    <Project Path="EnterpriseKnowledgeHub.Application/EnterpriseKnowledgeHub.Application.csproj" Id="572a3c7a-7897-4704-aaef-3541a4c9e517" />
+    <Project Path="src/Api/EnterpriseKnowledgeHub.Application/EnterpriseKnowledgeHub.Application.csproj" Id="572a3c7a-7897-4704-aaef-3541a4c9e517" />
+    <Project Path="src/Api/EnterpriseKnowledgeHub.Contracts/EnterpriseKnowledgeHub.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks.csproj" />

@@ -7,14 +7,15 @@ using Microsoft.EntityFrameworkCore;
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
 
 internal sealed class GetUserOrganizationsQueryHandler(
-    IUserContext _userContext, 
+    IUserInfoService _userInfoService, 
     OrganizationsDbContext _db)
     : IRequestHandler<GetUserOrganizationsQuery, GetUserOrganizationsResult>
 {
     public async Task<GetUserOrganizationsResult> Handle(
         GetUserOrganizationsQuery request, CancellationToken cancellationToken)
     {
-        var currentUserId = await _userContext.GetUserIdAsync(cancellationToken);
+        var userInfo = await _userInfoService.GetUserInfoAsync(cancellationToken);
+        var currentUserId = userInfo.UserId;
 
         var organizations = await (
             from m in _db.Memberships

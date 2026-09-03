@@ -14,16 +14,17 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Web" Version="4.14.2" />
+    <PackageReference Include="Scrutor" Version="6.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.2.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\EnterpriseKnowledgeHub.Application\EnterpriseKnowledgeHub.Application.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\EnterpriseKnowledgeHub.Modules.Identity\EnterpriseKnowledgeHub.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\Modules\Organizations\EnterpriseKnowledgeHub.Modules.Organizations\EnterpriseKnowledgeHub.Modules.Organizations.csproj" />
-    <ProjectReference Include="..\..\Contracts\EnterpriseKnowledgeHub.Contracts\EnterpriseKnowledgeHub.Contracts.csproj" />
+    <ProjectReference Include="..\EnterpriseKnowledgeHub.Application\EnterpriseKnowledgeHub.Application.csproj" />
+    <ProjectReference Include="..\EnterpriseKnowledgeHub.Contracts\EnterpriseKnowledgeHub.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

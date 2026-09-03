@@ -9,13 +9,15 @@ namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations
 
 internal sealed class CreateOrganizationCommandHandler(
     OrganizationsDbContext _db,
-    IUserContext _userContext)
+    IUserInfoService _userInfoService,
+    ICurrentUser _currentUser)
     : IRequestHandler<CreateOrganizationCommand, CreateOrganizationResult>
 {
     public async Task<CreateOrganizationResult> Handle(
         CreateOrganizationCommand request, CancellationToken cancellationToken)
     {
-        var currentUserId = await _userContext.GetUserIdAsync(cancellationToken);
+        var userInfo = await _userInfoService.GetUserInfoAsync(cancellationToken);
+        var currentUserId = userInfo.UserId;
 
         var isUserAdminAlready = _db.Memberships.Any(x => x.UserId == currentUserId && x.Status == MembershipStatus.Active && x.Role == OrganizationRole.OrganizationOwner);
         if (isUserAdminAlready)
@@ -23,7 +25,7 @@ internal sealed class CreateOrganizationCommandHandler(
             throw new OrganizationsDomainException("User is already an admin of the registered company and can not create another one");
         }
 
-        var currentUserEmail = (await _userContext.GetUserEmailAsync(cancellationToken)).Trim().ToLowerInvariant();
+        var currentUserEmail = (_currentUser.Email ?? string.Empty).Trim().ToLowerInvariant();
 
         var isInvitedOwner = _db.OrganizationOwnerInvitations.Any(
             x => x.Email == currentUserEmail && x.Status == InvitationStatus.Accepted);

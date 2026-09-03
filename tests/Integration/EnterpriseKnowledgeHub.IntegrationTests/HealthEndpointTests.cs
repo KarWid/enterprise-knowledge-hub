@@ -1,5 +1,5 @@
-using System.Net.Http.Json;
 using EnterpriseKnowledgeHub.Contracts.Health;
+using System.Net.Http.Json;
 
 namespace EnterpriseKnowledgeHub.IntegrationTests;
 
