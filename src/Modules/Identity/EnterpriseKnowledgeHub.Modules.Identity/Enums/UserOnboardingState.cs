@@ -4,6 +4,7 @@
     {
         Complete,
         CreateOrganization,
-        AcceptInvitation
+        AcceptInvitation,
+        AccessDenied
     }
 }

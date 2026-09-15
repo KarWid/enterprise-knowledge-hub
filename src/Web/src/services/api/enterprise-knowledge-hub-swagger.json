@@ -7,9 +7,7 @@
   "paths": {
     "/health": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "operationId": "GetHealth",
         "responses": {
           "200": {
@@ -20,9 +18,7 @@
     },
     "/api/me": {
       "get": {
-        "tags": [
-          "Me"
-        ],
+        "tags": ["Me"],
         "operationId": "GetMe",
         "responses": {
           "200": {
@@ -50,9 +46,7 @@
     },
     "/api/organizations": {
       "get": {
-        "tags": [
-          "Organizations"
-        ],
+        "tags": ["Organizations"],
         "operationId": "GetOrganizations",
         "responses": {
           "200": {
@@ -61,9 +55,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Organizations"
-        ],
+        "tags": ["Organizations"],
         "operationId": "CreateOrganization",
         "requestBody": {
           "content": {
@@ -84,6 +76,69 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/organizations/{organizationId}/invitations": {
+      "post": {
+        "tags": ["Organizations"],
+        "operationId": "InviteUserToOrganization",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteUserRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/organizations/invitations/{invitationId}/accept": {
+      "post": {
+        "tags": ["Organizations"],
+        "operationId": "AcceptOrganizationInvitation",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -121,15 +176,88 @@
           },
           "onboardingStatus": {
             "$ref": "#/components/schemas/UserOnboardingStatus"
+          },
+          "pendingInvitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MePendingInvitationItem"
+            },
+            "nullable": true
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeOrganizationItem"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
+      },
+      "InviteUserRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MeOrganizationItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/OrganizationRole"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MePendingInvitationItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organizationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrganizationRole": {
+        "enum": [
+          "OrganizationOwner",
+          "OrganizationAdmin",
+          "KnowledgeManager",
+          "Employee"
+        ],
+        "type": "string"
       },
       "UserOnboardingStatus": {
         "enum": [
           "Complete",
           "CreateOrganization",
-          "AcceptInvitation"
+          "AcceptInvitation",
+          "AccessDenied"
         ],
         "type": "string"
       }
@@ -145,7 +273,7 @@
   },
   "security": [
     {
-      "Bearer": [ ]
+      "Bearer": []
     }
   ],
   "tags": [

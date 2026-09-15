@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.Contracts.Organizations;
+using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.AcceptOrganizationInvitation;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.InviteUserToOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.CreateOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
@@ -52,6 +53,19 @@ public class OrganizationsController(IMediator _mediator) : ApiControllerBase()
 
         var response = new OrganizationInvitationResponse(
             result.Id, result.OrganizationId, result.Email, result.ExpiresAt);
+
+        return Ok(response);
+    }
+
+    [HttpPost("invitations/{invitationId:guid}/accept")]
+    [SwaggerOperation(OperationId = "AcceptOrganizationInvitation")]
+    public async Task<IActionResult> AcceptInvitation(
+        Guid invitationId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new AcceptOrganizationInvitationCommand(invitationId), cancellationToken);
+
+        var response = new OrganizationResponse(result.OrganizationId, result.OrganizationName, result.Role);
 
         return Ok(response);
     }

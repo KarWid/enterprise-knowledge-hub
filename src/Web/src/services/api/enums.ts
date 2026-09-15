@@ -1,10 +1,8 @@
-import type { UserOnboardingStatus } from './generated/api';
+import type { UserOnboardingStatus } from "./generated/api";
 
 export const UserOnboardingStatusType = {
-  Complete: 'Complete',
-  CreateOrganization: 'CreateOrganization',
-  AcceptInvitation: 'AcceptInvitation',
-} as const satisfies Record<
-  string,
-  UserOnboardingStatus
->;
+  Complete: "Complete",
+  CreateOrganization: "CreateOrganization",
+  AcceptInvitation: "AcceptInvitation",
+  AccessDenied: "AccessDenied",
+} as const satisfies Record<string, UserOnboardingStatus>;

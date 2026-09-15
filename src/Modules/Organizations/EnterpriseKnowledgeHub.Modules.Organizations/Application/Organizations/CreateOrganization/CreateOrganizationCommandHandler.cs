@@ -27,15 +27,18 @@ internal sealed class CreateOrganizationCommandHandler(
 
         var currentUserEmail = (_currentUser.Email ?? string.Empty).Trim().ToLowerInvariant();
 
-        var isInvitedOwner = _db.OrganizationOwnerInvitations.Any(
-            x => x.Email == currentUserEmail && x.Status == InvitationStatus.Accepted);
-        if (!isInvitedOwner)
+        var ownerInvitation = _db.OrganizationOwnerInvitations.FirstOrDefault(
+            x => x.Email == currentUserEmail && x.Status == InvitationStatus.Pending && x.ExpiresAt > DateTime.UtcNow);
+        if (ownerInvitation is null)
         {
             throw new OrganizationsDomainException("Only invited users can create an organization.");
         }
 
         var organization = Organization.Create(request.Name);
         organization.AddOwner(currentUserId);
+
+        // Creating the organization is the explicit action that consumes the owner invitation.
+        ownerInvitation.Accept();
 
         _db.Organizations.Add(organization);
         await _db.SaveChangesAsync(cancellationToken);

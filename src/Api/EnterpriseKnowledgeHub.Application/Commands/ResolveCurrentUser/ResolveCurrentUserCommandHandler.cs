@@ -1,8 +1,6 @@
-using EnterpriseKnowledgeHub.Application.Exceptions;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.ProvisionApplicationUser;
-using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.AcceptPendingInvitationsForUser;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.HasPendingInvitationForEmail;
 using MediatR;
 
@@ -19,36 +17,22 @@ internal sealed class ResolveCurrentUserCommandHandler(IMediator _mediator, ICur
 
         var existingUser = await _mediator.Send(new GetCurrentUserQuery(), cancellationToken);
 
-        // TODO @KWidla: Consider caching the resolved user information to avoid repeated database calls within the same request.
-        Guid userId;
-        string email;
-        string name;
-
         if (existingUser.Found)
         {
-            userId = existingUser.Id;
-            email = existingUser.Email ?? string.Empty;
-            name = existingUser.Name ?? string.Empty;
-        }
-        else
-        {
-            email = _currentUser.Email ?? string.Empty;
-            name = _currentUser.Name ?? string.Empty;
-
-            var isInvited = await _mediator.Send(new HasPendingInvitationForEmailQuery(email), cancellationToken);
-            if (!isInvited)
-                throw new UserNotInvitedException("This account has not been invited and cannot be provisioned.");
-
-            var provisioned = await _mediator.Send(
-                new ProvisionApplicationUserCommand(_currentUser.ExternalId, email, name),
-                cancellationToken);
-
-            userId = provisioned.Id;
+            return new ResolveCurrentUserResult(existingUser.Id, existingUser.Email ?? string.Empty, existingUser.Name ?? string.Empty);
         }
 
-        // Idempotent: also catches invitations issued after the user was first provisioned.
-        await _mediator.Send(new AcceptPendingInvitationsForUserCommand(userId, email), cancellationToken);
+        var email = _currentUser.Email ?? string.Empty;
+        var name = _currentUser.Name ?? string.Empty;
 
-        return new ResolveCurrentUserResult(userId, email, name);
+        var isInvited = await _mediator.Send(new HasPendingInvitationForEmailQuery(email), cancellationToken);
+        if (!isInvited)
+            return new ResolveCurrentUserResult(Guid.Empty, email, name, AccessDenied: true);
+
+        var provisioned = await _mediator.Send(
+            new ProvisionApplicationUserCommand(_currentUser.ExternalId, email, name),
+            cancellationToken);
+
+        return new ResolveCurrentUserResult(provisioned.Id, email, name);
     }
 }

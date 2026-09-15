@@ -1,5 +1,5 @@
-@import '../../styles/authenticated.less';
-@import '../../styles/variables.less';
+@import "../../styles/authenticated.less";
+@import "../../styles/variables.less";
 
 .page {
   .authenticated-page();
@@ -33,4 +33,59 @@
   color: @text-muted;
   margin: 0;
   line-height: 1.6;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid @border-light;
+  border-radius: 8px;
+}
+
+.organizationName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: @text-primary;
+}
+
+.button {
+  padding: 8px 16px;
+  background: @color-accent;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: @font-stack;
+  cursor: pointer;
+  transition: background @transition-fast;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: @color-accent-hover;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  font-size: 0.85rem;
+  color: #dc2626;
+  margin: 0;
 }

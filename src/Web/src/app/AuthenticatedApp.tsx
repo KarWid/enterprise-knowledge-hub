@@ -6,6 +6,7 @@ import { useGetMeQuery } from "../services/api/generated/api";
 import { UserOnboardingStatusType } from "../services/api/enums";
 import { CreateOrganizationPage } from "../features/onboarding/CreateOrganizationPage";
 import { AcceptInvitationPage } from "../features/onboarding/AcceptInvitationPage";
+import { AccessDeniedPage } from "../features/onboarding/AccessDeniedPage";
 import { ChatsPage } from "../features/chats/ChatsPage";
 import { DocumentsPage } from "../features/documents/DocumentsPage";
 import { AuthLoadingPage } from "./AuthLoadingPage";
@@ -23,6 +24,8 @@ export function AuthenticatedApp() {
       return <CreateOrganizationPage />;
     case UserOnboardingStatusType.AcceptInvitation:
       return <AcceptInvitationPage />;
+    case UserOnboardingStatusType.AccessDenied:
+      return <AccessDeniedPage />;
     default:
       return <AppShell />;
   }

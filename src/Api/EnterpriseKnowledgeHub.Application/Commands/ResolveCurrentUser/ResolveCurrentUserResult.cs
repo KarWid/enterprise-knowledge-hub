@@ -1,3 +1,3 @@
 namespace EnterpriseKnowledgeHub.Application.Commands.ResolveCurrentUser;
 
-public sealed record ResolveCurrentUserResult(Guid Id, string Email, string Name);
+public sealed record ResolveCurrentUserResult(Guid Id, string Email, string Name, bool AccessDenied = false);
