@@ -15,4 +15,8 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="EnterpriseKnowledgeHub.UnitTests" />
+  </ItemGroup>
+
 </Project>
