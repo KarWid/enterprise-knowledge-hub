@@ -71,6 +71,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+builder.Services.AddScoped<ICurrentOrganization, CurrentOrganization>();
 builder.Services.Decorate<IUserInfoService, CachedUserInfoService>();
 
 
