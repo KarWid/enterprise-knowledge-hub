@@ -1,0 +1,49 @@
+@import "../../styles/variables.less";
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition:
+    background @transition-fast,
+    border-color @transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &:focus-within {
+    border-color: @color-accent;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  }
+}
+
+.singleOrganization {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.icon {
+  color: @text-muted-on-dark;
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: @text-on-dark;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}

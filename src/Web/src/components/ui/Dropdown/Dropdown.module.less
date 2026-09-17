@@ -1,0 +1,87 @@
+@import "../../../styles/variables.less";
+
+.dropdown {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: @text-on-dark;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: @font-stack;
+  cursor: pointer;
+  outline: none;
+}
+
+.triggerLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform @transition-fast;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 200px;
+  max-width: 280px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: @surface-white;
+  border-radius: 10px;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: @text-primary;
+  font-size: 0.875rem;
+  font-family: @font-stack;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover,
+  &:focus-visible {
+    background: @surface-bg;
+    outline: none;
+  }
+}
+
+.optionSelected {
+  background: rgba(37, 99, 235, 0.1);
+  color: @color-accent-hover;
+  font-weight: 600;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(37, 99, 235, 0.16);
+  }
+}

@@ -1,29 +1,12 @@
 import { createApi, fetchBaseQuery, retry } from "@reduxjs/toolkit/query/react";
-import { apiScopes } from "../../auth/msalConfig";
-import { msalInstance } from "../../auth/msalInstance";
+import { applyRequestHeaders } from "./requestHeaders";
+import type { RootState } from "../store";
 
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: `${import.meta.env.VITE_API_URL}`,
-  prepareHeaders: async (headers) => {
-    const account = msalInstance.getActiveAccount();
+  baseUrl: import.meta.env.VITE_API_URL,
 
-    if (!account) {
-      return headers;
-    }
-
-    try {
-      const result = await msalInstance.acquireTokenSilent({
-        scopes: apiScopes.backend,
-        account: account,
-      });
-
-      headers.set("Authorization", `Bearer ${result.accessToken}`);
-    } catch (error) {
-      console.error("Failed to acquire token silently", error);
-    }
-
-    return headers;
-  },
+  prepareHeaders: (headers, { getState }) =>
+    applyRequestHeaders(headers, () => getState() as RootState),
 });
 
 const baseQueryAuthWithRetry = retry(

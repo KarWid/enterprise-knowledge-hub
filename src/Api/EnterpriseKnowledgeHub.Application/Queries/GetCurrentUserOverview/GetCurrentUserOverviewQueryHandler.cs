@@ -26,6 +26,7 @@ namespace EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview
             var userOrganizationsResult = await _mediator.Send(new GetUserOrganizationsQuery(), cancellationToken);
             var userOrganizations = userOrganizationsResult
                 ?.Organizations
+                ?.OrderBy(x => x.CreatedAt)
                 ?.Select(o => new OrganizationOverviewItem(o.Id, o.Name, o.Role))
                 .ToList() ?? [];
 

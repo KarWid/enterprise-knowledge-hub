@@ -32,6 +32,9 @@ const pl = {
     chats: "Czaty",
     documents: "Dokumenty",
   },
+  organization: {
+    selectLabel: "Wybierz organizację",
+  },
   health: {
     unreachable: "API niedostępne",
     checking: "Sprawdzanie API\u2026",
