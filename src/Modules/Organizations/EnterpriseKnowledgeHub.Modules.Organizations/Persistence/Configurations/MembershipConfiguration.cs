@@ -12,6 +12,9 @@ internal sealed class MembershipConfiguration : IEntityTypeConfiguration<Members
 
         builder.HasKey(m => m.Id);
 
+        builder.Property(m => m.Id)
+            .ValueGeneratedNever();
+
         builder.Property(m => m.UserId)
             .IsRequired();
 
