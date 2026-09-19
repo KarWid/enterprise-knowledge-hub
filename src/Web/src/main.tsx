@@ -4,6 +4,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { store } from "./services/store";
+import "antd/dist/reset.css";
 
 import App from "./App";
 import { msalInstance } from "./auth/msalInstance";

@@ -2,9 +2,9 @@
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Exceptions
 {
-    internal class OrganizationsDomainException : DomainException
+    public class OrganizationsDomainException : DomainException
     {
-        internal OrganizationsDomainException(string message) : base(message)
+        public OrganizationsDomainException(string message) : base(message)
         {
         }
     }

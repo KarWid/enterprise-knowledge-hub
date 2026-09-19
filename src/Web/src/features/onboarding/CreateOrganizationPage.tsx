@@ -17,7 +17,7 @@ interface FormValues {
 export function CreateOrganizationPage() {
   const { t } = useTranslation();
   const { refetch: refetchMe } = useGetMeQuery();
-  const [createOrganization, { isError }] = useCreateOrganizationMutation();
+  const [createOrganization] = useCreateOrganizationMutation();
 
   const validationSchema = Yup.object({
     name: Yup.string()
@@ -63,11 +63,6 @@ export function CreateOrganizationPage() {
                 autoFocus
                 maxLength={100}
               />
-              {isError && (
-                <p className={styles.error} role="alert">
-                  {t("onboarding.createOrganizationError")}
-                </p>
-              )}
               <button
                 type="submit"
                 className={styles.button}

@@ -13,12 +13,10 @@ export function AcceptInvitationPage() {
   const [acceptInvitation, { isLoading }] =
     useAcceptOrganizationInvitationMutation();
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
-  const [error, setError] = useState(false);
 
   const invitations = data?.pendingInvitations ?? [];
 
   async function handleAccept(invitationId: string) {
-    setError(false);
     setAcceptingId(invitationId);
 
     const result = await acceptInvitation({ invitationId });
@@ -26,7 +24,6 @@ export function AcceptInvitationPage() {
     setAcceptingId(null);
 
     if ("error" in result) {
-      setError(true);
       return;
     }
 
@@ -66,12 +63,6 @@ export function AcceptInvitationPage() {
             </li>
           ))}
         </ul>
-
-        {error && (
-          <p className={styles.error} role="alert">
-            {t("onboarding.acceptInvitationError")}
-          </p>
-        )}
       </div>
     </div>
   );

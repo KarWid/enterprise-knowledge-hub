@@ -8,6 +8,11 @@ const pl = {
     logOut: "Wyloguj się",
     signInPrompt: "Zaloguj się, aby kontynuować.",
   },
+  errorModal: {
+    next: "Dalej",
+    close: "Zamknij",
+    genericMessage: "Coś poszło nie tak. Spróbuj ponownie.",
+  },
   authenticated: {
     welcome: "Witaj!",
   },

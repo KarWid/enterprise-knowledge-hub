@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.Api.Authentication;
+using EnterpriseKnowledgeHub.Api.Middleware;
 using EnterpriseKnowledgeHub.Application;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
@@ -76,6 +77,8 @@ builder.Services.Decorate<IUserInfoService, CachedUserInfoService>();
 
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 //if (app.Environment.IsDevelopment())
 //{

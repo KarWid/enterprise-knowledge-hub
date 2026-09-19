@@ -2,9 +2,9 @@
 
 namespace EnterpriseKnowledgeHub.Modules.Identity.Exceptions
 {
-    internal class IdentityException : DomainException
+    public class IdentityException : DomainException
     {
-        internal IdentityException(string message) : base(message)
+        public IdentityException(string message) : base(message)
         {
         }
     }
