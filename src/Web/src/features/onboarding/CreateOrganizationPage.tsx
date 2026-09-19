@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Form, Formik } from "formik";
 import { useTranslation } from "react-i18next";
 import * as Yup from "yup";
@@ -8,6 +9,7 @@ import {
   useCreateOrganizationMutation,
   useGetMeQuery,
 } from "../../services/api/generated/api";
+import { ErrorModal } from "../../components/ErrorModal/ErrorModal";
 import styles from "./CreateOrganizationPage.module.less";
 
 interface FormValues {
@@ -17,7 +19,8 @@ interface FormValues {
 export function CreateOrganizationPage() {
   const { t } = useTranslation();
   const { refetch: refetchMe } = useGetMeQuery();
-  const [createOrganization] = useCreateOrganizationMutation();
+  const [createOrganization, { error }] = useCreateOrganizationMutation();
+  const [requestToRetry, setRequestToRetry] = useState<FormValues | null>(null);
 
   const validationSchema = Yup.object({
     name: Yup.string()
@@ -27,12 +30,23 @@ export function CreateOrganizationPage() {
   });
 
   async function handleSubmit(values: FormValues) {
+    const request = { name: values.name.trim() };
+    setRequestToRetry(request);
+
     const result = await createOrganization({
-      createOrganizationRequest: { name: values.name.trim() },
+      createOrganizationRequest: request,
     });
     if (!("error" in result)) {
-      refetchMe();
+      void refetchMe();
     }
+  }
+
+  function retryCreateOrganization() {
+    if (requestToRetry === null) {
+      return;
+    }
+
+    void handleSubmit(requestToRetry);
   }
 
   return (
@@ -76,6 +90,11 @@ export function CreateOrganizationPage() {
           )}
         </Formik>
       </div>
+      <ErrorModal
+        error={error}
+        fallbackMessage={t("onboarding.createOrganizationError")}
+        onContinue={retryCreateOrganization}
+      />
     </div>
   );
 }

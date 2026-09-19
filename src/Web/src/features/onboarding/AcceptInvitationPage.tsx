@@ -5,19 +5,22 @@ import {
   useAcceptOrganizationInvitationMutation,
   useGetMeQuery,
 } from "../../services/api/generated/api";
+import { ErrorModal } from "../../components/ErrorModal/ErrorModal";
 import styles from "./AcceptInvitationPage.module.less";
 
 export function AcceptInvitationPage() {
   const { t } = useTranslation();
   const { data, refetch: refetchMe } = useGetMeQuery();
-  const [acceptInvitation, { isLoading }] =
+  const [acceptInvitation, { isLoading, error }] =
     useAcceptOrganizationInvitationMutation();
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [invitationToRetry, setInvitationToRetry] = useState<string | null>(null);
 
   const invitations = data?.pendingInvitations ?? [];
 
   async function handleAccept(invitationId: string) {
     setAcceptingId(invitationId);
+    setInvitationToRetry(invitationId);
 
     const result = await acceptInvitation({ invitationId });
 
@@ -27,7 +30,15 @@ export function AcceptInvitationPage() {
       return;
     }
 
-    refetchMe();
+    void refetchMe();
+  }
+
+  function retryAcceptInvitation() {
+    if (invitationToRetry === null) {
+      return;
+    }
+
+    void handleAccept(invitationToRetry);
   }
 
   return (
@@ -64,6 +75,11 @@ export function AcceptInvitationPage() {
           ))}
         </ul>
       </div>
+      <ErrorModal
+        error={error}
+        fallbackMessage={t("onboarding.acceptInvitationError")}
+        onContinue={retryAcceptInvitation}
+      />
     </div>
   );
 }

@@ -10,25 +10,55 @@ import { AccessDeniedPage } from "../features/onboarding/AccessDeniedPage";
 import { ChatsPage } from "../features/chats/ChatsPage";
 import { DocumentsPage } from "../features/documents/DocumentsPage";
 import { AuthLoadingPage } from "./AuthLoadingPage";
+import { ErrorModal } from "../components/ErrorModal/ErrorModal";
 
 export function AuthenticatedApp() {
   const { t } = useTranslation();
-  const { data } = useGetMeQuery();
+  const { data, error, refetch } = useGetMeQuery();
+
+  function retryGetMe() {
+    void refetch();
+  }
 
   if (data === undefined) {
-    return <AuthLoadingPage message={t("app.pleaseWait")} />;
+    return (
+      <>
+        <AuthLoadingPage message={t("app.pleaseWait")} />
+        <ErrorModal
+          error={error}
+          fallbackMessage={t("errorModal.genericMessage")}
+          onContinue={retryGetMe}
+        />
+      </>
+    );
   }
 
+  let content: React.ReactNode;
   switch (data.onboardingStatus) {
     case UserOnboardingStatusType.CreateOrganization:
-      return <CreateOrganizationPage />;
+      content = <CreateOrganizationPage />;
+      break;
     case UserOnboardingStatusType.AcceptInvitation:
-      return <AcceptInvitationPage />;
+      content = <AcceptInvitationPage />;
+      break;
     case UserOnboardingStatusType.AccessDenied:
-      return <AccessDeniedPage />;
+      content = <AccessDeniedPage />;
+      break;
     default:
-      return <AppShell />;
+      content = <AppShell />;
+      break;
   }
+
+  return (
+    <>
+      {content}
+      <ErrorModal
+        error={error}
+        fallbackMessage={t("errorModal.genericMessage")}
+        onContinue={retryGetMe}
+      />
+    </>
+  );
 }
 
 function AppShell() {
