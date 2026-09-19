@@ -38,15 +38,9 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-builder.Services.AddIdentityModule();
-builder.Services.AddOrganizationsModule();
+builder.Services.AddIdentityModule(builder.Configuration, "EnterpriseKnowledgeHubDbConnectionString");
+builder.Services.AddOrganizationsModule(builder.Configuration, "EnterpriseKnowledgeHubDbConnectionString");
 builder.Services.AddEnterpriseKnowledgeHubApplicationModule();
-
-builder.Services.AddDbContext<IdentityDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EnterpriseKnowledgeHubDbConnectionString")));
-
-builder.Services.AddDbContext<OrganizationsDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("EnterpriseKnowledgeHubDbConnectionString")));
 
 builder.Services.AddEndpointsApiExplorer();
 
