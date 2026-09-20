@@ -28,6 +28,8 @@ jobs:
       - name: Deploy Bicep resources
         shell: bash
         run: |
+          # Azure SQL and App Service managed identities belong to the
+          # subscription's workforce Entra tenant, not External ID.
           az deployment group create \
             --name "enterprise-knowledge-hub-${GITHUB_SHA}" \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
@@ -38,7 +40,9 @@ jobs:
               location="${{ vars.AZURE_LOCATION }}" \
               appServicePlanSku="${{ vars.AZURE_APP_SERVICE_PLAN_SKU }}" \
               staticWebAppSku="${{ vars.AZURE_STATIC_WEB_APP_SKU }}" \
-              entraTenantId="${{ vars.ENTRA_TENANT_ID }}" \
-              entraClientId="${{ vars.ENTRA_API_CLIENT_ID }}" \
+              apiEntraTenantId="${{ vars.ENTRA_TENANT_ID }}" \
+              apiEntraAuthority="${{ vars.ENTRA_AUTHORITY }}" \
+              apiEntraClientId="${{ vars.ENTRA_API_CLIENT_ID }}" \
+              sqlEntraTenantId="${{ vars.AZURE_TENANT_ID }}" \
               sqlEntraAdministratorName="${{ vars.SQL_ENTRA_ADMINISTRATOR_NAME }}" \
               sqlEntraAdministratorObjectId="${{ vars.SQL_ENTRA_ADMINISTRATOR_OBJECT_ID }}"

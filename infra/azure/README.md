@@ -27,6 +27,17 @@ infra/azure/
 
 `main.bicep` is the only entry point. It calls each component and passes outputs forward. For example, SQL returns its server name and database name; App Service uses them to create the passwordless connection string.
 
+## Two Microsoft Entra directories
+
+This deployment deliberately separates two identity responsibilities:
+
+| Directory | Purpose | Bicep values |
+| --- | --- | --- |
+| Microsoft Entra External ID | The React SPA and API registrations; it issues customer access tokens. | `apiEntraTenantId`, `apiEntraAuthority`, `apiEntraClientId` |
+| Workforce Microsoft Entra tenant associated with the Azure subscription | GitHub deployment identity, App Service managed identity, and Azure SQL administrator group. | `sqlEntraTenantId` |
+
+Do not put the External ID tenant ID in `sqlEntraTenantId`. Azure SQL must use the workforce tenant that owns the Azure subscription.
+
 ## Is it safe to deploy twice?
 
 Yes. Azure Resource Manager uses **Incremental** deployment by default:
@@ -54,6 +65,10 @@ az deployment group create `
   --template-file infra/azure/main.bicep `
   --parameters infra/azure/main.bicepparam `
   --parameters `
+    apiEntraTenantId='<external-id-tenant-id>' `
+    apiEntraAuthority='https://<external-id-subdomain>.ciamlogin.com/' `
+    apiEntraClientId='<external-id-api-client-id>' `
+    sqlEntraTenantId='<azure-workforce-tenant-id>' `
     sqlEntraAdministratorName='<entra-user-or-group-name>' `
     sqlEntraAdministratorObjectId='<entra-user-or-group-object-id>'
 ```
@@ -126,10 +141,13 @@ Create a Microsoft Entra application/service principal for GitHub Actions and co
 | `AZURE_STATIC_WEB_APP_SKU` | `Free` or `Standard` |
 | `AZURE_CONTAINER_REGISTRY_NAME` | Bicep `containerRegistryName` output |
 | `AZURE_API_APP_NAME` | Bicep `apiAppName` output |
-| `ENTRA_TENANT_ID` | Microsoft Entra tenant ID used by the API |
-| `ENTRA_API_CLIENT_ID` | API app registration client ID |
-| `SQL_ENTRA_ADMINISTRATOR_NAME` | SQL Entra administrator display name or UPN |
-| `SQL_ENTRA_ADMINISTRATOR_OBJECT_ID` | SQL Entra administrator object ID |
+| `ENTRA_TENANT_ID` | Microsoft Entra External ID tenant ID used by the API |
+| `ENTRA_AUTHORITY` | External ID authority, for example `https://<external-id-subdomain>.ciamlogin.com/` |
+| `ENTRA_API_CLIENT_ID` | API app registration client ID from Microsoft Entra External ID |
+| `SQL_ENTRA_ADMINISTRATOR_NAME` | SQL Entra administrator group display name from the workforce tenant |
+| `SQL_ENTRA_ADMINISTRATOR_OBJECT_ID` | SQL Entra administrator group object ID from the workforce tenant |
+
+`AZURE_TENANT_ID` is the workforce tenant ID. The workflow also passes it to SQL as `sqlEntraTenantId`; there is no separate GitHub variable to maintain.
 
 The deployment identity needs `Contributor` on the resource group and `User Access Administrator` because Bicep creates an RBAC assignment. It also needs `AcrPush` on ACR to build and push API images.
 

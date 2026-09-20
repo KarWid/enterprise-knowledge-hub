@@ -3,7 +3,10 @@ targetScope = 'resourceGroup'
 param serverName string
 param databaseName string
 param location string
-param entraTenantId string
+// Azure SQL identities belong to the workforce Entra tenant associated with
+// the Azure subscription. This is deliberately not the External ID tenant
+// that signs in the application's customers.
+param sqlEntraTenantId string
 param entraAdministratorName string
 param entraAdministratorObjectId string
 
@@ -18,7 +21,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
       azureADOnlyAuthentication: true
       login: entraAdministratorName
       sid: entraAdministratorObjectId
-      tenantId: entraTenantId
+      tenantId: sqlEntraTenantId
     }
     publicNetworkAccess: 'Enabled'
     minimalTlsVersion: '1.2'

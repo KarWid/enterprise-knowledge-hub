@@ -16,11 +16,17 @@ param environment string
 
 param location string = resourceGroup().location
 
-@description('Microsoft Entra tenant ID that issues API access tokens.')
-param entraTenantId string
+@description('Microsoft Entra External ID tenant ID that issues browser access tokens for the API.')
+param apiEntraTenantId string
 
-@description('Application (client) ID of the Microsoft Entra API registration.')
-param entraClientId string
+@description('External ID authority URL, for example https://contoso.ciamlogin.com/.')
+param apiEntraAuthority string
+
+@description('Application (client) ID of the API registration in Microsoft Entra External ID.')
+param apiEntraClientId string
+
+@description('Workforce Microsoft Entra tenant ID associated with the Azure subscription and Azure SQL server.')
+param sqlEntraTenantId string
 
 @description('Display name or user principal name of the Microsoft Entra user or group that administers Azure SQL.')
 param sqlEntraAdministratorName string
@@ -79,7 +85,7 @@ module sqlDatabase 'components/sqlDatabase.bicep' = {
     serverName: names.outputs.sqlServerName
     databaseName: 'EnterpriseKnowledgeHub'
     location: location
-    entraTenantId: entraTenantId
+    sqlEntraTenantId: sqlEntraTenantId
     entraAdministratorName: sqlEntraAdministratorName
     entraAdministratorObjectId: sqlEntraAdministratorObjectId
   }
@@ -96,8 +102,9 @@ module appService 'components/appService.bicep' = {
     sqlServerFullyQualifiedDomainName: sqlDatabase.outputs.fullyQualifiedDomainName
     sqlDatabaseName: sqlDatabase.outputs.databaseName
     staticWebAppHostname: staticWebApp.outputs.defaultHostname
-    entraTenantId: entraTenantId
-    entraClientId: entraClientId
+    apiEntraTenantId: apiEntraTenantId
+    apiEntraAuthority: apiEntraAuthority
+    apiEntraClientId: apiEntraClientId
     apiImageTag: apiImageTag
     acrPullRoleDefinitionId: roles.outputs.acrPullRoleDefinitionId
   }

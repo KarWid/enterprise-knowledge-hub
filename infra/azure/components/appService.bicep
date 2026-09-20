@@ -8,8 +8,11 @@ param containerRegistryName string
 param sqlServerFullyQualifiedDomainName string
 param sqlDatabaseName string
 param staticWebAppHostname string
-param entraTenantId string
-param entraClientId string
+// Browser users authenticate through Microsoft Entra External ID. These
+// values are independent of the workforce Entra tenant that owns Azure SQL.
+param apiEntraTenantId string
+param apiEntraAuthority string
+param apiEntraClientId string
 param apiImageTag string
 param acrPullRoleDefinitionId string
 
@@ -59,9 +62,10 @@ resource apiAppSettings 'Microsoft.Web/sites/config@2024-04-01' = {
     ASPNETCORE_ENVIRONMENT: 'Production'
     ASPNETCORE_URLS: 'http://+:8080'
     WEBSITES_PORT: '8080'
-    AzureAd__Authority: '${az.environment().authentication.loginEndpoint}${entraTenantId}/v2.0'
-    AzureAd__ClientId: entraClientId
-    AzureAd__TenantId: entraTenantId
+    // External ID uses a ciamlogin.com authority, not login.microsoftonline.com.
+    AzureAd__Authority: apiEntraAuthority
+    AzureAd__ClientId: apiEntraClientId
+    AzureAd__TenantId: apiEntraTenantId
     AzureAd__Scopes: 'access_as_user'
     // The browser application is the only production origin allowed by CORS.
     Cors__AllowedOrigins__0: 'https://${staticWebAppHostname}'
