@@ -1,0 +1,23 @@
+# Source-control and editor state
+.git/
+.vs/
+.idea/
+
+# Build output
+**/bin/
+**/obj/
+TestResults/
+coverage/
+
+# Frontend dependencies and output are not needed by the API image.
+src/Web/node_modules/
+src/Web/dist/
+
+# Local configuration and credentials
+**/appsettings.Local.json
+**/.env
+**/.env.*
+*.pfx
+*.p12
+*.key
+secrets.json

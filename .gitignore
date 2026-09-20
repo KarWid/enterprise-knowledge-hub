@@ -49,3 +49,6 @@ desktop.ini
 *.tfstate
 *.tfstate.backup
 *.tfvars
+
+# Bicep compiler output (the source of truth is infra/azure/main.bicep)
+infra/azure/main.json

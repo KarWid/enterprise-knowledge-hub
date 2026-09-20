@@ -17,10 +17,28 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
+    // The Vite development server is the only allowed browser origin locally.
     options.AddPolicy("LocalDevelopment", policy =>
         policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod());
+
+    // Azure supplies the Static Web App URL through Cors__AllowedOrigins__0.
+    // Keeping the allowed origins in configuration prevents a deployed API from
+    // accepting browser calls from arbitrary websites.
+    var productionOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? [];
+
+    options.AddPolicy("Production", policy =>
+    {
+        if (productionOrigins.Length > 0)
+        {
+            policy.WithOrigins(productionOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
 });
 
 builder.Services
@@ -92,10 +110,7 @@ app.UseHttpsRedirection();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors("LocalDevelopment");
-}
+app.UseCors(app.Environment.IsDevelopment() ? "LocalDevelopment" : "Production");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,0 +1,44 @@
+name: Deploy Azure infrastructure
+
+on:
+  # Deploy infrastructure only after it is merged into the protected master branch.
+  push:
+    branches: [master]
+    paths:
+      - infra/azure/**
+      - .github/workflows/azure-infrastructure.yml
+
+permissions:
+  contents: read
+  id-token: write # Required for Azure OpenID Connect login; no client secret is used.
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sign in to Azure with OpenID Connect
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Bicep resources
+        shell: bash
+        run: |
+          az deployment group create \
+            --name "enterprise-knowledge-hub-${GITHUB_SHA}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --template-file infra/azure/main.bicep \
+            --parameters \
+              namePrefix="${{ vars.AZURE_NAME_PREFIX }}" \
+              environment="${{ vars.AZURE_ENVIRONMENT }}" \
+              location="${{ vars.AZURE_LOCATION }}" \
+              appServicePlanSku="${{ vars.AZURE_APP_SERVICE_PLAN_SKU }}" \
+              staticWebAppSku="${{ vars.AZURE_STATIC_WEB_APP_SKU }}" \
+              entraTenantId="${{ vars.ENTRA_TENANT_ID }}" \
+              entraClientId="${{ vars.ENTRA_API_CLIENT_ID }}" \
+              sqlEntraAdministratorName="${{ vars.SQL_ENTRA_ADMINISTRATOR_NAME }}" \
+              sqlEntraAdministratorObjectId="${{ vars.SQL_ENTRA_ADMINISTRATOR_OBJECT_ID }}"
