@@ -1,0 +1,65 @@
+name: Deploy API
+
+on:
+  # An API deployment is created only for commits that reached master.
+  push:
+    branches: [master]
+    paths:
+      - src/Api/**
+      - src/BuildingBlocks/**
+      - src/Modules/**
+      - src/Api/Dockerfile
+      - .dockerignore
+      - .github/workflows/deploy-api.yml
+
+permissions:
+  contents: read
+  id-token: write # Azure login uses workload identity federation, not a password.
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - run: dotnet test tests/Unit/EnterpriseKnowledgeHub.UnitTests/EnterpriseKnowledgeHub.UnitTests.csproj --configuration Release
+
+      - name: Sign in to Azure with OpenID Connect
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push the API image to ACR
+        shell: bash
+        run: |
+          az acr build \
+            --registry "${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}" \
+            --image "enterprise-knowledge-hub-api:${GITHUB_SHA}" \
+            --file src/Api/Dockerfile .
+
+      - name: Point App Service at this immutable image
+        shell: bash
+        run: |
+          acr_login_server=$(az acr show \
+            --name "${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}" \
+            --query loginServer \
+            --output tsv)
+
+          # The API's system-assigned identity has AcrPull from Bicep.
+          az webapp config set \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_API_APP_NAME }}" \
+            --generic-configurations '{"acrUseManagedIdentityCreds": true}'
+
+          az webapp config container set \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_API_APP_NAME }}" \
+            --container-image-name "${acr_login_server}/enterprise-knowledge-hub-api:${GITHUB_SHA}" \
+            --container-registry-url "https://${acr_login_server}"

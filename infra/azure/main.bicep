@@ -34,9 +34,6 @@ param sqlEntraAdministratorName string
 @description('Object ID of the Microsoft Entra user or group that administers Azure SQL.')
 param sqlEntraAdministratorObjectId string
 
-@description('Image tag to configure on App Service. GitHub Actions replaces this with the commit SHA.')
-param apiImageTag string = 'latest'
-
 @allowed([
   'B1'
   'S1'
@@ -105,7 +102,6 @@ module appService 'components/appService.bicep' = {
     apiEntraTenantId: apiEntraTenantId
     apiEntraAuthority: apiEntraAuthority
     apiEntraClientId: apiEntraClientId
-    apiImageTag: apiImageTag
     acrPullRoleDefinitionId: roles.outputs.acrPullRoleDefinitionId
   }
 }

@@ -27,6 +27,8 @@ infra/azure/
 
 `main.bicep` is the only entry point. It calls each component and passes outputs forward. For example, SQL returns its server name and database name; App Service uses them to create the passwordless connection string.
 
+The infrastructure deployment creates the App Service and its managed identity, but does not choose an API image. `deploy-api.yml` is the sole owner of the container image and deploys an immutable commit-SHA tag. This prevents a later infrastructure deployment from overwriting a working API image with a floating `latest` tag.
+
 ## Two Microsoft Entra directories
 
 This deployment deliberately separates two identity responsibilities:

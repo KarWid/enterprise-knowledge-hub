@@ -13,7 +13,6 @@ param staticWebAppHostname string
 param apiEntraTenantId string
 param apiEntraAuthority string
 param apiEntraClientId string
-param apiImageTag string
 param acrPullRoleDefinitionId string
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
@@ -36,7 +35,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
 resource apiApp 'Microsoft.Web/sites@2024-04-01' = {
   name: apiAppName
   location: location
-  kind: 'app,linux,container'
+  // The image itself is deliberately not declared here. The API deployment
+  // workflow configures an immutable commit-SHA image after it builds it.
+  kind: 'app,linux'
   identity: {
     type: 'SystemAssigned'
   }
@@ -48,7 +49,6 @@ resource apiApp 'Microsoft.Web/sites@2024-04-01' = {
       alwaysOn: true
       ftpsState: 'Disabled'
       healthCheckPath: '/health'
-      linuxFxVersion: 'DOCKER|${containerRegistryName}.azurecr.io/enterpriseknowledgehub-api:${apiImageTag}'
       minTlsVersion: '1.2'
       acrUseManagedIdentityCreds: true
     }
