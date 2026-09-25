@@ -200,6 +200,12 @@ Create a Microsoft Entra application/service principal for GitHub Actions and co
 
 `AZURE_TENANT_ID` is the workforce tenant ID. The workflow also passes it to SQL as `sqlEntraTenantId`; there is no separate GitHub variable to maintain.
 
+`ENTRA_API_CLIENT_ID` must be the API registration's raw client ID (a GUID), not
+the full scope URI. App Service derives `AzureAd__Audience` as
+`api://<ENTRA_API_CLIENT_ID>`. This must match the audience in the browser's
+`VITE_ENTRA_API_CLIENT_ID` scope, for example
+`api://<api-client-id>/access_as_user`.
+
 The deployment identity needs `Contributor` on the resource group and `User Access Administrator` because Bicep creates an RBAC assignment. It also needs `AcrPush` on ACR to build and push API images.
 
 ### 2. Add the Static Web Apps token

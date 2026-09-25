@@ -65,6 +65,9 @@ resource apiAppSettings 'Microsoft.Web/sites/config@2024-04-01' = {
     // External ID uses a ciamlogin.com authority, not login.microsoftonline.com.
     AzureAd__Authority: apiEntraAuthority
     AzureAd__ClientId: apiEntraClientId
+    // The SPA requests api://<client-id>/access_as_user. The resulting access
+    // token has api://<client-id> as its audience, which the API must validate.
+    AzureAd__Audience: 'api://${apiEntraClientId}'
     AzureAd__TenantId: apiEntraTenantId
     AzureAd__Scopes: 'access_as_user'
     // The browser application is the only production origin allowed by CORS.
