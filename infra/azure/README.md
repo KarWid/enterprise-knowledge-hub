@@ -83,26 +83,75 @@ Bicep deploys Azure resources but does not execute T-SQL inside the database. Af
 
 If you connect from your computer, first add your public IP under the SQL server's **Networking** page in the Azure portal. The `AllowAzureServices` rule does not include your laptop.
 
-Run the following in the `EnterpriseKnowledgeHub` database. Replace the values with the `apiAppName` and `apiManagedIdentityPrincipalId` outputs. This creates the runtime database user without granting schema-change permissions.
+Run the following in the `EnterpriseKnowledgeHub` database. This creates the runtime database user without granting schema-change permissions.
+
+First obtain the managed identity's **Application (client) ID**. The Bicep output named `apiManagedIdentityPrincipalId` is the identity's **Object (principal) ID**, which is useful as the lookup input but must not be used as the SQL user SID for an application identity.
+
+```powershell
+az ad sp show `
+  --id <api-managed-identity-principal-id> `
+  --query appId `
+  --output tsv
+```
+
+Use the returned client ID in `@apiClientId` below. The SQL Entra administrator group continues to use its **Object ID**; this distinction is important because it is a group rather than an application identity.
 
 ```sql
-DECLARE @apiUserName sysname = N'<api-app-name>';
-DECLARE @apiPrincipalId uniqueidentifier = '<api-managed-identity-principal-id>';
-DECLARE @apiSid varbinary(16) = CONVERT(varbinary(16), @apiPrincipalId);
+USE [EnterpriseKnowledgeHub];
+GO
 
+-- Exact Azure App Service name.
+DECLARE @apiUserName sysname = N'<api-app-name>';
+
+-- App Service managed identity Application (client) ID. Do not use its Object ID.
+DECLARE @apiClientId uniqueidentifier = '<api-managed-identity-client-id>';
+DECLARE @apiSid nvarchar(max) =
+    CONVERT(nvarchar(max), CONVERT(varbinary(16), @apiClientId), 1);
+
+DECLARE @quotedApiUserName nvarchar(258) =
+    N'[' + REPLACE(@apiUserName, N']', N']]') + N']';
+
+-- Initial setup: create the contained Entra application user once.
 IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @apiUserName)
 BEGIN
-    DECLARE @statement nvarchar(max) =
-        N'CREATE USER ' + QUOTENAME(@apiUserName) +
-        N' WITH SID = ' + sys.fn_varbintohexstr(@apiSid) + N', TYPE = E;';
-    EXEC sys.sp_executesql @statement;
+    EXEC(
+        N'CREATE USER ' + @quotedApiUserName +
+        N' WITH SID = ' + @apiSid + N', TYPE = E;'
+    );
 END;
 
-ALTER ROLE db_datareader ADD MEMBER [<api-app-name>];
-ALTER ROLE db_datawriter ADD MEMBER [<api-app-name>];
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.database_role_members AS membership
+    INNER JOIN sys.database_principals AS rolePrincipal
+        ON rolePrincipal.principal_id = membership.role_principal_id
+    INNER JOIN sys.database_principals AS memberPrincipal
+        ON memberPrincipal.principal_id = membership.member_principal_id
+    WHERE rolePrincipal.name = N'db_datareader'
+        AND memberPrincipal.name = @apiUserName
+)
+BEGIN
+    EXEC(N'ALTER ROLE db_datareader ADD MEMBER ' + @quotedApiUserName + N';');
+END;
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.database_role_members AS membership
+    INNER JOIN sys.database_principals AS rolePrincipal
+        ON rolePrincipal.principal_id = membership.role_principal_id
+    INNER JOIN sys.database_principals AS memberPrincipal
+        ON memberPrincipal.principal_id = membership.member_principal_id
+    WHERE rolePrincipal.name = N'db_datawriter'
+        AND memberPrincipal.name = @apiUserName
+)
+BEGIN
+    EXEC(N'ALTER ROLE db_datawriter ADD MEMBER ' + @quotedApiUserName + N';');
+END;
 ```
 
 The `SID`/`TYPE = E` form avoids requiring SQL Server to query Microsoft Graph when resolving the managed identity. The API can read and write data but cannot alter the database schema.
+
+Do not drop and recreate this user during ordinary API deployments. A system-assigned managed identity changes only when the App Service resource is deleted and recreated. If that happens, or the API logs `Login failed for user '<token-identified principal>'`, confirm that the stored SID matches the current managed identity client ID. If it does not, run `DROP USER [<api-app-name>]` in `EnterpriseKnowledgeHub`, then rerun the script above with the new client ID.
 
 ## Run EF Core migrations manually
 

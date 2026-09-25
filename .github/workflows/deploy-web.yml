@@ -1,0 +1,41 @@
+name: Deploy web
+
+on:
+  # Static Web Apps deployment is restricted to the master branch as well.
+  push:
+    branches: [master]
+    paths:
+      - src/Web/**
+      - .github/workflows/deploy-web.yml
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Vite exposes VITE_* values in the browser bundle. These must be public,
+      # non-secret application configuration values.
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_ENTRA_CLIENT_ID: ${{ vars.VITE_ENTRA_CLIENT_ID }}
+      VITE_ENTRA_AUTHORITY: ${{ vars.VITE_ENTRA_AUTHORITY }}
+      VITE_ENTRA_ISSUER_HOST: ${{ vars.VITE_ENTRA_ISSUER_HOST }}
+      VITE_ENTRA_REDIRECT_URI: ${{ vars.VITE_ENTRA_REDIRECT_URI }}
+      VITE_ENTRA_API_CLIENT_ID: ${{ vars.VITE_ENTRA_API_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          # Make master the production environment even if the repository's
+          # default branch is changed later.
+          production_branch: master
+          app_location: src/Web
+          app_build_command: npm run build
+          output_location: dist
+          skip_api_build: true
