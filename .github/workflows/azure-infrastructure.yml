@@ -30,8 +30,8 @@ jobs:
         run: |
           # Azure SQL and App Service managed identities belong to the
           # subscription's workforce Entra tenant, not External ID.
+          # Azure Resource Manager deployment names are limited to 64 characters.
           az deployment group create \
-            # Azure Resource Manager deployment names are limited to 64 characters.
             --name "ekh-${GITHUB_SHA}" \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --template-file infra/azure/main.bicep \
