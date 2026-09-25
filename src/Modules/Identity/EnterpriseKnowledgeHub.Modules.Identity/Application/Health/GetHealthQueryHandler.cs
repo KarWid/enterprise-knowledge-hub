@@ -22,7 +22,7 @@ internal sealed class GetHealthQueryHandler(
         catch (Exception exception)
         {
             // Keep connection details out of the HTTP response, but make the
-            // underlying exception available to trusted application logs.
+            // underlying exception available to trusted application logs. 
             logger.LogError(exception, "The health check could not connect to the database.");
 
             return new GetHealthResult(false);
