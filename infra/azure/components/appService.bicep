@@ -4,6 +4,7 @@ param appServicePlanName string
 param apiAppName string
 param location string
 param appServicePlanSku string
+param appLogLevel string
 param containerRegistryName string
 param sqlServerFullyQualifiedDomainName string
 param sqlDatabaseName string
@@ -62,6 +63,9 @@ resource apiAppSettings 'Microsoft.Web/sites/config@2024-04-01' = {
     ASPNETCORE_ENVIRONMENT: 'Production'
     ASPNETCORE_URLS: 'http://+:8080'
     WEBSITES_PORT: '8080'
+    // This overrides Logging:LogLevel:Default from appsettings.json. The
+    // double-underscore notation maps to a hierarchical .NET configuration key.
+    Logging__LogLevel__Default: appLogLevel
     // External ID uses a ciamlogin.com authority, not login.microsoftonline.com.
     AzureAd__Authority: apiEntraAuthority
     AzureAd__ClientId: apiEntraClientId

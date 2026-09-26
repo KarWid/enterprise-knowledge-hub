@@ -40,6 +40,7 @@ jobs:
               environment="${{ vars.AZURE_ENVIRONMENT }}" \
               location="${{ vars.AZURE_LOCATION }}" \
               appServicePlanSku="${{ vars.AZURE_APP_SERVICE_PLAN_SKU }}" \
+              appLogLevel="${{ vars.AZURE_APP_LOG_LEVEL || 'Information' }}" \
               staticWebAppSku="${{ vars.AZURE_STATIC_WEB_APP_SKU }}" \
               apiEntraTenantId="${{ vars.ENTRA_TENANT_ID }}" \
               apiEntraAuthority="${{ vars.ENTRA_AUTHORITY }}" \
