@@ -7,9 +7,10 @@ const en = {
     logIn: "Log in",
     logOut: "Log out",
     signInPrompt: "Sign in to continue.",
+    currentUserLoadFailure: "Something went wrong. Please try again or log out.",
   },
   errorModal: {
-    next: "Next",
+    retry: "Retry",
     close: "Close",
     genericMessage: "Something went wrong. Please try again.",
   },

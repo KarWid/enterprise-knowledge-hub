@@ -7,9 +7,10 @@ const pl = {
     logIn: "Zaloguj się",
     logOut: "Wyloguj się",
     signInPrompt: "Zaloguj się, aby kontynuować.",
+    currentUserLoadFailure: "Coś poszło nie tak. Spróbuj ponownie lub się wyloguj.",
   },
   errorModal: {
-    next: "Dalej",
+    retry: "Spróbuj ponownie",
     close: "Zamknij",
     genericMessage: "Coś poszło nie tak. Spróbuj ponownie.",
   },

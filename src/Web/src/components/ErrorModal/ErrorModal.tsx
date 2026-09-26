@@ -40,7 +40,7 @@ export function ErrorModal({
       onCancel={dismiss}
       footer={
         <Button type="primary" onClick={continueRequest}>
-          {t("errorModal.next")}
+          {t("errorModal.retry")}
         </Button>
       }
     >
