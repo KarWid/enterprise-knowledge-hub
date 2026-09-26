@@ -1,11 +1,11 @@
-﻿using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Events.OrganizationInvitationCreated;
 
 internal sealed class OrganizationInvitationCreatedEventHandler()
     : INotificationHandler<OrganizationInvitationCreatedEvent>
 {
-    public async Task Handle(
+    public async ValueTask Handle(
         OrganizationInvitationCreatedEvent notification,
         CancellationToken cancellationToken)
     {

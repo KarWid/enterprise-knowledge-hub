@@ -1,6 +1,6 @@
 using EnterpriseKnowledgeHub.Modules.Identity.Domain;
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseKnowledgeHub.Modules.Identity.Application.ProvisionApplicationUser;
@@ -8,7 +8,7 @@ namespace EnterpriseKnowledgeHub.Modules.Identity.Application.ProvisionApplicati
 internal sealed class ProvisionApplicationUserCommandHandler(IdentityDbContext db)
     : IRequestHandler<ProvisionApplicationUserCommand, ProvisionApplicationUserResult>
 {
-    public async Task<ProvisionApplicationUserResult> Handle(
+    public async ValueTask<ProvisionApplicationUserResult> Handle(
         ProvisionApplicationUserCommand request, CancellationToken cancellationToken)
     {
         var existing = await db.ApplicationUsers

@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetMembershipForUserAndOrganization;
 

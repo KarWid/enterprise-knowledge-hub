@@ -2,7 +2,7 @@ using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Exceptions;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.AcceptOrganizationInvitation;
@@ -15,7 +15,7 @@ internal sealed class AcceptOrganizationInvitationCommandHandler(
 {
     private const OrganizationRole InvitedRole = OrganizationRole.Employee;
 
-    public async Task<AcceptOrganizationInvitationResult> Handle(
+    public async ValueTask<AcceptOrganizationInvitationResult> Handle(
         AcceptOrganizationInvitationCommand request, CancellationToken cancellationToken)
     {
         var email = (_currentUser.Email ?? string.Empty).Trim().ToLowerInvariant();

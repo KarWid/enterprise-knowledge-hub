@@ -25,7 +25,7 @@ public class GetCurrentUserQueryHandlerTests
         var handler = new GetCurrentUserQueryHandler(db, currentUser);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => handler.Handle(new GetCurrentUserQuery(), CancellationToken.None));
+            () => handler.Handle(new GetCurrentUserQuery(), CancellationToken.None).AsTask());
     }
 
     [Fact]

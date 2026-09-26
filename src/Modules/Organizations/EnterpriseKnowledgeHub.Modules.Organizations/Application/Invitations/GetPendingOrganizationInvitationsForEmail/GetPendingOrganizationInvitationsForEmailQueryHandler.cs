@@ -1,6 +1,6 @@
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.GetPendingOrganizationInvitationsForEmail;
@@ -8,7 +8,7 @@ namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.G
 internal sealed class GetPendingOrganizationInvitationsForEmailQueryHandler(OrganizationsDbContext _db)
     : IRequestHandler<GetPendingOrganizationInvitationsForEmailQuery, GetPendingOrganizationInvitationsForEmailResult>
 {
-    public async Task<GetPendingOrganizationInvitationsForEmailResult> Handle(
+    public async ValueTask<GetPendingOrganizationInvitationsForEmailResult> Handle(
         GetPendingOrganizationInvitationsForEmailQuery request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();

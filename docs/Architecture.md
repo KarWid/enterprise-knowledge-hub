@@ -152,7 +152,7 @@ The backend is an ASP.NET Core REST API.
 The application starts as a modular monolith.
 The API layer uses ASP.NET Core Controllers for endpoint definitions.
 Minimal API is not used.
-The application layer uses CQRS through MediatR.
+The application layer uses CQRS through the source-generated Mediator library.
 Recommended conceptual structure:
 src/
   Api/
@@ -175,7 +175,7 @@ Contracts do not reference domain entities.
 They form a stable communication boundary between the API, modules, workers, and the frontend.
 
 CQRS
-The application layer uses CQRS implemented with MediatR.
+The application layer uses CQRS implemented with the source-generated Mediator library.
 Use cases are expressed as commands or queries:
 Command — a write operation that changes state.
 Query — a read operation that returns data.

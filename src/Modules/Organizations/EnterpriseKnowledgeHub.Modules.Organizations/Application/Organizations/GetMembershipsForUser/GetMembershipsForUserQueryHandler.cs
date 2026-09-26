@@ -1,6 +1,6 @@
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetMembershipsForUser;
@@ -8,7 +8,7 @@ namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations
 internal sealed class GetMembershipsForUserQueryHandler(OrganizationsDbContext _db)
     : IRequestHandler<GetMembershipsForUserQuery, GetMembershipsForUserQueryResult>
 {
-    public async Task<GetMembershipsForUserQueryResult> Handle(
+    public async ValueTask<GetMembershipsForUserQueryResult> Handle(
         GetMembershipsForUserQuery request, CancellationToken cancellationToken)
     {
         var membershipIds = await _db.Memberships

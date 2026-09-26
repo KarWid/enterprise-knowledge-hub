@@ -25,18 +25,40 @@ public sealed class ExceptionHandlingMiddleware(
         {
             var (statusCode, error) = HandleException(exception);
 
-            if (statusCode >= StatusCodes.Status500InternalServerError)
-            {
-                logger.LogError(exception, "Unhandled exception while processing {RequestPath}", context.Request.Path);
-            }
-            else
-            {
-                logger.LogWarning(exception, "Request to {RequestPath} failed with {ErrorCode}", context.Request.Path, error.Code);
-            }
+            LogException(context, exception, statusCode, error.Code);
 
             context.Response.StatusCode = statusCode;
             await context.Response.WriteAsJsonAsync(error, cancellationToken: context.RequestAborted);
         }
+    }
+
+    private void LogException(HttpContext context, Exception exception, int statusCode, string errorCode)
+    {
+        const string messageTemplate =
+            "Request failed while processing {RequestMethod} {RequestPath}. TraceId: {TraceId}; StatusCode: {StatusCode}; ErrorCode: {ErrorCode}";
+
+        if (statusCode >= StatusCodes.Status500InternalServerError)
+        {
+            logger.LogError(
+                exception,
+                messageTemplate,
+                context.Request.Method,
+                context.Request.Path,
+                context.TraceIdentifier,
+                statusCode,
+                errorCode);
+
+            return;
+        }
+
+        logger.LogWarning(
+            exception,
+            messageTemplate,
+            context.Request.Method,
+            context.Request.Path,
+            context.TraceIdentifier,
+            statusCode,
+            errorCode);
     }
 
     private static (int StatusCode, ErrorResult Error) HandleException(Exception exception) => exception switch

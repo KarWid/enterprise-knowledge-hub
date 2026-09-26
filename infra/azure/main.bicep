@@ -41,6 +41,18 @@ param sqlEntraAdministratorObjectId string
 ])
 param appServicePlanSku string = 'B1'
 
+@description('Minimum severity written by application loggers.')
+@allowed([
+  'Trace'
+  'Debug'
+  'Information'
+  'Warning'
+  'Error'
+  'Critical'
+  'None'
+])
+param appLogLevel string = 'Information'
+
 @allowed([
   'Free'
   'Standard'
@@ -95,6 +107,7 @@ module appService 'components/appService.bicep' = {
     apiAppName: names.outputs.apiAppName
     location: location
     appServicePlanSku: appServicePlanSku
+    appLogLevel: appLogLevel
     containerRegistryName: containerRegistry.outputs.name
     sqlServerFullyQualifiedDomainName: sqlDatabase.outputs.fullyQualifiedDomainName
     sqlDatabaseName: sqlDatabase.outputs.databaseName

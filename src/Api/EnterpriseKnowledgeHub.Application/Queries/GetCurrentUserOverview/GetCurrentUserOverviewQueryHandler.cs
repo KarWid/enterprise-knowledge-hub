@@ -2,13 +2,13 @@
 using EnterpriseKnowledgeHub.Modules.Identity.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.GetPendingOrganizationInvitationsForEmail;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
-using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview
 {
     internal sealed class GetCurrentUserOverviewQueryHandler(IMediator _mediator) : IRequestHandler<GetCurrentUserOverviewQuery, GetCurrentUserOverviewQueryResult>
     {
-        public async Task<GetCurrentUserOverviewQueryResult> Handle(GetCurrentUserOverviewQuery request, CancellationToken cancellationToken)
+        public async ValueTask<GetCurrentUserOverviewQueryResult> Handle(GetCurrentUserOverviewQuery request, CancellationToken cancellationToken)
         {
             var currentUserResult = await _mediator.Send(new ResolveCurrentUserCommand(), cancellationToken);
 

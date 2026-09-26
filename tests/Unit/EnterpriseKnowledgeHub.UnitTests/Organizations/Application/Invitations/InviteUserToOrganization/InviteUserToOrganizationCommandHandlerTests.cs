@@ -34,7 +34,7 @@ public class InviteUserToOrganizationCommandHandlerTests
             db, new FakeUserInfoService(new FakeUserInfo(callerId)), new FakePublisher());
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(() => handler.Handle(
-            new InviteUserToOrganizationCommand(organization.Id, "new@example.com"), CancellationToken.None));
+            new InviteUserToOrganizationCommand(organization.Id, "new@example.com"), CancellationToken.None).AsTask());
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class InviteUserToOrganizationCommandHandlerTests
             db, new FakeUserInfoService(new FakeUserInfo(ownerId)), new FakePublisher());
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(() => handler.Handle(
-            new InviteUserToOrganizationCommand(organization.Id, "new@example.com"), CancellationToken.None));
+            new InviteUserToOrganizationCommand(organization.Id, "new@example.com"), CancellationToken.None).AsTask());
     }
 
     [Fact]

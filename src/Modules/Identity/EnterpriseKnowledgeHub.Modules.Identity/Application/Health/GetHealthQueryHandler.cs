@@ -1,5 +1,5 @@
 using EnterpriseKnowledgeHub.Modules.Identity.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +10,7 @@ internal sealed class GetHealthQueryHandler(
     ILogger<GetHealthQueryHandler> logger)
     : IRequestHandler<GetHealthQuery, GetHealthResult>
 {
-    public async Task<GetHealthResult> Handle(GetHealthQuery request, CancellationToken cancellationToken)
+    public async ValueTask<GetHealthResult> Handle(GetHealthQuery request, CancellationToken cancellationToken)
     {
         try
         {

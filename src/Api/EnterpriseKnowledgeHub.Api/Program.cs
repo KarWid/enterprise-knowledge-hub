@@ -10,6 +10,7 @@ using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi;
+using Mediator;
 using Scrutor;
 using System.Text.Json.Serialization;
 
@@ -46,6 +47,16 @@ builder.Services
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
 builder.Services.AddMemoryCache();
+
+builder.Services.AddMediator(options =>
+{
+    options.ServiceLifetime = ServiceLifetime.Scoped;
+    options.Assemblies = [
+        typeof(EnterpriseKnowledgeHubApplicationModule),
+        typeof(IdentityModule),
+        typeof(OrganizationsModule)
+    ];
+});
 
 builder.Services.AddAuthorization();
 
@@ -91,20 +102,6 @@ builder.Services.Decorate<IUserInfoService, CachedUserInfoService>();
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-//if (app.Environment.IsDevelopment())
-//{
-//    // Apply pending migrations automatically in development.
-//    using var scope = app.Services.CreateScope();
-
-//    var identityDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-//    if (identityDb.Database.IsRelational())
-//        await identityDb.Database.MigrateAsync();
-
-//    var organizationsDb = scope.ServiceProvider.GetRequiredService<OrganizationsDbContext>();
-//    if (organizationsDb.Database.IsRelational())
-//        await organizationsDb.Database.MigrateAsync();
-//}
 
 app.UseHttpsRedirection();
 app.UseSwagger();

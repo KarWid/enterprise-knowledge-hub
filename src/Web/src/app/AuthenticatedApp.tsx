@@ -11,25 +11,28 @@ import { ChatsPage } from "../features/chats/ChatsPage";
 import { DocumentsPage } from "../features/documents/DocumentsPage";
 import { AuthLoadingPage } from "./AuthLoadingPage";
 import { ErrorModal } from "../components/ErrorModal/ErrorModal";
+import { CurrentUserLoadErrorModal } from "./CurrentUserLoadErrorModal";
 
 export function AuthenticatedApp() {
   const { t } = useTranslation();
-  const { data, error, refetch } = useGetMeQuery();
+  const { data, error, isFetching, refetch } = useGetMeQuery();
 
   function retryGetMe() {
     void refetch();
   }
 
   if (data === undefined) {
+    if (error !== undefined && !isFetching) {
+      return (
+        <>
+          <AuthLoadingPage message={t("app.pleaseWait")} />
+          <CurrentUserLoadErrorModal onRetry={retryGetMe} />
+        </>
+      );
+    }
+
     return (
-      <>
-        <AuthLoadingPage message={t("app.pleaseWait")} />
-        <ErrorModal
-          error={error}
-          fallbackMessage={t("errorModal.genericMessage")}
-          onContinue={retryGetMe}
-        />
-      </>
+      <AuthLoadingPage message={t("app.pleaseWait")} />
     );
   }
 

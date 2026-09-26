@@ -4,7 +4,7 @@ using EnterpriseKnowledgeHub.Modules.Organizations.Domain;
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Exceptions;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
@@ -18,7 +18,7 @@ internal sealed class InviteUserToOrganizationCommandHandler(
 {
     private static readonly TimeSpan InvitationLifetime = TimeSpan.FromDays(7);
 
-    public async Task<InviteUserToOrganizationResult> Handle(
+    public async ValueTask<InviteUserToOrganizationResult> Handle(
         InviteUserToOrganizationCommand request, CancellationToken cancellationToken)
     {
         var userInfo = await _userInfoService.GetUserInfoAsync(cancellationToken);

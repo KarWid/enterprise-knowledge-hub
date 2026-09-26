@@ -1,7 +1,7 @@
 using EnterpriseKnowledgeHub.Contracts.Health;
 using EnterpriseKnowledgeHub.Contracts.Errors;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.Health;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 

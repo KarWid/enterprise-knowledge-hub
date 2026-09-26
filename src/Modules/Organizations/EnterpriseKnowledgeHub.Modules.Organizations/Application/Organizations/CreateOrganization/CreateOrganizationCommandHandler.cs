@@ -3,7 +3,7 @@ using EnterpriseKnowledgeHub.Modules.Organizations.Domain;
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Exceptions;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
-using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.CreateOrganization;
 
@@ -13,7 +13,7 @@ internal sealed class CreateOrganizationCommandHandler(
     ICurrentUser _currentUser)
     : IRequestHandler<CreateOrganizationCommand, CreateOrganizationResult>
 {
-    public async Task<CreateOrganizationResult> Handle(
+    public async ValueTask<CreateOrganizationResult> Handle(
         CreateOrganizationCommand request, CancellationToken cancellationToken)
     {
         var userInfo = await _userInfoService.GetUserInfoAsync(cancellationToken);

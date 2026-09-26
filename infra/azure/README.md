@@ -189,6 +189,7 @@ Create a Microsoft Entra application/service principal for GitHub Actions and co
 | `AZURE_ENVIRONMENT` | Same environment supplied to Bicep, for example `dev` |
 | `AZURE_LOCATION` | Azure region, for example `westeurope` |
 | `AZURE_APP_SERVICE_PLAN_SKU` | `B1`, `S1`, or `P0v3` |
+| `AZURE_APP_LOG_LEVEL` | Optional minimum application log level: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, or `None`; defaults to `Information` |
 | `AZURE_STATIC_WEB_APP_SKU` | `Free` or `Standard` |
 | `AZURE_CONTAINER_REGISTRY_NAME` | Bicep `containerRegistryName` output |
 | `AZURE_API_APP_NAME` | Bicep `apiAppName` output |

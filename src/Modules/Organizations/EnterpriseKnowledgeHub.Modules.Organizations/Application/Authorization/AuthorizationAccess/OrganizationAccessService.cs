@@ -1,7 +1,7 @@
 ﻿using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetMembershipForUserAndOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Exceptions;
-using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Authorization.AuthorizationAccess;
 

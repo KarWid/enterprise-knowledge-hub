@@ -8,7 +8,7 @@
 
   <ItemGroup>
 	  <PackageReference Include="Scrutor" Version="6.1.0" />
-	  <PackageReference Include="MediatR" Version="14.2.0" />
+	  <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
   </ItemGroup>
 
@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="EnterpriseKnowledgeHub.Api" />
     <InternalsVisibleTo Include="EnterpriseKnowledgeHub.UnitTests" />
   </ItemGroup>
 

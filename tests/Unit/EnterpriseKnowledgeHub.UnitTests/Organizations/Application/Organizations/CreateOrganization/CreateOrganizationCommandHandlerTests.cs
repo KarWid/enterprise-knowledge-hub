@@ -35,7 +35,7 @@ public class CreateOrganizationCommandHandlerTests
             new FakeCurrentUser { Email = "owner@example.com" });
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(
-            () => handler.Handle(new CreateOrganizationCommand("New Org"), CancellationToken.None));
+            () => handler.Handle(new CreateOrganizationCommand("New Org"), CancellationToken.None).AsTask());
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class CreateOrganizationCommandHandlerTests
             new FakeCurrentUser { Email = "not-invited@example.com" });
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(
-            () => handler.Handle(new CreateOrganizationCommand("New Org"), CancellationToken.None));
+            () => handler.Handle(new CreateOrganizationCommand("New Org"), CancellationToken.None).AsTask());
     }
 
     [Fact]
