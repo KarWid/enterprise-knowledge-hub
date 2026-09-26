@@ -3,7 +3,7 @@ using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.Accep
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.InviteUserToOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.CreateOrganization;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;

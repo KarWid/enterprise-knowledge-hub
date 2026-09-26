@@ -1,7 +1,7 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Organizations.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Organizations.Persistence;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetUserOrganizations;
@@ -11,7 +11,7 @@ internal sealed class GetUserOrganizationsQueryHandler(
     OrganizationsDbContext _db)
     : IRequestHandler<GetUserOrganizationsQuery, GetUserOrganizationsResult>
 {
-    public async Task<GetUserOrganizationsResult> Handle(
+    public async ValueTask<GetUserOrganizationsResult> Handle(
         GetUserOrganizationsQuery request, CancellationToken cancellationToken)
     {
         var userInfo = await _userInfoService.GetUserInfoAsync(cancellationToken);

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview;
 

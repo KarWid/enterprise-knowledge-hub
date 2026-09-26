@@ -2,14 +2,14 @@ using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.CurrentUser;
 using EnterpriseKnowledgeHub.Modules.Identity.Application.ProvisionApplicationUser;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Invitations.HasPendingInvitationForEmail;
-using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Application.Commands.ResolveCurrentUser;
 
 internal sealed class ResolveCurrentUserCommandHandler(IMediator _mediator, ICurrentUser _currentUser)
     : IRequestHandler<ResolveCurrentUserCommand, ResolveCurrentUserResult>
 {
-    public async Task<ResolveCurrentUserResult> Handle(
+    public async ValueTask<ResolveCurrentUserResult> Handle(
         ResolveCurrentUserCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(_currentUser.ExternalId))

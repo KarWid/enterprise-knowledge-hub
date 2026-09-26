@@ -2,7 +2,7 @@ using System.Net;
 using EnterpriseKnowledgeHub.Api.Mappers;
 using EnterpriseKnowledgeHub.Application.Queries.GetCurrentUserOverview;
 using EnterpriseKnowledgeHub.Contracts.Identity.GetMe;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;

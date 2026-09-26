@@ -84,7 +84,7 @@ public class AcceptOrganizationInvitationCommandHandlerTests
             new FakeCurrentUser { Email = "someone-else@example.com" });
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(
-            () => handler.Handle(new AcceptOrganizationInvitationCommand(invitation.Id), CancellationToken.None));
+            () => handler.Handle(new AcceptOrganizationInvitationCommand(invitation.Id), CancellationToken.None).AsTask());
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class AcceptOrganizationInvitationCommandHandlerTests
             new FakeCurrentUser { Email = "user@example.com" });
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(
-            () => handler.Handle(new AcceptOrganizationInvitationCommand(Guid.NewGuid()), CancellationToken.None));
+            () => handler.Handle(new AcceptOrganizationInvitationCommand(Guid.NewGuid()), CancellationToken.None).AsTask());
     }
 
     [Fact]
@@ -118,6 +118,6 @@ public class AcceptOrganizationInvitationCommandHandlerTests
             new FakeCurrentUser { Email = "user@example.com" });
 
         await Assert.ThrowsAsync<OrganizationsDomainException>(
-            () => handler.Handle(new AcceptOrganizationInvitationCommand(invitation.Id), CancellationToken.None));
+            () => handler.Handle(new AcceptOrganizationInvitationCommand(invitation.Id), CancellationToken.None).AsTask());
     }
 }

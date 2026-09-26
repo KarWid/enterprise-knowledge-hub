@@ -220,7 +220,7 @@ The application should modify aggregates through their defined behavior rather t
 Do not make every database table an aggregate automatically.
 
 10. Application Layer
-The application layer coordinates use cases using CQRS implemented with MediatR.
+The application layer coordinates use cases using CQRS implemented with the source-generated Mediator library.
 
 CQRS Pattern
 Use cases are expressed as either commands or queries.

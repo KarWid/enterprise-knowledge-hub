@@ -2,7 +2,7 @@ using EnterpriseKnowledgeHub.Application.Commands.ResolveCurrentUser;
 using EnterpriseKnowledgeHub.Application.Exceptions;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Modules.Organizations.Application.Organizations.GetMembershipsForUser;
-using MediatR;
+using Mediator;
 
 namespace EnterpriseKnowledgeHub.Application.Services;
 

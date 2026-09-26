@@ -7,13 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Identity\EnterpriseKnowledgeHub.Modules.Identity\EnterpriseKnowledgeHub.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\Modules\Organizations\EnterpriseKnowledgeHub.Modules.Organizations\EnterpriseKnowledgeHub.Modules.Organizations.csproj" />
     <ProjectReference Include="..\EnterpriseKnowledgeHub.Contracts\EnterpriseKnowledgeHub.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EnterpriseKnowledgeHub.Api" />
   </ItemGroup>
 
 </Project>
