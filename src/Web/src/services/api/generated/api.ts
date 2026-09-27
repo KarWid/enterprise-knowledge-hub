@@ -7,6 +7,28 @@ const injectedRtkApi = api.injectEndpoints({
     getMe: build.query<GetMeApiResponse, GetMeApiArg>({
       query: () => ({ url: `/api/me` }),
     }),
+    getDocuments: build.query<GetDocumentsApiResponse, GetDocumentsApiArg>({
+      query: () => ({ url: `/api/documents` }),
+    }),
+    beginDocumentUpload: build.mutation<
+      BeginDocumentUploadApiResponse,
+      BeginDocumentUploadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/documents/uploads`,
+        method: "POST",
+        body: queryArg.createDocumentUploadRequest,
+      }),
+    }),
+    completeDocumentUpload: build.mutation<
+      CompleteDocumentUploadApiResponse,
+      CompleteDocumentUploadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/documents/${queryArg.documentId}/complete`,
+        method: "POST",
+      }),
+    }),
     getOrganizations: build.query<
       GetOrganizationsApiResponse,
       GetOrganizationsApiArg
@@ -50,6 +72,18 @@ export type GetHealthApiResponse = unknown;
 export type GetHealthApiArg = void;
 export type GetMeApiResponse = /** status 200 OK */ CurrentUserResponse;
 export type GetMeApiArg = void;
+export type GetDocumentsApiResponse = /** status 200 OK */ DocumentResponse[];
+export type GetDocumentsApiArg = void;
+export type BeginDocumentUploadApiResponse =
+  /** status 201 Created */ DocumentUploadSessionResponse;
+export type BeginDocumentUploadApiArg = {
+  createDocumentUploadRequest: CreateDocumentUploadRequest;
+};
+export type CompleteDocumentUploadApiResponse =
+  /** status 200 OK */ DocumentResponse;
+export type CompleteDocumentUploadApiArg = {
+  documentId: string;
+};
 export type GetOrganizationsApiResponse = unknown;
 export type GetOrganizationsApiArg = void;
 export type CreateOrganizationApiResponse = unknown;
@@ -88,6 +122,27 @@ export type CurrentUserResponse = {
   pendingInvitations?: MePendingInvitationItem[] | null;
   organizations?: MeOrganizationItem[] | null;
 };
+export type DocumentResponse = {
+  id: string;
+  name: string;
+  contentType: string;
+  status:
+    | "PendingForUpload"
+    | "Uploaded"
+    | "Processing"
+    | "Ready"
+    | "Failed"
+    | "Archived";
+  createdAt: string;
+};
+export type DocumentUploadSessionResponse = {
+  documentId: string;
+  uploadUri: string;
+  expiresAt: string;
+};
+export type CreateDocumentUploadRequest = {
+  fileName?: string | null;
+};
 export type CreateOrganizationRequest = {
   name?: string | null;
 };
@@ -97,6 +152,9 @@ export type InviteUserRequest = {
 export const {
   useGetHealthQuery,
   useGetMeQuery,
+  useGetDocumentsQuery,
+  useBeginDocumentUploadMutation,
+  useCompleteDocumentUploadMutation,
   useGetOrganizationsQuery,
   useCreateOrganizationMutation,
   useInviteUserToOrganizationMutation,

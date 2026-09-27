@@ -1,0 +1,43 @@
+@import "../../../styles/variables.less";
+
+.header {
+  margin-bottom: 24px;
+}
+
+.uploadCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.uploadControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.muted {
+  margin: 16px 0 0;
+  color: @text-muted;
+}
+
+.documentList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+
+.uploadButton {
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .uploadCard,
+  .uploadControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

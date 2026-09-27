@@ -355,6 +355,19 @@ src/
 
 Avoid creating a large global component hierarchy before the application requires it.
 
+Within a feature, place page components and their styles together in a named page
+folder (for example, `features/documents/DocumentsPage/`). Place reusable,
+feature-specific components under that feature's `components/` directory, with
+each component and its styles in a named folder. Keep page workflow/state logic
+in a focused feature hook or service when it makes the page difficult to read;
+leave rendering and composition in the page component.
+
+For generic UI elements, first check `src/components/ui` and reuse an existing
+component when it fits. If no suitable component exists, create a reusable UI
+component there and use it from feature pages instead of duplicating markup and
+styles. Keep domain-specific components within their feature until they are
+needed elsewhere.
+
 19. API Client
 The frontend should communicate with the backend through a consistent API client.
 Authentication tokens should be handled centrally.

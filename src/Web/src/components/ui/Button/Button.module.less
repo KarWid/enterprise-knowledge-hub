@@ -1,0 +1,47 @@
+@import "../../../styles/variables.less";
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background @transition-fast,
+    border-color @transition-fast,
+    color @transition-fast;
+
+  &:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.25);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.primary {
+  background: @color-accent;
+  color: @text-on-dark;
+
+  &:hover:not(:disabled) {
+    background: @color-accent-hover;
+  }
+}
+
+.secondary {
+  border-color: @border-light;
+  background: @surface-white;
+  color: @text-secondary;
+
+  &:hover:not(:disabled) {
+    background: @surface-bg;
+  }
+}
