@@ -716,6 +716,15 @@ Blob Storage
     ↓
 Document record
 
+Requirements:
+- The API reserves an upload using only the PDF file name; it must not accept the document stream or proxy document bytes.
+- Reserving the upload creates an Organization-scoped Document in PendingForUpload with a server-generated blob reference and upload expiration.
+- The API returns a short-lived (no more than 15 minutes), HTTPS-only, create-only user delegation SAS scoped to that exact blob. Storage account keys and broad container SAS tokens are forbidden.
+- React uploads the PDF directly to Blob Storage, then calls the authorized completion endpoint.
+- The completion endpoint verifies blob existence, the PDF signature, and the configured size limit before changing the Document to Uploaded. Invalid uploads are Failed and their blobs are removed.
+- Configure Blob Storage CORS only for the known web application origin(s), PUT/OPTIONS, and required Azure upload headers. CORS does not replace SAS authorization.
+- A future BlobCreated/Event Grid handler must be idempotent, correlate the blob to a pending Document record, and preserve Organization ownership before triggering knowledge processing.
+
 
 Milestone 8 — Knowledge Processing
 Goal:
@@ -741,6 +750,31 @@ Azure OpenAI
 Grounded answer
     ↓
 Sources
+
+
+Milestone 10 - Document Versioning and Replacement
+Goal:
+KnowledgeManager
+    ↓
+Replace a document explicitly
+    ↓
+New immutable document version
+    ↓
+Process and index the replacement
+    ↓
+Promote replacement when ready
+    ↓
+Retrieve only the current version
+
+Requirements:
+- A document replacement must be explicit. Do not infer replacement from an identical file name.
+- Model a stable document source separately from its immutable uploaded versions, or introduce an equivalent explicit version relationship.
+- Every version must retain its own blob reference and processing status. Never overwrite the prior version's blob.
+- Keep the current version available for retrieval until the replacement has processed and indexed successfully.
+- Promote the replacement and archive the prior version only after the replacement is ready. A failed replacement must leave the current version available.
+- Search-index chunks must identify their organization and document version. Retrieval must return chunks only from current, ready versions; changing a SQL document status alone is not sufficient.
+- Remove or deactivate archived-version chunks after promotion.
+- Verify with tests that archived and failed replacement versions are never used as knowledge sources, and that organization isolation remains enforced for every version.
 
 
 36. The Golden Rule

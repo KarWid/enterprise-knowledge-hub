@@ -100,6 +100,24 @@ module sqlDatabase 'components/sqlDatabase.bicep' = {
   }
 }
 
+module storage 'components/storage.bicep' = {
+  name: 'storage'
+  params: {
+    name: names.outputs.storageAccountName
+    location: location
+    // Direct browser uploads require Blob service CORS. Keep the rule limited
+    // to this Static Web App, with the Vite origin available only in dev.
+    allowedOrigins: environment == 'dev'
+      ? [
+          'https://${staticWebApp.outputs.defaultHostname}'
+          'http://localhost:5173'
+        ]
+      : [
+          'https://${staticWebApp.outputs.defaultHostname}'
+        ]
+  }
+}
+
 module appService 'components/appService.bicep' = {
   name: 'app-service'
   params: {
@@ -112,10 +130,20 @@ module appService 'components/appService.bicep' = {
     sqlServerFullyQualifiedDomainName: sqlDatabase.outputs.fullyQualifiedDomainName
     sqlDatabaseName: sqlDatabase.outputs.databaseName
     staticWebAppHostname: staticWebApp.outputs.defaultHostname
+    blobStorageAccountUrl: storage.outputs.blobServiceUrl
     apiEntraTenantId: apiEntraTenantId
     apiEntraAuthority: apiEntraAuthority
     apiEntraClientId: apiEntraClientId
     acrPullRoleDefinitionId: roles.outputs.acrPullRoleDefinitionId
+  }
+}
+
+module storageAccess 'components/storageAccess.bicep' = {
+  name: 'storage-access'
+  params: {
+    storageAccountName: storage.outputs.name
+    principalId: appService.outputs.managedIdentityPrincipalId
+    storageBlobDataContributorRoleDefinitionId: roles.outputs.storageBlobDataContributorRoleDefinitionId
   }
 }
 
@@ -127,4 +155,6 @@ output containerRegistryName string = containerRegistry.outputs.name
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 output sqlServerFullyQualifiedDomainName string = sqlDatabase.outputs.fullyQualifiedDomainName
 output sqlDatabaseName string = sqlDatabase.outputs.databaseName
+output storageAccountName string = storage.outputs.name
+output blobStorageAccountUrl string = storage.outputs.blobServiceUrl
 output apiManagedIdentityPrincipalId string = appService.outputs.managedIdentityPrincipalId

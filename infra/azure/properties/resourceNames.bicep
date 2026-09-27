@@ -15,6 +15,7 @@ var suffix = toLower(take(uniqueString(subscription().subscriptionId, resourceGr
 var resourceBaseName = toLower('${namePrefix}-${environment}-${suffix}')
 
 output containerRegistryName string = toLower('acr${namePrefix}${environment}${suffix}')
+output storageAccountName string = toLower('st${namePrefix}${environment}${suffix}')
 output sqlServerName string = '${resourceBaseName}-sql'
 output appServicePlanName string = '${resourceBaseName}-plan'
 output apiAppName string = '${resourceBaseName}-api'

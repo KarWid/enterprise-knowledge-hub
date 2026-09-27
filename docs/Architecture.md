@@ -205,7 +205,7 @@ Database-per-tenant is not required for the MVP.
 Azure Blob Storage stores original uploaded documents.
 Public access to Blob Storage is disabled.
 The frontend must not directly access blobs using storage account keys.
-Initial MVP flow:
+API-managed blob operations use:
 React
   ↓
 ASP.NET Core API
@@ -214,7 +214,24 @@ Managed Identity
   ↓
 Blob Storage
 
-A future direct-upload flow using short-lived delegated access may be introduced if required for scalability.
+For document uploads, the browser uses a direct-upload flow so the API never
+proxies document bytes:
+
+React
+  ↓
+ASP.NET Core API authorizes the current Organization and reserves a Document
+  ↓
+User delegation SAS restricted to one server-generated blob, HTTPS, create-only, and a short lifetime
+  ↓
+React PUTs the PDF directly to Blob Storage
+  ↓
+ASP.NET Core API verifies the blob and marks the Document as Uploaded
+
+The API creates the user delegation SAS with its Managed Identity; the browser
+never receives a storage account key. The direct PUT requires a Blob Storage
+CORS rule limited to the configured web application origin. A BlobCreated event
+may later be used to reconcile an uncompleted upload and trigger processing,
+but must be idempotent and must only act on a matching, pending Document record.
 
 12. Knowledge Processing
 The MVP supports PDF documents.

@@ -148,13 +148,21 @@ ContentType
 Status
 CreatedBy
 CreatedAt
+UploadExpiresAt
 
 Possible document states:
+PendingForUpload
 Uploaded
 Processing
 Ready
 Failed
 Archived
+
+PendingForUpload means the application has reserved a server-generated blob
+reference and issued a short-lived upload capability, but has not yet verified
+the blob. Pending documents are not knowledge sources. UploadExpiresAt records
+when that capability expires; an expired or invalid upload transitions to
+Failed. Only a verified PDF can transition from PendingForUpload to Uploaded.
 
 
 9. Document Ownership

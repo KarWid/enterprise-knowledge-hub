@@ -9,6 +9,7 @@ param containerRegistryName string
 param sqlServerFullyQualifiedDomainName string
 param sqlDatabaseName string
 param staticWebAppHostname string
+param blobStorageAccountUrl string
 // Browser users authenticate through Microsoft Entra External ID. These
 // values are independent of the workforce Entra tenant that owns Azure SQL.
 param apiEntraTenantId string
@@ -76,6 +77,10 @@ resource apiAppSettings 'Microsoft.Web/sites/config@2024-04-01' = {
     AzureAd__Scopes: 'access_as_user'
     // The browser application is the only production origin allowed by CORS.
     Cors__AllowedOrigins__0: 'https://${staticWebAppHostname}'
+    // The API authenticates to Blob Storage through its system-assigned
+    // identity, not a connection string or shared account key.
+    BlobStorage__AccountUrl: blobStorageAccountUrl
+    BlobStorage__ContainerName: 'documents'
     // In Azure, Active Directory Default resolves to this App Service's
     // system-assigned managed identity. No SQL password is configured.
     ConnectionStrings__EnterpriseKnowledgeHubDbConnectionString: 'Server=tcp:${sqlServerFullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
