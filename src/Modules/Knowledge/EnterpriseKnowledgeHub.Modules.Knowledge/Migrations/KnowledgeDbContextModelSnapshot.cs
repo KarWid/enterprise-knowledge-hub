@@ -43,12 +43,20 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("FailureCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Revision")
+                        .IsConcurrencyToken()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -59,6 +67,10 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
                     b.Property<DateTime?>("UploadExpiresAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ValidatedETag")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BlobReference")
@@ -66,7 +78,77 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
 
                     b.HasIndex("OrganizationId", "CreatedAt");
 
+                    b.HasIndex("Status", "UploadExpiresAt");
+
                     b.ToTable("Documents", "knowledge");
+                });
+
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.UploadInboxItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BlobReference")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ETag")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LeaseOwner")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "BlobReference");
+
+                    b.HasIndex("Source", "EventId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "NextAttemptAt", "LeaseExpiresAt");
+
+                    b.ToTable("UploadInbox", "knowledge");
                 });
 #pragma warning restore 612, 618
         }

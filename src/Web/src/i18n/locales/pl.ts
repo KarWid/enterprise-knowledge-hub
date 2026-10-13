@@ -51,12 +51,20 @@ const pl = {
     uploadedAt: "Przeslano {{date}}",
     error: "Nie mozna wczytac lub przeslac dokumentow. Sprobuj ponownie.",
     status: {
-      PendingForUpload: "Oczekuje na przeslanie",
-      Uploaded: "Przeslany",
+      PendingForUpload: "Oczekuje na weryfikację przesłania",
+      Uploaded: "Przesłanie zweryfikowane (podstawowe kontrole)",
+      Rejected: "Odrzucony",
       Processing: "Przetwarzanie",
       Ready: "Gotowy",
       Failed: "Nieudany",
       Archived: "Zarchiwizowany",
+    },
+    verification: {
+      verifying: "Przesłano — trwa weryfikacja… Możesz opuścić tę stronę.",
+      pending: "Weryfikacja nadal trwa. Sprawdź status później na liście dokumentów.",
+      verified: "Przesłanie zweryfikowane. Przetwarzanie wiedzy nie jest jeszcze dostępne.",
+      rejected: "Dokument odrzucony: wymagany jest plik PDF w dozwolonym limicie rozmiaru.",
+      failed: "Nie udało się zweryfikować przesłania. Sprawdź status przed ponowną próbą.",
     },
   },
   organization: {

@@ -7,5 +7,6 @@ public enum DocumentStatus
     Processing,
     Ready,
     Failed,
-    Archived
+    Archived,
+    Rejected
 }

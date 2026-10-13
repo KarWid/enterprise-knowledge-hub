@@ -203,7 +203,7 @@ Database-per-tenant is not required for the MVP.
 
 11. Blob Storage
 Azure Blob Storage stores original uploaded documents.
-Public access to Blob Storage is disabled.
+Anonymous access to Blob Storage is disabled. Its public network endpoint remains reachable for authorized browser uploads.
 The frontend must not directly access blobs using storage account keys.
 API-managed blob operations use:
 React
@@ -225,13 +225,23 @@ User delegation SAS restricted to one server-generated blob, HTTPS, create-only,
   ↓
 React PUTs the PDF directly to Blob Storage
   ↓
-ASP.NET Core API verifies the blob and marks the Document as Uploaded
+BlobCreated (Event Grid schema) reaches an authenticated API webhook
+  ↓
+Webhook commits an inbox notification in Azure SQL before acknowledging it
+  ↓
+An API BackgroundService verifies the reserved blob and marks the Document as Uploaded
 
 The API creates the user delegation SAS with its Managed Identity; the browser
 never receives a storage account key. The direct PUT requires a Blob Storage
-CORS rule limited to the configured web application origin. A BlobCreated event
-may later be used to reconcile an uncompleted upload and trigger processing,
-but must be idempotent and must only act on a matching, pending Document record.
+CORS rule limited to the configured web application origin. The browser observes
+the status through an authorized GET endpoint and is not responsible for completion.
+The worker runs in the existing Always On App Service, with atomic database leases,
+bounded retries, and an inbox dead-letter state. No separate worker deployment is used.
+It resolves ownership from the exact reserved blob reference, not a current user.
+Deadline reconciliation uses the same finalizer when events are missing or delayed.
+Uploaded means basic format/size checks passed; malware scanning and extraction
+are not enabled. See [Document upload operations](DocumentUploads.md) for the
+lease, cleanup, delayed-event, and future validation-gate policies.
 
 12. Knowledge Processing
 The MVP supports PDF documents.

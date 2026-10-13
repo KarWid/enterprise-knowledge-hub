@@ -18,6 +18,8 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     defaultToOAuthAuthentication: true
     minimumTlsVersion: 'TLS1_2'
     publicNetworkAccess: 'Enabled'
+    // Network reachability is necessary for browser PUTs; anonymous blob access
+    // remains disabled above and each container is private.
     supportsHttpsTrafficOnly: true
   }
 }
@@ -38,6 +40,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
             'OPTIONS'
           ]
           allowedHeaders: [
+            'content-type'
             'if-none-match'
             'x-ms-blob-content-type'
             'x-ms-blob-type'

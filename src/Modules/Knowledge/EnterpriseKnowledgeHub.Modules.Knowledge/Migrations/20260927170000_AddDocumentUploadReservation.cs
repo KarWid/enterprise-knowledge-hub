@@ -1,4 +1,6 @@
 using System;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +8,9 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
 {
     /// <inheritdoc />
+    // This hand-written migration has no Designer partial; keep its discovery metadata here.
+    [DbContext(typeof(KnowledgeDbContext))]
+    [Migration("20260927170000_AddDocumentUploadReservation")]
     public partial class AddDocumentUploadReservation : Migration
     {
         /// <inheritdoc />

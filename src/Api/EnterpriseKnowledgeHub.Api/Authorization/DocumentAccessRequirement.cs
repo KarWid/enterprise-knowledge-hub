@@ -13,9 +13,15 @@ public sealed class DocumentAccessRequirement(IReadOnlySet<string> allowedRoles)
             nameof(OrganizationRole.KnowledgeManager)
         };
 
+    private static readonly IReadOnlySet<string> DocumentUploadManagementRoles =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            nameof(OrganizationRole.OrganizationOwner)
+        };
+
     public static readonly DocumentAccessRequirement Read = new(DocumentManagementRoles);
 
-    public static readonly DocumentAccessRequirement Upload = new(DocumentManagementRoles);
+    public static readonly DocumentAccessRequirement Upload = new(DocumentUploadManagementRoles);
 
     public bool Allows(string role) => allowedRoles.Count == 0 || allowedRoles.Contains(role);
 }

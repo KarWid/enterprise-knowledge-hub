@@ -51,12 +51,20 @@ const en = {
     uploadedAt: "Uploaded {{date}}",
     error: "We couldn't load or upload documents. Please try again.",
     status: {
-      PendingForUpload: "Waiting for upload",
-      Uploaded: "Uploaded",
+      PendingForUpload: "Awaiting upload verification",
+      Uploaded: "Upload verified (basic checks)",
+      Rejected: "Rejected",
       Processing: "Processing",
       Ready: "Ready",
       Failed: "Failed",
       Archived: "Archived",
+    },
+    verification: {
+      verifying: "Uploaded—verifying… You can leave this page; verification will continue.",
+      pending: "Verification is still pending. Return to the document list later to check its status.",
+      verified: "Upload verification passed. Knowledge processing is not yet available.",
+      rejected: "The document was rejected: it must be a PDF within the allowed size limit.",
+      failed: "The upload could not be verified. Check its status before starting a new upload.",
     },
   },
   organization: {

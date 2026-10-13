@@ -1,9 +1,8 @@
 using EnterpriseKnowledgeHub.Api.Authorization;
 using EnterpriseKnowledgeHub.Api.Mappers;
 using EnterpriseKnowledgeHub.Contracts.Knowledge;
-using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.BeginDocumentUpload;
-using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.CompleteDocumentUpload;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
@@ -44,18 +43,19 @@ public sealed class DocumentsController(IMediator mediator) : ApiControllerBase
             DocumentMapper.MapToDocumentUploadSessionResponse(result));
     }
 
-    [HttpPost("{documentId:guid}/complete")]
-    [Authorize(Policy = Policies.Documents.Upload)]
-    [SwaggerOperation(OperationId = "CompleteDocumentUpload")]
+    [HttpGet("{documentId:guid}")]
+    [Authorize(Policy = Policies.Documents.Read)]
+    [SwaggerOperation(OperationId = "GetDocument")]
     [ProducesResponseType(typeof(DocumentResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> CompleteUpload(
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDocument(
         Guid documentId,
         CancellationToken cancellationToken)
     {
         var result = await mediator.Send(
-            new CompleteDocumentUploadCommand(documentId),
+            new GetDocumentQuery(documentId),
             cancellationToken);
 
-        return Ok(DocumentMapper.MapToDocumentResponse(result));
+        return result is null ? NotFound() : Ok(DocumentMapper.MapToDocumentResponse(result));
     }
 }

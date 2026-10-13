@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ErrorModal } from "../../../components/ErrorModal/ErrorModal";
 import { Button } from "../../../components/ui/Button/Button";
@@ -13,8 +14,9 @@ import styles from "./DocumentsPage.module.less";
 export function DocumentsPage() {
   const { t } = useTranslation();
   const { data: documents = [], error: documentsError, isLoading, refetch } =
-    useGetDocumentsQuery();
-  const upload = useDocumentUpload({ onCompleted: () => void refetch() });
+    useGetDocumentsQuery(undefined, { refetchOnMountOrArgChange: true });
+  const refreshDocuments = useCallback(() => { void refetch(); }, [refetch]);
+  const upload = useDocumentUpload({ onCompleted: refreshDocuments });
 
   function retry() {
     if (upload.error !== undefined && upload.file !== null) {
@@ -59,6 +61,8 @@ export function DocumentsPage() {
           </Button>
         </div>
       </Card>
+
+      {upload.notice && <p role="status">{t(`documents.verification.${upload.notice}`)}</p>}
 
       <Card>
         <Heading level="h2" title={t("documents.listTitle")} />

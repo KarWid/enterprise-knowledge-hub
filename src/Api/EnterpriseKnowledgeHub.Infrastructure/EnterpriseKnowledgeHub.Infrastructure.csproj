@@ -16,4 +16,8 @@
     <ProjectReference Include="..\..\Modules\Knowledge\EnterpriseKnowledgeHub.Modules.Knowledge\EnterpriseKnowledgeHub.Modules.Knowledge.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="EnterpriseKnowledgeHub.IntegrationTests" />
+  </ItemGroup>
+
 </Project>

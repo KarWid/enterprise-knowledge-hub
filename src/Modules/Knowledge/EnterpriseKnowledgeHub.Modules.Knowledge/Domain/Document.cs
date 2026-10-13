@@ -17,6 +17,9 @@ public sealed class Document
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UploadExpiresAt { get; private set; }
+    public string? ValidatedETag { get; private set; }
+    public string? FailureCode { get; private set; }
+    public Guid Revision { get; private set; } = Guid.NewGuid();
 
     private Document()
     {
@@ -61,20 +64,30 @@ public sealed class Document
         Status == DocumentStatus.PendingForUpload &&
         (UploadExpiresAt is null || UploadExpiresAt <= utcNow);
 
-    public void CompleteUpload()
+    public void CompleteUpload(string etag)
     {
         EnsurePendingUpload();
 
+        ValidatedETag = DomainGuard.Required(etag, nameof(ValidatedETag), 128);
         Status = DocumentStatus.Uploaded;
-        UploadExpiresAt = null;
+        Revision = Guid.NewGuid();
     }
 
-    public void FailUpload()
+    public void FailUpload(string failureCode = "upload_missing")
     {
         EnsurePendingUpload();
 
         Status = DocumentStatus.Failed;
-        UploadExpiresAt = null;
+        FailureCode = failureCode;
+        Revision = Guid.NewGuid();
+    }
+
+    public void RejectUpload(string failureCode = "invalid_pdf_or_size")
+    {
+        EnsurePendingUpload();
+        Status = DocumentStatus.Rejected;
+        FailureCode = failureCode;
+        Revision = Guid.NewGuid();
     }
 
     private void EnsurePendingUpload()

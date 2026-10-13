@@ -93,10 +93,10 @@
         }
       }
     },
-    "/api/documents/{documentId}/complete": {
-      "post": {
+    "/api/documents/{documentId}": {
+      "get": {
         "tags": ["Documents"],
-        "operationId": "CompleteDocumentUpload",
+        "operationId": "GetDocument",
         "parameters": [
           {
             "name": "documentId",
@@ -263,7 +263,7 @@
           },
           "status": {
             "type": "string",
-            "enum": ["PendingForUpload", "Uploaded", "Processing", "Ready", "Failed", "Archived"]
+            "enum": ["PendingForUpload", "Uploaded", "Processing", "Ready", "Failed", "Archived", "Rejected"]
           },
           "createdAt": {
             "type": "string",

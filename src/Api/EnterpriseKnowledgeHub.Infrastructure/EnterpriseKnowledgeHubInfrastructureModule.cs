@@ -2,6 +2,7 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
+using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,9 @@ public static class EnterpriseKnowledgeHubInfrastructureModule
         services.AddSingleton<BlobServiceClient>(serviceProvider =>
         {
             var options = serviceProvider.GetRequiredService<IOptions<BlobStorageOptions>>().Value;
-            if (!Uri.TryCreate(options.AccountUrl, UriKind.Absolute, out var accountUri))
+            if (!Uri.TryCreate(options.AccountUrl, UriKind.Absolute, out var accountUri) ||
+                accountUri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(accountUri.Query) ||
+                !string.IsNullOrEmpty(accountUri.UserInfo))
                 throw new InvalidOperationException("BlobStorage:AccountUrl must be configured with the storage account blob endpoint.");
 
             if (string.IsNullOrWhiteSpace(options.ContainerName))
@@ -40,6 +43,7 @@ public static class EnterpriseKnowledgeHubInfrastructureModule
                 .ContainerName));
 
         services.AddSingleton<IDocumentBlobStorage, AzureBlobDocumentStorage>();
+        services.AddHostedService<DocumentUploadWorker>();
 
         return services;
     }

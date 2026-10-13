@@ -149,6 +149,9 @@ Status
 CreatedBy
 CreatedAt
 UploadExpiresAt
+ValidatedETag
+FailureCode
+Revision
 
 Possible document states:
 PendingForUpload
@@ -157,12 +160,18 @@ Processing
 Ready
 Failed
 Archived
+Rejected
 
 PendingForUpload means the application has reserved a server-generated blob
 reference and issued a short-lived upload capability, but has not yet verified
 the blob. Pending documents are not knowledge sources. UploadExpiresAt records
-when that capability expires; an expired or invalid upload transitions to
-Failed. Only a verified PDF can transition from PendingForUpload to Uploaded.
+when that capability expires, and is preserved after finalization for cleanup.
+An invalid signature or size transitions to Rejected; a genuinely absent blob
+after the deadline plus grace transitions to Failed. A committed upload can be
+verified after SAS expiry. Only a basic format/size-verified upload transitions
+from PendingForUpload to Uploaded, with its verified ETag recorded. Uploaded
+does not mean malware-free or ready for knowledge retrieval. Revision protects
+concurrent transitions, and terminal reservations are never reopened.
 
 
 9. Document Ownership

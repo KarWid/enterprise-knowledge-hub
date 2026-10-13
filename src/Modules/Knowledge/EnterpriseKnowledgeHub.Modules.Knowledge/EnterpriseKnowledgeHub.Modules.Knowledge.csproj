@@ -23,6 +23,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="EnterpriseKnowledgeHub.Api" />
     <InternalsVisibleTo Include="EnterpriseKnowledgeHub.UnitTests" />
+    <InternalsVisibleTo Include="EnterpriseKnowledgeHub.IntegrationTests" />
   </ItemGroup>
 
 </Project>

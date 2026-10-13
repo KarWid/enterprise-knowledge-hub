@@ -20,14 +20,8 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.createDocumentUploadRequest,
       }),
     }),
-    completeDocumentUpload: build.mutation<
-      CompleteDocumentUploadApiResponse,
-      CompleteDocumentUploadApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/documents/${queryArg.documentId}/complete`,
-        method: "POST",
-      }),
+    getDocument: build.query<GetDocumentApiResponse, GetDocumentApiArg>({
+      query: (queryArg) => ({ url: `/api/documents/${queryArg.documentId}` }),
     }),
     getOrganizations: build.query<
       GetOrganizationsApiResponse,
@@ -79,9 +73,8 @@ export type BeginDocumentUploadApiResponse =
 export type BeginDocumentUploadApiArg = {
   createDocumentUploadRequest: CreateDocumentUploadRequest;
 };
-export type CompleteDocumentUploadApiResponse =
-  /** status 200 OK */ DocumentResponse;
-export type CompleteDocumentUploadApiArg = {
+export type GetDocumentApiResponse = /** status 200 OK */ DocumentResponse;
+export type GetDocumentApiArg = {
   documentId: string;
 };
 export type GetOrganizationsApiResponse = unknown;
@@ -132,7 +125,8 @@ export type DocumentResponse = {
     | "Processing"
     | "Ready"
     | "Failed"
-    | "Archived";
+    | "Archived"
+    | "Rejected";
   createdAt: string;
 };
 export type DocumentUploadSessionResponse = {
@@ -154,7 +148,7 @@ export const {
   useGetMeQuery,
   useGetDocumentsQuery,
   useBeginDocumentUploadMutation,
-  useCompleteDocumentUploadMutation,
+  useGetDocumentQuery,
   useGetOrganizationsQuery,
   useCreateOrganizationMutation,
   useInviteUserToOrganizationMutation,

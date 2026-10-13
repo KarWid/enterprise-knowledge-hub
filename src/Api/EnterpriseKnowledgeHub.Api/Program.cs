@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 using EnterpriseKnowledgeHub.Api.Authentication;
 using EnterpriseKnowledgeHub.Api.Authorization;
 using EnterpriseKnowledgeHub.Api.Middleware;
+using EnterpriseKnowledgeHub.Api.StorageEvents;
 using EnterpriseKnowledgeHub.Application;
+using EnterpriseKnowledgeHub.BuildingBlocks;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Infrastructure;
 using EnterpriseKnowledgeHub.Modules.Identity;
@@ -64,6 +66,7 @@ static void ConfigureAuthentication(WebApplicationBuilder builder)
         .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
     builder.Services.AddMemoryCache();
+    builder.Services.AddStorageEventWebhook(builder.Configuration);
 }
 
 static void ConfigureMediator(WebApplicationBuilder builder)
@@ -112,6 +115,7 @@ static void ConfigureModules(WebApplicationBuilder builder)
 {
     const string connectionStringName = "EnterpriseKnowledgeHubDbConnectionString";
 
+    builder.Services.AddEnterpriseKnowledgeHubBuildingBlocks();
     builder.Services.AddIdentityModule(builder.Configuration, connectionStringName);
     builder.Services.AddOrganizationsModule(builder.Configuration, connectionStringName);
     builder.Services.AddKnowledgeModule(builder.Configuration, connectionStringName);

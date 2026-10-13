@@ -39,17 +39,21 @@ internal sealed class AzureBlobDocumentStorage(
 
     public async Task<DocumentUploadInspection?> InspectUploadAsync(
         string blobReference,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? expectedETag = null)
     {
         var blob = containerClient.GetBlobClient(blobReference);
 
         try
         {
-            var properties = await blob.GetPropertiesAsync(cancellationToken: cancellationToken);
+            var blobRequestConditions = expectedETag is null 
+                ? null 
+                : new BlobRequestConditions { IfMatch = new ETag(expectedETag) };
 
+            var properties = await blob.GetPropertiesAsync(conditions: blobRequestConditions, cancellationToken: cancellationToken);
             if (properties.Value.ContentLength < PdfSignature.Length)
             {
-                return new DocumentUploadInspection(properties.Value.ContentLength, false);
+                return new DocumentUploadInspection(properties.Value.ContentLength, false, properties.Value.ETag.ToString());
             }
 
             var download = await blob.DownloadStreamingAsync(
@@ -64,31 +68,48 @@ internal sealed class AzureBlobDocumentStorage(
                 cancellationToken);
 
             await using var content = download.Value.Content;
-            var header = new byte[PdfSignature.Length];
-            var bytesRead = 0;
-            while (bytesRead < header.Length)
-            {
-                var read = await content.ReadAsync(header.AsMemory(bytesRead), cancellationToken);
-                if (read == 0)
-                    break;
 
-                bytesRead += read;
-            }
+            (byte[]? header, int bytesRead) = await GetPdfHeaderAsync(content, cancellationToken);
 
             return new DocumentUploadInspection(
                 properties.Value.ContentLength,
-                bytesRead == PdfSignature.Length && header.SequenceEqual(PdfSignature));
+                bytesRead == PdfSignature.Length && header != null && header.SequenceEqual(PdfSignature),
+                properties.Value.ETag.ToString());
         }
-        catch (RequestFailedException exception) when (exception.Status == 404)
+        catch (RequestFailedException exception) when (exception.Status == 404 && exception.ErrorCode == "BlobNotFound")
         {
             return null;
         }
+        catch (RequestFailedException exception) when (exception.Status == 412)
+        {
+            // TODO @KWidla: Do we catch the exception?
+            throw new DocumentBlobChangedException();
+        }
     }
 
-    public async Task DeleteIfExistsAsync(string blobReference, CancellationToken cancellationToken)
+    public async Task DeleteIfExistsAsync(string blobReference, string etag, CancellationToken cancellationToken)
     {
         await containerClient
             .GetBlobClient(blobReference)
-            .DeleteIfExistsAsync(cancellationToken: cancellationToken);
+            .DeleteIfExistsAsync(conditions: new BlobRequestConditions { IfMatch = new ETag(etag) },
+                cancellationToken: cancellationToken);
+    }
+
+    private async Task<(byte[]? header, int bytesRead)> GetPdfHeaderAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var header = new byte[PdfSignature.Length];
+        var bytesRead = 0;
+        while (bytesRead < header.Length)
+        {
+            var read = await stream.ReadAsync(header.AsMemory(bytesRead), cancellationToken);
+            if (read == 0)
+            {
+                break;
+            }
+
+            bytesRead += read;
+        }
+
+        return (header, bytesRead);
     }
 }

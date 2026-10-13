@@ -44,7 +44,12 @@ internal sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(document => document.UploadExpiresAt)
             .IsRequired(false);
 
+        builder.Property(document => document.Revision).IsConcurrencyToken();
+        builder.Property(document => document.ValidatedETag).HasMaxLength(128);
+        builder.Property(document => document.FailureCode).HasMaxLength(64);
+
         builder.HasIndex(document => new { document.OrganizationId, document.CreatedAt });
         builder.HasIndex(document => document.BlobReference).IsUnique();
+        builder.HasIndex(document => new { document.Status, document.UploadExpiresAt });
     }
 }
