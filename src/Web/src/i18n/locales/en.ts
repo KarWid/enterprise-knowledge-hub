@@ -46,6 +46,8 @@ const en = {
     chooseFile: "Choose a PDF file",
     upload: "Upload",
     uploading: "Uploading...",
+    uploadProgressTitle: "Uploading document",
+    uploadProgressMessage: "Keep this tab open until the upload completes.",
     listTitle: "Your documents",
     empty: "No documents have been uploaded yet.",
     uploadedAt: "Uploaded {{date}}",

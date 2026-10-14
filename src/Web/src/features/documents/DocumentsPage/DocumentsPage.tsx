@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/Button/Button";
 import { Card } from "../../../components/ui/Card/Card";
 import { FilePicker } from "../../../components/ui/FilePicker/FilePicker";
 import { Heading } from "../../../components/ui/Heading/Heading";
+import { Modal } from "../../../components/ui/Modal/Modal";
 import { Section } from "../../../components/ui/Section/Section";
 import { useGetDocumentsQuery } from "../../../services/api/generated/api";
 import { DocumentListItem } from "../components/DocumentListItem/DocumentListItem";
@@ -83,6 +84,13 @@ export function DocumentsPage() {
         error={upload.error ?? documentsError}
         fallbackMessage={t("documents.error")}
         onContinue={retry}
+      />
+
+      <Modal
+        open={upload.isUploading}
+        title={t("documents.uploadProgressTitle")}
+        isProgress
+        text={t("documents.uploadProgressMessage")}
       />
     </Section>
   );

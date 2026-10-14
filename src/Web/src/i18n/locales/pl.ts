@@ -46,6 +46,8 @@ const pl = {
     chooseFile: "Wybierz plik PDF",
     upload: "Przeslij",
     uploading: "Przesylanie...",
+    uploadProgressTitle: "Przesyłanie dokumentu",
+    uploadProgressMessage: "Nie zamykaj tej karty, dopóki przesyłanie nie zostanie zakończone.",
     listTitle: "Twoje dokumenty",
     empty: "Nie przeslano jeszcze zadnych dokumentow.",
     uploadedAt: "Przeslano {{date}}",
