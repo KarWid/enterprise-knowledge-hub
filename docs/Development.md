@@ -404,6 +404,37 @@ authentication/authorization integration where practical,
 EF Core persistence,
 organization isolation,
 database behavior.
+
+Test Structure (Arrange-Act-Assert)
+Unit and integration tests should follow the Arrange-Act-Assert pattern and use
+explicit `// Arrange`, `// Act`, and `// Assert` sections. Keep each section
+focused:
+- Arrange creates the input, dependencies, persisted state, and test fixture.
+- Act invokes the single behavior being tested.
+- Assert verifies observable results rather than implementation details.
+
+Example:
+```csharp
+[Fact]
+public async Task ExistingPendingWorkCanBeClaimed()
+{
+    // Arrange
+    var fixture = new UploadInboxFixture();
+    await fixture.AddPendingWorkAsync();
+
+    // Act
+    var work = await fixture.Inbox.ClaimAsync(CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(work);
+    Assert.Equal(UploadWorkStatus.Processing, work.Status);
+}
+```
+
+For exception scenarios, define the operation during Act and execute it from
+the assertion when required by the test framework. Shared fixtures and builders
+may reduce setup duplication, but should not hide the behavior under test.
+
 Architecture Tests
 Architecture tests may be introduced to enforce:
 module boundaries,

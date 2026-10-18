@@ -7,16 +7,19 @@ namespace EnterpriseKnowledgeHub.IntegrationTests.Authorization;
 
 public sealed class DocumentAccessAuthorizationHandlerTests
 {
-    [Fact]
-    public async Task UploadPolicy_WhenMembershipIsKnowledgeManager_Succeeds()
+    [Theory]
+    [InlineData("OrganizationOwner", true)]
+    [InlineData("OrganizationAdmin", false)]
+    [InlineData("KnowledgeManager", false)]
+    public async Task UploadPolicy_OnlyOrganizationOwnerSucceeds(string role, bool allowed)
     {
         var context = CreateAuthorizationContext(DocumentAccessRequirement.Upload);
         var handler = new DocumentAccessAuthorizationHandler(
-            new FakeOrganizationAccessService("KnowledgeManager"));
+            new FakeOrganizationAccessService(role));
 
         await handler.HandleAsync(context);
 
-        Assert.True(context.HasSucceeded);
+        Assert.Equal(allowed, context.HasSucceeded);
     }
 
     [Fact]

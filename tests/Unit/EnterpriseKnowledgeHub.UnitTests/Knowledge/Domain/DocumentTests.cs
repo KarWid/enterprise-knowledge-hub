@@ -37,7 +37,7 @@ public sealed class DocumentTests
     }
 
     [Fact]
-    public void CompleteUpload_TransitionsPendingDocumentAndClearsUploadExpiration()
+    public void CompleteUpload_RecordsETagAndPreservesDeadline()
     {
         var document = Document.CreatePendingUpload(
             Guid.NewGuid(),
@@ -45,10 +45,12 @@ public sealed class DocumentTests
             Guid.NewGuid(),
             DateTime.UtcNow.AddMinutes(15));
 
-        document.CompleteUpload();
+        var deadline = document.UploadExpiresAt;
+        document.CompleteUpload("\"0x123\"");
 
         Assert.Equal(DocumentStatus.Uploaded, document.Status);
-        Assert.Null(document.UploadExpiresAt);
+        Assert.Equal(deadline, document.UploadExpiresAt);
+        Assert.Equal("\"0x123\"", document.ValidatedETag);
     }
 
     [Fact]
@@ -64,7 +66,7 @@ public sealed class DocumentTests
         Assert.False(document.IsUploadExpired(expiresAt.AddTicks(-1)));
         Assert.True(document.IsUploadExpired(expiresAt));
 
-        document.CompleteUpload();
+        document.CompleteUpload("\"0x123\"");
 
         Assert.False(document.IsUploadExpired(expiresAt.AddMinutes(1)));
     }
