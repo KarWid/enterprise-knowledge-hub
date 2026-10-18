@@ -25,6 +25,15 @@ param apiEntraAuthority string
 @description('Application (client) ID of the API registration in Microsoft Entra External ID.')
 param apiEntraClientId string
 
+@description('Enable only after configuring the separate workforce Entra webhook application. Missing settings fail startup.')
+param enableStorageEventWebhook bool = false
+param storageEventsTenantId string = ''
+param storageEventsAudience string = ''
+param storageEventsSenderApplicationId string = ''
+
+@description('Second deployment phase: the authenticated webhook must already be live for subscription validation.')
+param deployStorageEventSubscription bool = false
+
 @description('Workforce Microsoft Entra tenant ID associated with the Azure subscription and Azure SQL server.')
 param sqlEntraTenantId string
 
@@ -135,6 +144,11 @@ module appService 'components/appService.bicep' = {
     apiEntraAuthority: apiEntraAuthority
     apiEntraClientId: apiEntraClientId
     acrPullRoleDefinitionId: roles.outputs.acrPullRoleDefinitionId
+    enableStorageEventWebhook: enableStorageEventWebhook
+    storageEventsTenantId: storageEventsTenantId
+    storageEventsAudience: storageEventsAudience
+    storageEventsSenderApplicationId: storageEventsSenderApplicationId
+    storageAccountResourceId: storage.outputs.id
   }
 }
 
@@ -144,6 +158,18 @@ module storageAccess 'components/storageAccess.bicep' = {
     storageAccountName: storage.outputs.name
     principalId: appService.outputs.managedIdentityPrincipalId
     storageBlobDataContributorRoleDefinitionId: roles.outputs.storageBlobDataContributorRoleDefinitionId
+  }
+}
+
+module documentUploadEvents 'components/documentUploadEvents.bicep' = if (deployStorageEventSubscription) {
+  name: 'document-upload-events'
+  params: {
+    storageAccountName: storage.outputs.name
+    documentsContainerName: storage.outputs.documentsContainerName
+    location: location
+    webhookUrl: 'https://${appService.outputs.defaultHostname}/webhooks/storage-events'
+    webhookTenantId: storageEventsTenantId
+    webhookAudience: storageEventsAudience
   }
 }
 

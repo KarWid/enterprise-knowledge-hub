@@ -16,6 +16,11 @@ param apiEntraTenantId string
 param apiEntraAuthority string
 param apiEntraClientId string
 param acrPullRoleDefinitionId string
+param enableStorageEventWebhook bool
+param storageEventsTenantId string
+param storageEventsAudience string
+param storageEventsSenderApplicationId string
+param storageAccountResourceId string
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: containerRegistryName
@@ -81,6 +86,13 @@ resource apiAppSettings 'Microsoft.Web/sites/config@2024-04-01' = {
     // identity, not a connection string or shared account key.
     BlobStorage__AccountUrl: blobStorageAccountUrl
     BlobStorage__ContainerName: 'documents'
+    StorageEvents__Enabled: string(enableStorageEventWebhook)
+    StorageEvents__TenantId: storageEventsTenantId
+    StorageEvents__Audience: storageEventsAudience
+    StorageEvents__SenderApplicationId: storageEventsSenderApplicationId
+    StorageEvents__RequiredRole: 'AzureEventGridSecureWebhookSubscriber'
+    StorageEvents__ExpectedSource: storageAccountResourceId
+    DocumentUploadWorker__Enabled: 'true'
     // In Azure, Active Directory Default resolves to this App Service's
     // system-assigned managed identity. No SQL password is configured.
     ConnectionStrings__EnterpriseKnowledgeHubDbConnectionString: 'Server=tcp:${sqlServerFullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'

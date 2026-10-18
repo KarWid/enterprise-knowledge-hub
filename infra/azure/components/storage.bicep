@@ -68,3 +68,4 @@ resource documentsContainer 'Microsoft.Storage/storageAccounts/blobServices/cont
 output name string = storageAccount.name
 output id string = storageAccount.id
 output blobServiceUrl string = storageAccount.properties.primaryEndpoints.blob
+output documentsContainerName string = documentsContainer.name

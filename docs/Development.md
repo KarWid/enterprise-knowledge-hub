@@ -733,10 +733,12 @@ Requirements:
 - The API reserves an upload using only the PDF file name; it must not accept the document stream or proxy document bytes.
 - Reserving the upload creates an Organization-scoped Document in PendingForUpload with a server-generated blob reference and upload expiration.
 - The API returns a short-lived (no more than 15 minutes), HTTPS-only, create-only user delegation SAS scoped to that exact blob. Storage account keys and broad container SAS tokens are forbidden.
-- React uploads the PDF directly to Blob Storage, then calls the authorized completion endpoint.
-- The completion endpoint verifies blob existence, the PDF signature, and the configured size limit before changing the Document to Uploaded. Invalid uploads are Failed and their blobs are removed.
+- React uses a single create-only PUT directly to Blob Storage, shows “Uploaded—verifying…”, and polls the authorized document-status endpoint with a bounded lifetime. A polling timeout leaves verification pending.
+- An Entra-authenticated Event Grid webhook durably records BlobCreated notifications in the Knowledge inbox. A BackgroundService in the existing API verifies the blob using conditional ETag reads, checks the PDF signature and configured size limit, and persists the ETag before changing the Document to Uploaded.
+- Invalid uploads become Rejected with an atomically scheduled, retryable cleanup job. Cleanup is conditional and delayed until after the SAS deadline plus grace. Pending reservations are reconciled after that deadline: existing blobs use the same finalizer; only genuinely absent blobs become Failed. SAS expiry alone does not reject a committed upload.
 - Configure Blob Storage CORS only for the known web application origin(s), PUT/OPTIONS, and required Azure upload headers. CORS does not replace SAS authorization.
-- A future BlobCreated/Event Grid handler must be idempotent, correlate the blob to a pending Document record, and preserve Organization ownership before triggering knowledge processing.
+- Inbox uniqueness, expiring atomic leases, bounded retry/backoff, and document concurrency tokens handle duplicates, crashes, and concurrent API instances. Background ownership comes from the exact persisted reservation, not a current user.
+- Uploaded currently means basic verification, not malware clearance. The application extraction gate is closed; future malware checks and extraction/indexing are separate durable steps. See [Document upload operations](DocumentUploads.md) for required local tests, migration, Azure/Entra bootstrap, and future gate requirements.
 
 
 Milestone 8 — Knowledge Processing
