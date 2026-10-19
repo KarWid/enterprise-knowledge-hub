@@ -435,6 +435,17 @@ For exception scenarios, define the operation during Act and execute it from
 the assertion when required by the test framework. Shared fixtures and builders
 may reduce setup duplication, but should not hide the behavior under test.
 
+Test Readability
+
+- Give each test a descriptive name that states the condition and expected behavior.
+- Prefer one behavior or state transition per test. Split tests that exercise unrelated outcomes.
+- Do not compress setup, execution, and assertions into one expression merely to reduce line count.
+- Use descriptive local names instead of abbreviations such as `f`, `db2`, or `result1`.
+- Use theories when every case follows the same readable workflow. Prefer enums or named data over magic strings.
+- Keep incidental setup in clearly named helpers, but leave the behavior under test visible in the test method.
+- Add an assertion message or a short comment when the business, concurrency, security, or persistence invariant is not obvious from the assertion itself.
+- Tests are executable documentation and should be understandable without stepping through their helpers or production code.
+
 Architecture Tests
 Architecture tests may be introduced to enforce:
 module boundaries,
@@ -552,6 +563,28 @@ unnecessary static helpers,
 massive service classes,
 deeply nested conditional logic,
 premature abstractions.
+
+Braces and Control Flow
+
+Use Allman-style braces: opening and closing braces appear on their own lines.
+Always use braces for `if`, `else`, `for`, `foreach`, `while`, and similar
+control-flow statements, including single-statement bodies. Do not place the
+controlled statement on the same line as its condition.
+
+Prefer:
+
+```csharp
+if (document is null)
+{
+    return;
+}
+```
+
+Avoid:
+
+```csharp
+if (document is null) return;
+```
 
 29. Naming
 Use clear and consistent naming.
