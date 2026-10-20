@@ -36,6 +36,7 @@ internal sealed class UploadInbox(
         }
     }
 
+    /// <inheritdoc />
     public async Task<UploadInboxItem?> ClaimAsync(CancellationToken ct)
     {
         var now = clock.GetUtcNow().UtcDateTime;
