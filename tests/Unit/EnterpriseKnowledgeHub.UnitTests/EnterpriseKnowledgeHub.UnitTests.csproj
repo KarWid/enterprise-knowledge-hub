@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\..\src\BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks\EnterpriseKnowledgeHub.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\..\src\Modules\Identity\EnterpriseKnowledgeHub.Modules.Identity\EnterpriseKnowledgeHub.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\..\src\Modules\Organizations\EnterpriseKnowledgeHub.Modules.Organizations\EnterpriseKnowledgeHub.Modules.Organizations.csproj" />
+    <ProjectReference Include="..\..\..\src\Modules\Knowledge\EnterpriseKnowledgeHub.Modules.Knowledge\EnterpriseKnowledgeHub.Modules.Knowledge.csproj" />
   </ItemGroup>
 
   <ItemGroup>

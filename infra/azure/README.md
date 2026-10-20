@@ -3,6 +3,8 @@
 This infrastructure deliberately contains only the services used by the current application:
 
 - Azure SQL Database with Microsoft Entra-only authentication
+- Azure Blob Storage for original PDF documents, with anonymous access and shared keys disabled
+- Blob service CORS limited to the deployed Static Web App origin (and Vite only in `dev`) for direct document uploads
 - Azure Container Registry (ACR) for the API image
 - Linux App Service for the API container
 - Azure Static Web Apps for React
@@ -20,6 +22,8 @@ infra/azure/
 │   └── roleDefinitions.bicep  # Azure built-in RBAC role IDs.
 └── components/
     ├── containerRegistry.bicep
+    ├── storage.bicep
+    ├── storageAccess.bicep
     ├── sqlDatabase.bicep
     ├── staticWebApp.bicep
     └── appService.bicep
@@ -76,6 +80,14 @@ az deployment group create `
 ```
 
 Record the deployment outputs: `apiUrl`, `staticWebAppUrl`, `apiAppName`, `apiManagedIdentityPrincipalId`, `sqlServerFullyQualifiedDomainName`, and `sqlDatabaseName`.
+
+## Blob Storage
+
+The deployment creates a private `documents` container. Anonymous blob access and shared-key authorization are disabled at the account level, and the container itself has no public access. The API's system-assigned managed identity receives `Storage Blob Data Contributor` on the storage account, which permits the upload, verification, cleanup, and user-delegation-SAS operations used by the Documents milestone without granting account-key access.
+
+The Blob service CORS rule permits only `PUT` and `OPTIONS` from the deployed Static Web App origin (plus `http://localhost:5173` in `dev`) and only the headers required for a block-blob upload. CORS does not grant access: each direct upload requires the API to issue a short-lived, HTTPS-only, create-only user delegation SAS for one server-generated blob reference.
+
+`BlobStorage__AccountUrl` is populated from the deployment automatically. For local development, set `BlobStorage__AccountUrl` to the development storage account's Blob endpoint and sign in with `az login`; the signed-in developer needs `Storage Blob Data Contributor` on that account. Do not use or commit a storage-account connection string.
 
 ## One-time database access setup
 
@@ -166,6 +178,7 @@ $env:ConnectionStrings__EnterpriseKnowledgeHubDbConnectionString = `
 Push-Location src
 dotnet ef database update --project Modules/Organizations/EnterpriseKnowledgeHub.Modules.Organizations --startup-project Api/EnterpriseKnowledgeHub.Api --context OrganizationsDbContext
 dotnet ef database update --project Modules/Identity/EnterpriseKnowledgeHub.Modules.Identity --startup-project Api/EnterpriseKnowledgeHub.Api --context IdentityDbContext
+dotnet ef database update --project Modules/Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge --startup-project Api/EnterpriseKnowledgeHub.Api --context KnowledgeDbContext
 Pop-Location
 
 Remove-Item Env:ConnectionStrings__EnterpriseKnowledgeHubDbConnectionString

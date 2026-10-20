@@ -16,3 +16,11 @@ param sqlEntraAdministratorName = '<entra-user-or-group-name>'
 param sqlEntraAdministratorObjectId = '<entra-user-or-group-object-id>'
 param appServicePlanSku = 'B1'
 param staticWebAppSku = 'Free'
+
+// Two-phase bootstrap; see docs/DocumentUploads.md. No Event Grid resources
+// are created while deployStorageEventSubscription remains false.
+param enableStorageEventWebhook = false
+param storageEventsTenantId = ''
+param storageEventsAudience = ''
+param storageEventsSenderApplicationId = ''
+param deployStorageEventSubscription = false

@@ -208,3 +208,4 @@ Build what the current milestone actually needs.
     - Organizations
       --- dotnet ef database update --context OrganizationsDbContext
       --- dotnet ef database update --context IdentityDbContext
+      --- dotnet ef database update --project Modules/Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge --startup-project Api/EnterpriseKnowledgeHub.Api --context KnowledgeDbContext

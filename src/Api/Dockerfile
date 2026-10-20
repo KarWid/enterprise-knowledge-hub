@@ -9,6 +9,8 @@ COPY ["src/Api/EnterpriseKnowledgeHub.Contracts/EnterpriseKnowledgeHub.Contracts
 COPY ["src/BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks.csproj", "src/BuildingBlocks/EnterpriseKnowledgeHub.BuildingBlocks/"]
 COPY ["src/Modules/Identity/EnterpriseKnowledgeHub.Modules.Identity/EnterpriseKnowledgeHub.Modules.Identity.csproj", "src/Modules/Identity/EnterpriseKnowledgeHub.Modules.Identity/"]
 COPY ["src/Modules/Organizations/EnterpriseKnowledgeHub.Modules.Organizations/EnterpriseKnowledgeHub.Modules.Organizations.csproj", "src/Modules/Organizations/EnterpriseKnowledgeHub.Modules.Organizations/"]
+COPY ["src/Modules/Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge.csproj", "src/Modules/Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge/"]
+COPY ["src/Api/EnterpriseKnowledgeHub.Infrastructure/EnterpriseKnowledgeHub.Infrastructure.csproj", "src/Api/EnterpriseKnowledgeHub.Infrastructure/"]
 
 RUN dotnet restore "src/Api/EnterpriseKnowledgeHub.Api/EnterpriseKnowledgeHub.Api.csproj"
 
