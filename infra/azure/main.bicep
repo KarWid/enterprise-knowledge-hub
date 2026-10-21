@@ -27,8 +27,14 @@ param apiEntraClientId string
 
 @description('Enable only after configuring the separate workforce Entra webhook application. Missing settings fail startup.')
 param enableStorageEventWebhook bool = false
+
+@description('Workforce Microsoft Entra tenant that issues Event Grid webhook tokens.')
 param storageEventsTenantId string = ''
+
+@description('Application (client) ID of the webhook application registered in the workforce tenant.')
 param storageEventsAudience string = ''
+
+@description('Application ID of the Microsoft.EventGrid service principal authorized to call the webhook.')
 param storageEventsSenderApplicationId string = ''
 
 @description('Second deployment phase: the authenticated webhook must already be live for subscription validation.')
@@ -78,6 +84,19 @@ module names 'properties/resourceNames.bicep' = {
 
 module roles 'properties/roleDefinitions.bicep' = {
   name: 'role-definitions'
+}
+
+// Bicep assertions are still experimental. This conditional, resource-free
+// module provides stable parameter validation whenever webhook infrastructure
+// is requested. It also rejects a subscription whose webhook is disabled.
+module storageEventConfigurationValidation 'properties/storageEventConfigurationValidation.bicep' = if (enableStorageEventWebhook || deployStorageEventSubscription) {
+  name: 'storage-event-configuration-validation'
+  params: {
+    webhookEnabled: enableStorageEventWebhook
+    tenantId: storageEventsTenantId
+    audience: storageEventsAudience
+    senderApplicationId: storageEventsSenderApplicationId
+  }
 }
 
 module containerRegistry 'components/containerRegistry.bicep' = {
@@ -150,6 +169,7 @@ module appService 'components/appService.bicep' = {
     storageEventsSenderApplicationId: storageEventsSenderApplicationId
     storageAccountResourceId: storage.outputs.id
   }
+  dependsOn: [storageEventConfigurationValidation]
 }
 
 module storageAccess 'components/storageAccess.bicep' = {

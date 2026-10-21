@@ -251,9 +251,11 @@ for production; the short values above are only for a quick local check.
    and the UploadExpiresAt column on existing databases; if the column was added
    manually, reconcile migration history before applying the newly discoverable
    migration. Fresh databases apply the full chain automatically.
-4. Set `enableStorageEventWebhook=true`, `storageEventsTenantId`,
-   `storageEventsAudience=<webhook-client-GUID>`, and the verified sender ID in
-   your environment's Bicep parameters. Leave `deployStorageEventSubscription=false`.
+4. Set the GitHub repository variables `ENABLE_STORAGE_EVENT_WEBHOOK=true`,
+   `STORAGE_EVENTS_AUDIENCE=<webhook-client-GUID>`, and
+   `STORAGE_EVENTS_SENDER_APPLICATION_ID=<verified-Microsoft.EventGrid-app-ID>`.
+   The workflow reuses `AZURE_TENANT_ID` as `storageEventsTenantId`. Leave
+   `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=false`.
    Deploy the API code and App Service settings through the existing deployment
    process. Confirm it is running, Always On is true (already supported on B1/S1/P0v3),
    and unauthenticated POSTs to `/webhooks/storage-events` return 401.
@@ -262,9 +264,9 @@ for production; the short values above are only for a quick local check.
    `allowSharedKeyAccess=false`, `allowBlobPublicAccess=false`, private containers,
    HTTPS, and CORS restricted to the deployed frontend origins. Public **network**
    reachability remains enabled because browsers must reach the blob endpoint.
-6. Only after the authenticated webhook is live, set
-   `deployStorageEventSubscription=true` and deploy the Bicep template through
-   your normal approved process. It creates a Storage system topic, a private
+6. Only after the authenticated webhook is live, set the GitHub repository
+   variable `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=true` and manually run the
+   `Deploy Azure infrastructure` workflow. It creates a Storage system topic, a private
    `document-upload-events-deadletter` container, a narrowly scoped Blob Data Contributor
    assignment for the topic identity, and the webhook event subscription.
    Delivery uses Entra app authentication; dead-lettering uses the system topic

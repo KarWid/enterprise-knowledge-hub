@@ -1,6 +1,11 @@
 name: Deploy Azure infrastructure
 
 on:
+  # Event Grid webhook authentication requires two deployment phases. The
+  # manual trigger allows phase two to run after the webhook is confirmed live,
+  # without requiring an unrelated infrastructure commit.
+  workflow_dispatch:
+
   # Deploy infrastructure only after it is merged into the protected master branch.
   push:
     branches: [master]
@@ -45,6 +50,11 @@ jobs:
               apiEntraTenantId="${{ vars.ENTRA_TENANT_ID }}" \
               apiEntraAuthority="${{ vars.ENTRA_AUTHORITY }}" \
               apiEntraClientId="${{ vars.ENTRA_API_CLIENT_ID }}" \
+              enableStorageEventWebhook="${{ vars.ENABLE_STORAGE_EVENT_WEBHOOK || 'false' }}" \
+              storageEventsTenantId="${{ vars.AZURE_TENANT_ID }}" \
+              storageEventsAudience="${{ vars.STORAGE_EVENTS_AUDIENCE }}" \
+              storageEventsSenderApplicationId="${{ vars.STORAGE_EVENTS_SENDER_APPLICATION_ID }}" \
+              deployStorageEventSubscription="${{ vars.DEPLOY_STORAGE_EVENT_SUBSCRIPTION || 'false' }}" \
               sqlEntraTenantId="${{ vars.AZURE_TENANT_ID }}" \
               sqlEntraAdministratorName="${{ vars.SQL_ENTRA_ADMINISTRATOR_NAME }}" \
               sqlEntraAdministratorObjectId="${{ vars.SQL_ENTRA_ADMINISTRATOR_OBJECT_ID }}"

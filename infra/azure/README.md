@@ -209,10 +209,20 @@ Create a Microsoft Entra application/service principal for GitHub Actions and co
 | `ENTRA_TENANT_ID` | Microsoft Entra External ID tenant ID used by the API |
 | `ENTRA_AUTHORITY` | External ID authority, for example `https://<external-id-subdomain>.ciamlogin.com/` |
 | `ENTRA_API_CLIENT_ID` | API app registration client ID from Microsoft Entra External ID |
+| `ENABLE_STORAGE_EVENT_WEBHOOK` | `true` after the workforce-tenant webhook application and role assignments are ready; otherwise `false` |
+| `DEPLOY_STORAGE_EVENT_SUBSCRIPTION` | Keep `false` until the authenticated webhook is deployed and healthy; set to `true` for phase two |
+| `STORAGE_EVENTS_AUDIENCE` | Application (client) ID of the workforce-tenant webhook application, for example the `EKH Storage Events` app |
+| `STORAGE_EVENTS_SENDER_APPLICATION_ID` | Verified application ID of the `Microsoft.EventGrid` enterprise application in the workforce tenant |
 | `SQL_ENTRA_ADMINISTRATOR_NAME` | SQL Entra administrator group display name from the workforce tenant |
 | `SQL_ENTRA_ADMINISTRATOR_OBJECT_ID` | SQL Entra administrator group object ID from the workforce tenant |
 
 `AZURE_TENANT_ID` is the workforce tenant ID. The workflow also passes it to SQL as `sqlEntraTenantId`; there is no separate GitHub variable to maintain.
+
+The same `AZURE_TENANT_ID` is passed as the Storage Event webhook tenant because
+the webhook application and Event Grid service principal belong to the workforce
+tenant. The infrastructure workflow can also be started manually. Use that
+manual trigger for phase two after changing `DEPLOY_STORAGE_EVENT_SUBSCRIPTION`
+to `true`; changing a repository variable by itself does not trigger a workflow.
 
 `ENTRA_API_CLIENT_ID` must be the API registration's raw client ID (a GUID), not
 the full scope URI. This External ID API issues access tokens whose `aud` claim
