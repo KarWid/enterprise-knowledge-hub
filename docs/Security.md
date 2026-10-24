@@ -331,6 +331,23 @@ long-lived API keys,
 credentials committed to configuration files.
 Managed identities should receive only the permissions required for their specific responsibilities.
 
+Event Grid dead-lettering uses the system topic's managed identity, separately
+from the Microsoft.EventGrid application role used for webhook delivery. The
+topic identity receives Storage Blob Data Contributor at storage-account scope
+on a dedicated Event Grid dead-letter account. This follows Event Grid's documented
+authorization setup without granting access to the application documents account.
+The original account remains the event source; emitting BlobCreated events does
+not require granting the topic identity blob-data access to that source account.
+Only event notifications belong in the dead-letter account. The API identity has
+no role there; its document storage permissions remain on the original account.
+Both accounts disable anonymous blob access and shared keys and require HTTPS.
+The dead-letter account has no browser CORS rules; its public network endpoint
+is reachable for authenticated Event Grid writes. Notifications may contain blob
+names and organization identifiers and must be treated as private operational data.
+When upgrading from a shared account, explicitly remove the topic identity's old
+grants on document storage after switching destinations. Incremental deployment
+does not revoke those permissions automatically. See DocumentUploads.md.
+
 13. Azure Key Vault
 Azure Key Vault stores secrets that cannot be eliminated through managed identity.
 Examples may include:

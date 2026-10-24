@@ -224,6 +224,20 @@ for production; the short values above are only for a quick local check.
 
 ## Remaining Azure bootstrap (manual; do not run as part of local tests)
 
+Use the same GitHub variables throughout these phases; no additional flag is needed.
+
+| Phase | `ENABLE_STORAGE_EVENT_WEBHOOK` | `DEPLOY_STORAGE_EVENT_SUBSCRIPTION` | Result |
+| --- | --- | --- | --- |
+| 1: initial API deployment, if needed | `false` | `false` | API is deployed; webhook authentication fails closed. |
+| 2: prepare authenticated webhook and Event Grid dependencies | `true` | `false` | Webhook settings, system topic, managed identity, separate dead-letter storage account/container and RBAC on that account are deployed. |
+| 3: activate event delivery | `true` | `true` | Event subscription is created after phase 2 readiness checks. |
+
+Complete the Entra bootstrap and database migration below before phase 2. A 401
+from an unauthenticated POST in phase 1 proves neither that machine authentication
+is enabled nor that Event Grid can deliver. Before phase 3, verify phase 2 settings,
+API health, app-role assignments and storage RBAC. Successful subscription
+validation in phase 3 checks the authenticated handshake.
+
 1. In the workforce Entra tenant associated with the Azure subscription, create a
    single-tenant app registration named `EKH Storage Events`. This is separate
    from the External ID app used by React. Record its tenant ID, application
@@ -271,19 +285,32 @@ for production; the short values above are only for a quick local check.
    `STORAGE_EVENTS_SENDER_APPLICATION_ID=<verified-Microsoft.EventGrid-app-ID>`.
    The workflow reuses `AZURE_TENANT_ID` as `storageEventsTenantId`. Leave
    `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=false`.
-   Deploy the API code and App Service settings through the existing deployment
-   process. Confirm it is running, Always On is true (already supported on B1/S1/P0v3),
-   and unauthenticated POSTs to `/webhooks/storage-events` return 401.
+   Run `Deploy Azure infrastructure` on the branch containing these Bicep changes.
+   This preparation run also creates/reuses the system topic, its system-assigned
+   identity, a dedicated Standard GPv2 / Hot / LRS storage account containing the
+   private `document-upload-events-deadletter` container, and the topic identity's
+   Storage Blob Data Contributor assignment on that new account. The topic still
+   observes the original documents account. The API's BlobStorage settings and
+   webhook ExpectedSource remain pointed at the original account. This run does
+   not create the subscription yet. Deploy the API code through
+   the existing API workflow if it is not already deployed. Confirm it is running,
+   Always On is true (already supported on B1/S1/P0v3), `StorageEvents__Enabled`
+   is true, the tenant/audience/sender settings match the Entra setup, and
+   unauthenticated POSTs to `/webhooks/storage-events` return 401.
 5. Preserve the API managed identity's Storage Blob Data Contributor assignment
    at storage-account scope (includes user-delegation key generation). Keep
    `allowSharedKeyAccess=false`, `allowBlobPublicAccess=false`, private containers,
    HTTPS, and CORS restricted to the deployed frontend origins. Public **network**
    reachability remains enabled because browsers must reach the blob endpoint.
-6. Only after the authenticated webhook is live, set the GitHub repository
+6. Wait for the topic identity's dedicated dead-letter account RBAC assignment and the Entra
+   app roles to propagate. Bicep `dependsOn` orders resource creation; it does
+   not wait for authorization propagation. Check the topic identity and its
+   assignment as shown below. Allow several minutes; an assignment visible in
+   Azure Resource Manager does not guarantee that Event Grid already sees it.
+   Only after the authenticated webhook and permissions are ready, set the GitHub repository
    variable `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=true` and manually run the
-   `Deploy Azure infrastructure` workflow. It creates a Storage system topic, a private
-   `document-upload-events-deadletter` container, a narrowly scoped Blob Data Contributor
-   assignment for the topic identity, and the webhook event subscription.
+   `Deploy Azure infrastructure` workflow again on the same branch/version.
+   It reuses the prepared resources and creates the webhook event subscription.
    Delivery uses Entra app authentication; dead-lettering uses the system topic
    managed identity. The subscription explicitly uses EventGridSchema, BlobCreated,
    the documents/organizations prefix, `.pdf` suffix and PutBlob filter, up to
@@ -298,6 +325,99 @@ for production; the short values above are only for a quick local check.
 The subscription's synchronous validation POST must pass the same bearer policy.
 The endpoint returns `validationResponse` only after authentication and expected
 source validation. Do not temporarily make it anonymous to bootstrap deployment.
+
+### Existing deployments: move dead letters to the dedicated account
+
+Keep the completed Entra app registration/role bootstrap and database migrations.
+Only the last part of the deployment procedure changes:
+
+1. Before merging these infrastructure changes into `master` (which triggers an
+   automatic deployment), set `ENABLE_STORAGE_EVENT_WEBHOOK=true` and
+   `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=false` in GitHub. Deploy the updated Bicep
+   using the merge-triggered run or a manual run on the updated branch.
+2. Verify that the system topic identity has the role on the new dead-letter
+   account, then allow time for RBAC propagation. Use Azure Cloud Shell PowerShell in the deployment
+   subscription; the following commands are read-only:
+
+   ```powershell
+   $resourceGroupName = '<resource-group-name>'
+   # Use main.bicep's storageAccountName and eventGridDeadLetterStorageAccountName outputs.
+   $documentsStorageAccountName = '<original-documents-storage-account-name>'
+   $deadLetterStorageAccountName = '<new-dead-letter-storage-account-name>'
+   $systemTopicName = "$documentsStorageAccountName-uploads"
+
+   $topicPrincipalId = az eventgrid system-topic show `
+       --resource-group $resourceGroupName `
+       --name $systemTopicName `
+       --query identity.principalId --output tsv
+   if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($topicPrincipalId))
+   {
+       throw 'Could not resolve the system topic managed identity.'
+   }
+
+   $deadLetterStorageAccountId = az storage account show `
+       --resource-group $resourceGroupName `
+       --name $deadLetterStorageAccountName `
+       --query id --output tsv
+   if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($deadLetterStorageAccountId))
+   {
+       throw 'Could not resolve the storage account.'
+   }
+
+   az role assignment list `
+       --assignee-object-id $topicPrincipalId `
+       --scope $deadLetterStorageAccountId `
+       --include-inherited `
+       --query "[?roleDefinitionName=='Storage Blob Data Contributor'].{Role:roleDefinitionName,Scope:scope,PrincipalId:principalId}" `
+       --output table
+   ```
+
+   Check the principal against the topic identity and the scope against the new
+   dead-letter account ID. The assignment must not target the documents account.
+   The new direct assignment's scope ends with the dead-letter account name, not
+   `/blobServices/default/containers/document-upload-events-deadletter`.
+3. Set `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=true` and run the infrastructure workflow
+   again. Keep `ENABLE_STORAGE_EVENT_WEBHOOK=true`. Verify successful subscription
+   creation/handshake, then test a fresh PDF upload and confirm an Event Grid
+   notification (not just reconciliation) was persisted and processed in UploadInbox.
+   In the subscription's dead-letter configuration, confirm the destination is
+   the new account and the identity is SystemAssigned. The topic's source must
+   still be the original documents account. An empty dead-letter container after
+   successful uploads is expected; it does not itself prove dead-letter writes.
+4. Complete the permission migration after the subscription switch succeeds.
+   In the original documents account's Access control (IAM), identify any Storage
+   Blob Data Contributor assignment for the system topic's exact principal ID.
+   Also inspect the old `document-upload-events-deadletter` container's IAM for
+   the earlier container-scoped assignment. An authorized operator must remove
+   those old topic assignments at their exact scopes. Do not remove the API
+   identity's assignment or the topic's role on the new dead-letter account.
+   Confirm the topic has no remaining blob-data grants covering document storage,
+   including inherited grants. Until this is done, old access remains effective.
+5. Keep the old container and any dead-letter blobs for review/recovery. The
+   template neither moves nor deletes them. Process or archive these notifications
+   under the existing recovery procedure before separately approving their removal.
+
+The account-scoped grant follows Microsoft's
+[Event Grid managed-identity dead-letter setup](https://learn.microsoft.com/en-us/azure/event-grid/managed-service-identity).
+It grants read/write/delete access across the dedicated account, so keep application
+documents and other feature data in the original account. Dead letters contain
+event notifications rather than PDF copies, but their identifiers still require
+private access. Both accounts disable anonymous access and shared keys and require
+HTTPS. Event Grid uses the dedicated account's public network endpoint with its
+managed identity; no browser CORS or API role is configured there. No Defender
+or automatic retention deletion is enabled by these templates.
+
+If you already manually added an assignment on the new account, check its resource name
+before deployment: an existing assignment with another name can conflict with the
+Bicep-managed one and needs explicit adoption rather than repeated creation.
+
+In incremental mode, switching a conditional resource off does not delete an
+existing subscription. These flags control initial deployment ordering, not a
+runtime pause switch. Leave both true after activation for normal updates.
+Do not disable anonymous-access protection or enable storage keys to resolve
+authorization failures. If the account-scoped assignment exists and retries still
+fail, compare the failing identity/resource IDs and inspect deployment operations
+and storage network restrictions before changing permissions again.
 
 ## Operations and recovery
 

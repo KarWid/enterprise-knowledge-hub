@@ -4,6 +4,7 @@ This infrastructure deliberately contains only the services used by the current 
 
 - Azure SQL Database with Microsoft Entra-only authentication
 - Azure Blob Storage for original PDF documents, with anonymous access and shared keys disabled
+- A separate Standard GPv2 / Hot / LRS account for Event Grid dead letters, created when the webhook is enabled
 - Blob service CORS limited to the deployed Static Web App origin (and Vite only in `dev`) for direct document uploads
 - Azure Container Registry (ACR) for the API image
 - Linux App Service for the API container
@@ -24,6 +25,8 @@ infra/azure/
     ├── containerRegistry.bicep
     ├── storage.bicep
     ├── storageAccess.bicep
+    ├── eventGridDeadLetterStorage.bicep
+    ├── documentUploadEvents.bicep
     ├── sqlDatabase.bicep
     ├── staticWebApp.bicep
     └── appService.bicep
@@ -88,6 +91,34 @@ The deployment creates a private `documents` container. Anonymous blob access an
 The Blob service CORS rule permits only `PUT` and `OPTIONS` from the deployed Static Web App origin (plus `http://localhost:5173` in `dev`) and only the headers required for a block-blob upload. CORS does not grant access: each direct upload requires the API to issue a short-lived, HTTPS-only, create-only user delegation SAS for one server-generated blob reference.
 
 `BlobStorage__AccountUrl` is populated from the deployment automatically. For local development, set `BlobStorage__AccountUrl` to the development storage account's Blob endpoint and sign in with `az login`; the signed-in developer needs `Storage Blob Data Contributor` on that account. Do not use or commit a storage-account connection string.
+
+## Document upload event deployment
+
+For document upload events, follow the staged procedure in
+[DocumentUploads.md](../../docs/DocumentUploads.md#remaining-azure-bootstrap-manual-do-not-run-as-part-of-local-tests).
+Deploy with `ENABLE_STORAGE_EVENT_WEBHOOK=true` and
+`DEPLOY_STORAGE_EVENT_SUBSCRIPTION=false` first: this prepares the system topic,
+its managed identity, the dedicated dead-letter storage account and private
+container, and Storage Blob Data Contributor on that account. After RBAC propagation and webhook readiness,
+deploy again with both flags `true` to create the event subscription. No new
+GitHub variable is needed. The original account remains the topic's source and
+the API/browser document destination. Only the dedicated dead-letter account
+receives the topic identity's blob-data role. It has no browser CORS rules and
+disables anonymous access and shared keys. No Defender or automatic retention
+deletion is enabled by these templates.
+
+The existing `storageAccountName` output still identifies document storage.
+New outputs `eventGridDeadLetterStorageAccountName` and
+`eventGridDeadLetterStorageAccountId` identify the separate account (empty when
+the event infrastructure is disabled). Its deterministic name uses `dl` instead
+of the original account's `st` prefix, with the same environment suffix.
+
+Incremental deployment does not remove older container- or account-scoped grants
+on document storage, or move/delete old dead-letter blobs. Removing those old
+topic grants after the destination switch is required to complete the isolation.
+See the linked migration instructions for existing environments.
+Similarly, setting the subscription flag back to false
+does not delete or disable an already-created subscription.
 
 ## One-time database access setup
 

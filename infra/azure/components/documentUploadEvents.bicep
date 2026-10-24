@@ -2,7 +2,12 @@ targetScope = 'resourceGroup'
 
 param storageAccountName string
 param documentsContainerName string
+param deadLetterStorageAccountName string
+param deadLetterContainerName string
 param location string
+@description('Create the subscription only after a preparation deployment and RBAC propagation.')
+param deploySubscription bool = false
+param storageBlobDataContributorRoleDefinitionId string
 @secure()
 param webhookUrl string
 param webhookTenantId string
@@ -12,15 +17,8 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
 }
 
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
-  parent: storage
-  name: 'default'
-}
-
-resource deadletters 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobService
-  name: 'document-upload-events-deadletter'
-  properties: { publicAccess: 'None' }
+resource deadLetterStorage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
+  name: deadLetterStorageAccountName
 }
 
 resource topic 'Microsoft.EventGrid/systemTopics@2022-06-15' = {
@@ -34,17 +32,20 @@ resource topic 'Microsoft.EventGrid/systemTopics@2022-06-15' = {
 }
 
 resource deadletterAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: deadletters
-  name: guid(deadletters.id, topic.id, 'deadletter-writer')
+  // Event Grid's documented dead-letter setup grants this role on the account.
+  // Restrict the grant to the dedicated dead-letter account, not document storage.
+  scope: deadLetterStorage
+  name: guid(deadLetterStorage.id, topic.id, 'deadletter-writer')
   properties: {
     principalId: topic.identity.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: storageBlobDataContributorRoleDefinitionId
   }
 }
 
-// Deploy only AFTER the API/webhook and Entra role assignment are live.
-resource uploadEvents 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2022-06-15' = {
+// Deploy only AFTER the webhook, Entra app roles and topic RBAC are ready.
+// dependsOn orders creation; it cannot wait for RBAC propagation.
+resource uploadEvents 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2022-06-15' = if (deploySubscription) {
   parent: topic
   name: 'document-uploads'
   properties: {
@@ -77,8 +78,8 @@ resource uploadEvents 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2022-
       deadLetterDestination: {
         endpointType: 'StorageBlob'
         properties: {
-          resourceId: storage.id
-          blobContainerName: deadletters.name
+          resourceId: deadLetterStorage.id
+          blobContainerName: deadLetterContainerName
         }
       }
     }

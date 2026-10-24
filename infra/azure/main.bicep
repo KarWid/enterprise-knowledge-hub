@@ -25,7 +25,7 @@ param apiEntraAuthority string
 @description('Application (client) ID of the API registration in Microsoft Entra External ID.')
 param apiEntraClientId string
 
-@description('Enable only after configuring the separate workforce Entra webhook application. Missing settings fail startup.')
+@description('Enable the configured workforce Entra webhook and prepare its Event Grid topic, identity and dead-letter RBAC. Missing settings fail startup.')
 param enableStorageEventWebhook bool = false
 
 @description('Workforce Microsoft Entra tenant that issues Event Grid webhook tokens.')
@@ -37,7 +37,7 @@ param storageEventsAudience string = ''
 @description('Application ID of the Microsoft.EventGrid service principal authorized to call the webhook.')
 param storageEventsSenderApplicationId string = ''
 
-@description('Second deployment phase: the authenticated webhook must already be live for subscription validation.')
+@description('Enable only in a later deployment, after the webhook is live and the prepared topic identity RBAC has propagated.')
 param deployStorageEventSubscription bool = false
 
 @description('Workforce Microsoft Entra tenant ID associated with the Azure subscription and Azure SQL server.')
@@ -181,12 +181,25 @@ module storageAccess 'components/storageAccess.bicep' = {
   }
 }
 
-module documentUploadEvents 'components/documentUploadEvents.bicep' = if (deployStorageEventSubscription) {
+module eventGridDeadLetterStorage 'components/eventGridDeadLetterStorage.bicep' = if (enableStorageEventWebhook || deployStorageEventSubscription) {
+  name: 'event-grid-dead-letter-storage'
+  params: {
+    name: names.outputs.eventGridDeadLetterStorageAccountName
+    location: location
+  }
+  dependsOn: [storageEventConfigurationValidation]
+}
+
+module documentUploadEvents 'components/documentUploadEvents.bicep' = if (enableStorageEventWebhook || deployStorageEventSubscription) {
   name: 'document-upload-events'
   params: {
     storageAccountName: storage.outputs.name
     documentsContainerName: storage.outputs.documentsContainerName
+    deadLetterStorageAccountName: eventGridDeadLetterStorage!.outputs.name
+    deadLetterContainerName: eventGridDeadLetterStorage!.outputs.containerName
     location: location
+    deploySubscription: deployStorageEventSubscription
+    storageBlobDataContributorRoleDefinitionId: roles.outputs.storageBlobDataContributorRoleDefinitionId
     webhookUrl: 'https://${appService.outputs.defaultHostname}/webhooks/storage-events'
     webhookTenantId: storageEventsTenantId
     webhookAudience: storageEventsAudience
@@ -204,3 +217,9 @@ output sqlDatabaseName string = sqlDatabase.outputs.databaseName
 output storageAccountName string = storage.outputs.name
 output blobStorageAccountUrl string = storage.outputs.blobServiceUrl
 output apiManagedIdentityPrincipalId string = appService.outputs.managedIdentityPrincipalId
+output eventGridDeadLetterStorageAccountName string = (enableStorageEventWebhook || deployStorageEventSubscription)
+  ? eventGridDeadLetterStorage!.outputs.name
+  : ''
+output eventGridDeadLetterStorageAccountId string = (enableStorageEventWebhook || deployStorageEventSubscription)
+  ? eventGridDeadLetterStorage!.outputs.id
+  : ''

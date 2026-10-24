@@ -16,6 +16,8 @@ var resourceBaseName = toLower('${namePrefix}-${environment}-${suffix}')
 
 output containerRegistryName string = toLower('acr${namePrefix}${environment}${suffix}')
 output storageAccountName string = toLower('st${namePrefix}${environment}${suffix}')
+// A different two-character prefix preserves the existing account and stays within 24 characters.
+output eventGridDeadLetterStorageAccountName string = toLower('dl${namePrefix}${environment}${suffix}')
 output sqlServerName string = '${resourceBaseName}-sql'
 output appServicePlanName string = '${resourceBaseName}-plan'
 output apiAppName string = '${resourceBaseName}-api'

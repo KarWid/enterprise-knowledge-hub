@@ -243,6 +243,15 @@ Uploaded means basic format/size checks passed; malware scanning and extraction
 are not enabled. See [Document upload operations](DocumentUploads.md) for the
 lease, cleanup, delayed-event, and future validation-gate policies.
 
+Storage is separated by responsibility. The original application account holds
+documents and remains the Event Grid system topic's source. A dedicated Standard
+GPv2, Hot, LRS account holds undeliverable Event Grid notifications in the private
+`document-upload-events-deadletter` container. The topic identity receives Blob
+Data Contributor only on that dedicated account; the API identity retains access
+to document storage. The webhook source validation and browser upload endpoint
+continue to use the original account. Inbox DeadLetter rows in SQL remain a
+separate mechanism for failures after the webhook has accepted an event.
+
 12. Knowledge Processing
 The MVP supports PDF documents.
 The conceptual pipeline is:

@@ -1,9 +1,9 @@
 name: Deploy Azure infrastructure
 
 on:
-  # Event Grid webhook authentication requires two deployment phases. The
-  # manual trigger allows phase two to run after the webhook is confirmed live,
-  # without requiring an unrelated infrastructure commit.
+  # First deploy with webhook=true and subscription=false to prepare the topic
+  # identity, dedicated dead-letter account and its RBAC. Enable the subscription in a later run
+  # after webhook readiness and RBAC propagation (see docs/DocumentUploads.md).
   workflow_dispatch:
 
   # Deploy infrastructure only after it is merged into the protected master branch.
