@@ -1,0 +1,39 @@
+@import "../../../../styles/variables.less";
+
+.document {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid @border-light;
+
+  strong,
+  .documentMeta {
+    display: block;
+  }
+}
+
+.documentIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.documentMeta {
+  margin-top: 3px;
+  color: @text-muted;
+  font-size: 0.8rem;
+}
+
+.status {
+  margin-left: auto;
+  color: @text-secondary;
+  font-size: 0.85rem;
+}

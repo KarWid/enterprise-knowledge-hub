@@ -8,7 +8,7 @@ import { CreateOrganizationPage } from "../features/onboarding/CreateOrganizatio
 import { AcceptInvitationPage } from "../features/onboarding/AcceptInvitationPage";
 import { AccessDeniedPage } from "../features/onboarding/AccessDeniedPage";
 import { ChatsPage } from "../features/chats/ChatsPage";
-import { DocumentsPage } from "../features/documents/DocumentsPage";
+import { DocumentsPage } from "../features/documents/DocumentsPage/DocumentsPage";
 import { AuthLoadingPage } from "./AuthLoadingPage";
 import { ErrorModal } from "../components/ErrorModal/ErrorModal";
 import { CurrentUserLoadErrorModal } from "./CurrentUserLoadErrorModal";

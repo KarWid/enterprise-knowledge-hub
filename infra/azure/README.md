@@ -3,6 +3,8 @@
 This infrastructure deliberately contains only the services used by the current application:
 
 - Azure SQL Database with Microsoft Entra-only authentication
+- Azure Blob Storage for original PDF documents, with anonymous access and shared keys disabled
+- Blob service CORS limited to the deployed Static Web App origin (and Vite only in `dev`) for direct document uploads
 - Azure Container Registry (ACR) for the API image
 - Linux App Service for the API container
 - Azure Static Web Apps for React
@@ -20,6 +22,8 @@ infra/azure/
 │   └── roleDefinitions.bicep  # Azure built-in RBAC role IDs.
 └── components/
     ├── containerRegistry.bicep
+    ├── storage.bicep
+    ├── storageAccess.bicep
     ├── sqlDatabase.bicep
     ├── staticWebApp.bicep
     └── appService.bicep
@@ -76,6 +80,14 @@ az deployment group create `
 ```
 
 Record the deployment outputs: `apiUrl`, `staticWebAppUrl`, `apiAppName`, `apiManagedIdentityPrincipalId`, `sqlServerFullyQualifiedDomainName`, and `sqlDatabaseName`.
+
+## Blob Storage
+
+The deployment creates a private `documents` container. Anonymous blob access and shared-key authorization are disabled at the account level, and the container itself has no public access. The API's system-assigned managed identity receives `Storage Blob Data Contributor` on the storage account, which permits the upload, verification, cleanup, and user-delegation-SAS operations used by the Documents milestone without granting account-key access.
+
+The Blob service CORS rule permits only `PUT` and `OPTIONS` from the deployed Static Web App origin (plus `http://localhost:5173` in `dev`) and only the headers required for a block-blob upload. CORS does not grant access: each direct upload requires the API to issue a short-lived, HTTPS-only, create-only user delegation SAS for one server-generated blob reference.
+
+`BlobStorage__AccountUrl` is populated from the deployment automatically. For local development, set `BlobStorage__AccountUrl` to the development storage account's Blob endpoint and sign in with `az login`; the signed-in developer needs `Storage Blob Data Contributor` on that account. Do not use or commit a storage-account connection string.
 
 ## One-time database access setup
 
@@ -166,6 +178,7 @@ $env:ConnectionStrings__EnterpriseKnowledgeHubDbConnectionString = `
 Push-Location src
 dotnet ef database update --project Modules/Organizations/EnterpriseKnowledgeHub.Modules.Organizations --startup-project Api/EnterpriseKnowledgeHub.Api --context OrganizationsDbContext
 dotnet ef database update --project Modules/Identity/EnterpriseKnowledgeHub.Modules.Identity --startup-project Api/EnterpriseKnowledgeHub.Api --context IdentityDbContext
+dotnet ef database update --project Modules/Knowledge/EnterpriseKnowledgeHub.Modules.Knowledge --startup-project Api/EnterpriseKnowledgeHub.Api --context KnowledgeDbContext
 Pop-Location
 
 Remove-Item Env:ConnectionStrings__EnterpriseKnowledgeHubDbConnectionString
@@ -196,10 +209,20 @@ Create a Microsoft Entra application/service principal for GitHub Actions and co
 | `ENTRA_TENANT_ID` | Microsoft Entra External ID tenant ID used by the API |
 | `ENTRA_AUTHORITY` | External ID authority, for example `https://<external-id-subdomain>.ciamlogin.com/` |
 | `ENTRA_API_CLIENT_ID` | API app registration client ID from Microsoft Entra External ID |
+| `ENABLE_STORAGE_EVENT_WEBHOOK` | `true` after the workforce-tenant webhook application and role assignments are ready; otherwise `false` |
+| `DEPLOY_STORAGE_EVENT_SUBSCRIPTION` | Keep `false` until the authenticated webhook is deployed and healthy; set to `true` for phase two |
+| `STORAGE_EVENTS_AUDIENCE` | Application (client) ID of the workforce-tenant webhook application, for example the `EKH Storage Events` app |
+| `STORAGE_EVENTS_SENDER_APPLICATION_ID` | Verified application ID of the `Microsoft.EventGrid` enterprise application in the workforce tenant |
 | `SQL_ENTRA_ADMINISTRATOR_NAME` | SQL Entra administrator group display name from the workforce tenant |
 | `SQL_ENTRA_ADMINISTRATOR_OBJECT_ID` | SQL Entra administrator group object ID from the workforce tenant |
 
 `AZURE_TENANT_ID` is the workforce tenant ID. The workflow also passes it to SQL as `sqlEntraTenantId`; there is no separate GitHub variable to maintain.
+
+The same `AZURE_TENANT_ID` is passed as the Storage Event webhook tenant because
+the webhook application and Event Grid service principal belong to the workforce
+tenant. The infrastructure workflow can also be started manually. Use that
+manual trigger for phase two after changing `DEPLOY_STORAGE_EVENT_SUBSCRIPTION`
+to `true`; changing a repository variable by itself does not trigger a workflow.
 
 `ENTRA_API_CLIENT_ID` must be the API registration's raw client ID (a GUID), not
 the full scope URI. This External ID API issues access tokens whose `aud` claim

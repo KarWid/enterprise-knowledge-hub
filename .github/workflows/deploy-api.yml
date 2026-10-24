@@ -22,12 +22,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run unit tests
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
-      - run: dotnet test tests/Unit/EnterpriseKnowledgeHub.UnitTests/EnterpriseKnowledgeHub.UnitTests.csproj --configuration Release
+      - name: Run unit tests
+        run: dotnet test tests/Unit/EnterpriseKnowledgeHub.UnitTests/EnterpriseKnowledgeHub.UnitTests.csproj --configuration Release
+
+      - name: Run integration tests with SQLite
+        run: dotnet test tests/Integration/EnterpriseKnowledgeHub.IntegrationTests/EnterpriseKnowledgeHub.IntegrationTests.csproj --configuration Release
 
       - name: Sign in to Azure with OpenID Connect
         uses: azure/login@v2

@@ -355,6 +355,19 @@ src/
 
 Avoid creating a large global component hierarchy before the application requires it.
 
+Within a feature, place page components and their styles together in a named page
+folder (for example, `features/documents/DocumentsPage/`). Place reusable,
+feature-specific components under that feature's `components/` directory, with
+each component and its styles in a named folder. Keep page workflow/state logic
+in a focused feature hook or service when it makes the page difficult to read;
+leave rendering and composition in the page component.
+
+For generic UI elements, first check `src/components/ui` and reuse an existing
+component when it fits. If no suitable component exists, create a reusable UI
+component there and use it from feature pages instead of duplicating markup and
+styles. Keep domain-specific components within their feature until they are
+needed elsewhere.
+
 19. API Client
 The frontend should communicate with the backend through a consistent API client.
 Authentication tokens should be handled centrally.
@@ -391,6 +404,48 @@ authentication/authorization integration where practical,
 EF Core persistence,
 organization isolation,
 database behavior.
+
+Test Structure (Arrange-Act-Assert)
+Unit and integration tests should follow the Arrange-Act-Assert pattern and use
+explicit `// Arrange`, `// Act`, and `// Assert` sections. Keep each section
+focused:
+- Arrange creates the input, dependencies, persisted state, and test fixture.
+- Act invokes the single behavior being tested.
+- Assert verifies observable results rather than implementation details.
+
+Example:
+```csharp
+[Fact]
+public async Task ExistingPendingWorkCanBeClaimed()
+{
+    // Arrange
+    var fixture = new UploadInboxFixture();
+    await fixture.AddPendingWorkAsync();
+
+    // Act
+    var work = await fixture.Inbox.ClaimAsync(CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(work);
+    Assert.Equal(UploadWorkStatus.Processing, work.Status);
+}
+```
+
+For exception scenarios, define the operation during Act and execute it from
+the assertion when required by the test framework. Shared fixtures and builders
+may reduce setup duplication, but should not hide the behavior under test.
+
+Test Readability
+
+- Give each test a descriptive name that states the condition and expected behavior.
+- Prefer one behavior or state transition per test. Split tests that exercise unrelated outcomes.
+- Do not compress setup, execution, and assertions into one expression merely to reduce line count.
+- Use descriptive local names instead of abbreviations such as `f`, `db2`, or `result1`.
+- Use theories when every case follows the same readable workflow. Prefer enums or named data over magic strings.
+- Keep incidental setup in clearly named helpers, but leave the behavior under test visible in the test method.
+- Add an assertion message or a short comment when the business, concurrency, security, or persistence invariant is not obvious from the assertion itself.
+- Tests are executable documentation and should be understandable without stepping through their helpers or production code.
+
 Architecture Tests
 Architecture tests may be introduced to enforce:
 module boundaries,
@@ -508,6 +563,28 @@ unnecessary static helpers,
 massive service classes,
 deeply nested conditional logic,
 premature abstractions.
+
+Braces and Control Flow
+
+Use Allman-style braces: opening and closing braces appear on their own lines.
+Always use braces for `if`, `else`, `for`, `foreach`, `while`, and similar
+control-flow statements, including single-statement bodies. Do not place the
+controlled statement on the same line as its condition.
+
+Prefer:
+
+```csharp
+if (document is null)
+{
+    return;
+}
+```
+
+Avoid:
+
+```csharp
+if (document is null) return;
+```
 
 29. Naming
 Use clear and consistent naming.
@@ -716,6 +793,17 @@ Blob Storage
     ↓
 Document record
 
+Requirements:
+- The API reserves an upload using only the PDF file name; it must not accept the document stream or proxy document bytes.
+- Reserving the upload creates an Organization-scoped Document in PendingForUpload with a server-generated blob reference and upload expiration.
+- The API returns a short-lived (no more than 15 minutes), HTTPS-only, create-only user delegation SAS scoped to that exact blob. Storage account keys and broad container SAS tokens are forbidden.
+- React uses a single create-only PUT directly to Blob Storage, shows “Uploaded—verifying…”, and polls the authorized document-status endpoint with a bounded lifetime. A polling timeout leaves verification pending.
+- An Entra-authenticated Event Grid webhook durably records BlobCreated notifications in the Knowledge inbox. A BackgroundService in the existing API verifies the blob using conditional ETag reads, checks the PDF signature and configured size limit, and persists the ETag before changing the Document to Uploaded.
+- Invalid uploads become Rejected with an atomically scheduled, retryable cleanup job. Cleanup is conditional and delayed until after the SAS deadline plus grace. Pending reservations are reconciled after that deadline: existing blobs use the same finalizer; only genuinely absent blobs become Failed. SAS expiry alone does not reject a committed upload.
+- Configure Blob Storage CORS only for the known web application origin(s), PUT/OPTIONS, and required Azure upload headers. CORS does not replace SAS authorization.
+- Inbox uniqueness, expiring atomic leases, bounded retry/backoff, and document concurrency tokens handle duplicates, crashes, and concurrent API instances. Background ownership comes from the exact persisted reservation, not a current user.
+- Uploaded currently means basic verification, not malware clearance. The application extraction gate is closed; future malware checks and extraction/indexing are separate durable steps. See [Document upload operations](DocumentUploads.md) for required local tests, migration, Azure/Entra bootstrap, and future gate requirements.
+
 
 Milestone 8 — Knowledge Processing
 Goal:
@@ -741,6 +829,31 @@ Azure OpenAI
 Grounded answer
     ↓
 Sources
+
+
+Milestone 10 - Document Versioning and Replacement
+Goal:
+KnowledgeManager
+    ↓
+Replace a document explicitly
+    ↓
+New immutable document version
+    ↓
+Process and index the replacement
+    ↓
+Promote replacement when ready
+    ↓
+Retrieve only the current version
+
+Requirements:
+- A document replacement must be explicit. Do not infer replacement from an identical file name.
+- Model a stable document source separately from its immutable uploaded versions, or introduce an equivalent explicit version relationship.
+- Every version must retain its own blob reference and processing status. Never overwrite the prior version's blob.
+- Keep the current version available for retrieval until the replacement has processed and indexed successfully.
+- Promote the replacement and archive the prior version only after the replacement is ready. A failed replacement must leave the current version available.
+- Search-index chunks must identify their organization and document version. Retrieval must return chunks only from current, ready versions; changing a SQL document status alone is not sufficient.
+- Remove or deactivate archived-version chunks after promotion.
+- Verify with tests that archived and failed replacement versions are never used as knowledge sources, and that organization isolation remains enforced for every version.
 
 
 36. The Golden Rule

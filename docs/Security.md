@@ -267,7 +267,7 @@ Connection information and secrets must not be stored in source control.
 Azure Blob Storage stores original customer documents.
 Public access is disabled.
 The application must not expose customer documents through publicly accessible blob URLs.
-Preferred access pattern:
+For API-mediated operations, the access path is:
 React
   ↓
 ASP.NET Core API
@@ -279,6 +279,41 @@ Blob Storage
 The frontend must not receive storage account keys.
 Blob containers should not be publicly readable.
 Access to blobs must be scoped to the current Organization and authorized operation.
+
+11.1 Direct Browser Document Uploads
+Large document bytes do not pass through the API. The API first authorizes the
+Documents.Upload operation and current Organization, then creates a
+PendingForUpload Document with a server-generated blob reference. It returns a
+user delegation SAS that is:
+- scoped to that single blob;
+- restricted to HTTPS and create-only access;
+- short-lived (no more than 15 minutes);
+- never logged, persisted, or returned after the upload-reservation response.
+
+The browser may use that SAS only to upload the reserved blob. It receives no
+read, list, delete, container, storage account key, or cross-organization
+permission. Blob Storage CORS must be restricted to known React origins and to
+the required PUT headers and method; CORS is not an authorization boundary.
+
+After the direct upload, BlobCreated reaches POST /webhooks/storage-events.
+A separate machine JWT scheme validates signature, issuer, audience, lifetime,
+the configured Microsoft.EventGrid application identity, and the required app role.
+Frontend user tokens cannot authorize this endpoint. Subscription validation,
+headers, topic fields, and CORS are not authentication. Missing configuration
+never enables anonymous delivery. Accepted batches are durable before acknowledgment.
+
+The worker reads properties and the PDF signature using Managed Identity and
+ETag conditions, enforces the configured size limit, and persists the verified
+ETag before changing the document to Uploaded. A PDF header is only a basic
+format check; it does not prove PDF validity or absence of malware. Invalid
+files become Rejected. A genuinely absent blob after the upload deadline plus
+grace becomes Failed; Storage outages retry. SAS expiry alone never rejects
+successfully committed bytes. Cleanup is durable, conditionally deletes the
+current rejected blob, and waits until the SAS deadline plus grace to avoid
+recreation with an unexpired create-only SAS. Terminal reservations never reopen.
+Pending, Rejected, and Failed documents must never enter knowledge processing.
+Uploaded does not mean Ready; the extraction gate remains closed this milestone.
+See [Document upload operations](DocumentUploads.md) for setup and recovery.
 
 12. Azure Managed Identity
 Managed Identity is the preferred authentication mechanism for Azure-to-Azure communication.
@@ -394,6 +429,12 @@ AI Search
 
 At every stage, the system must retain the document's Organization ownership.
 A processing failure must not cause data to be associated with another organization.
+
+The BlobCreated event handler treats events as
+at-least-once and potentially out of order. It must look up a Document by the
+server-generated blob reference, preserve its OrganizationId, validate the blob,
+and make status transitions idempotently. It must never process an arbitrary
+blob merely because an event was received.
 
 18. API Security
 The API must:
