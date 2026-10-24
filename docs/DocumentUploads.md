@@ -242,6 +242,21 @@ for production; the short values above are only for a quick local check.
    webhook ownership/app-role authorization check and hold Azure permission to
    create the subscription and role assignments. Use the official user/app
    variant appropriate to your deployment identity; bootstrap is not handled by Bicep.
+
+   From the repository root, preview the role assignments with the parameterized
+   bootstrap script:
+
+   ```powershell
+   .\infra\azure\bootstrap\Grant-StorageEventWebhookRoles.ps1 `
+       -TenantId '<workforce-tenant-id>' `
+       -WebhookApplicationId '<webhook-client-id>' `
+       -EventGridApplicationId '<verified-Microsoft.EventGrid-app-id>' `
+       -GitHubDeploymentApplicationId '<AZURE_CLIENT_ID>' `
+       -WhatIf
+   ```
+
+   After checking the resolved application names, run the same command without
+   `-WhatIf`. Add `-Confirm` if you want PowerShell to ask before each assignment.
 3. Review/generate the Knowledge migration SQL and have your authorized deployment
    process apply it to Azure SQL before enabling the new worker. This implementation
    does not apply remote migrations. The App Service identity needs DML rights
