@@ -7,7 +7,8 @@ const en = {
     logIn: "Log in",
     logOut: "Log out",
     signInPrompt: "Sign in to continue.",
-    currentUserLoadFailure: "Something went wrong. Please try again or log out.",
+    currentUserLoadFailure:
+      "Something went wrong. Please try again or log out.",
   },
   errorModal: {
     retry: "Retry",
@@ -16,6 +17,9 @@ const en = {
   },
   authenticated: {
     welcome: "Welcome!",
+  },
+  language: {
+    selectorLabel: "Language",
   },
   onboarding: {
     createOrganization: "Create your organization",
@@ -54,7 +58,7 @@ const en = {
     error: "We couldn't load or upload documents. Please try again.",
     status: {
       PendingForUpload: "Awaiting upload verification",
-      Uploaded: "Upload verified (basic checks)",
+      Uploaded: "Upload verified",
       Rejected: "Rejected",
       Processing: "Processing",
       Ready: "Ready",
@@ -62,11 +66,16 @@ const en = {
       Archived: "Archived",
     },
     verification: {
-      verifying: "Uploaded—verifying… You can leave this page; verification will continue.",
-      pending: "Verification is still pending. Return to the document list later to check its status.",
-      verified: "Upload verification passed. Knowledge processing is not yet available.",
-      rejected: "The document was rejected: it must be a PDF within the allowed size limit.",
-      failed: "The upload could not be verified. Check its status before starting a new upload.",
+      verifying:
+        "Uploaded—verifying… You can leave this page; verification will continue.",
+      pending:
+        "Verification is still pending. Return to the document list later to check its status.",
+      verified:
+        "Upload verification passed. Knowledge processing is not yet available.",
+      rejected:
+        "The document was rejected: it must be a PDF within the allowed size limit.",
+      failed:
+        "The upload could not be verified. Check its status before starting a new upload.",
     },
   },
   organization: {

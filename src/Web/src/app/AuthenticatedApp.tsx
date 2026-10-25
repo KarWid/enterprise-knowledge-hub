@@ -12,6 +12,7 @@ import { DocumentsPage } from "../features/documents/DocumentsPage/DocumentsPage
 import { AuthLoadingPage } from "./AuthLoadingPage";
 import { ErrorModal } from "../components/ErrorModal/ErrorModal";
 import { CurrentUserLoadErrorModal } from "./CurrentUserLoadErrorModal";
+import { LanguageSwitcher } from "../components/LanguageSwitcher/LanguageSwitcher";
 
 export function AuthenticatedApp() {
   const { t } = useTranslation();
@@ -52,9 +53,15 @@ export function AuthenticatedApp() {
       break;
   }
 
+  const showOnboardingLanguageSwitcher =
+    data.onboardingStatus !== UserOnboardingStatusType.Complete;
+
   return (
     <>
       {content}
+      {showOnboardingLanguageSwitcher && (
+        <LanguageSwitcher className={styles.onboardingLanguageSwitcher} />
+      )}
       <ErrorModal
         error={error}
         fallbackMessage={t("errorModal.genericMessage")}
@@ -75,7 +82,10 @@ function AppShell() {
     <div className={styles.shell}>
       <header className={styles.topbar}>
         <span className={styles.topbarLogo}>{t("app.title")}</span>
-        <UserInfo />
+        <div className={styles.topbarActions}>
+          <LanguageSwitcher />
+          <UserInfo />
+        </div>
       </header>
 
       <nav className={styles.sidebar}>
