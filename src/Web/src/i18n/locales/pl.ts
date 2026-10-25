@@ -7,7 +7,8 @@ const pl = {
     logIn: "Zaloguj się",
     logOut: "Wyloguj się",
     signInPrompt: "Zaloguj się, aby kontynuować.",
-    currentUserLoadFailure: "Coś poszło nie tak. Spróbuj ponownie lub się wyloguj.",
+    currentUserLoadFailure:
+      "Coś poszło nie tak. Spróbuj ponownie lub się wyloguj.",
   },
   errorModal: {
     retry: "Spróbuj ponownie",
@@ -16,6 +17,9 @@ const pl = {
   },
   authenticated: {
     welcome: "Witaj!",
+  },
+  language: {
+    selectorLabel: "Język",
   },
   onboarding: {
     createOrganization: "Utwórz organizację",
@@ -47,14 +51,15 @@ const pl = {
     upload: "Przeslij",
     uploading: "Przesylanie...",
     uploadProgressTitle: "Przesyłanie dokumentu",
-    uploadProgressMessage: "Nie zamykaj tej karty, dopóki przesyłanie nie zostanie zakończone.",
+    uploadProgressMessage:
+      "Nie zamykaj tej karty, dopóki przesyłanie nie zostanie zakończone.",
     listTitle: "Twoje dokumenty",
     empty: "Nie przeslano jeszcze zadnych dokumentow.",
     uploadedAt: "Przeslano {{date}}",
     error: "Nie mozna wczytac lub przeslac dokumentow. Sprobuj ponownie.",
     status: {
       PendingForUpload: "Oczekuje na weryfikację przesłania",
-      Uploaded: "Przesłanie zweryfikowane (podstawowe kontrole)",
+      Uploaded: "Przesłanie zweryfikowane",
       Rejected: "Odrzucony",
       Processing: "Przetwarzanie",
       Ready: "Gotowy",
@@ -63,10 +68,14 @@ const pl = {
     },
     verification: {
       verifying: "Przesłano — trwa weryfikacja… Możesz opuścić tę stronę.",
-      pending: "Weryfikacja nadal trwa. Sprawdź status później na liście dokumentów.",
-      verified: "Przesłanie zweryfikowane. Przetwarzanie wiedzy nie jest jeszcze dostępne.",
-      rejected: "Dokument odrzucony: wymagany jest plik PDF w dozwolonym limicie rozmiaru.",
-      failed: "Nie udało się zweryfikować przesłania. Sprawdź status przed ponowną próbą.",
+      pending:
+        "Weryfikacja nadal trwa. Sprawdź status później na liście dokumentów.",
+      verified:
+        "Przesłanie zweryfikowane. Przetwarzanie wiedzy nie jest jeszcze dostępne.",
+      rejected:
+        "Dokument odrzucony: wymagany jest plik PDF w dozwolonym limicie rozmiaru.",
+      failed:
+        "Nie udało się zweryfikować przesłania. Sprawdź status przed ponowną próbą.",
     },
   },
   organization: {

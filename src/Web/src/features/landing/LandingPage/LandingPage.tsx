@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { login } from '../../../auth/authService';
+import { LanguageSwitcher } from '../../../components/LanguageSwitcher/LanguageSwitcher';
 import { ChatMockup } from '../ChatMockup/ChatMockup';
 import styles from './LandingPage.module.less';
 
@@ -11,9 +12,12 @@ export function LandingPage() {
       {/* Nav */}
       <nav className={styles.nav}>
         <span className={styles.navLogo}>{t('app.title')}</span>
-        <button className={styles.navLoginButton} onClick={login}>
-          {t('landing.nav.logIn')}
-        </button>
+        <div className={styles.navActions}>
+          <LanguageSwitcher />
+          <button className={styles.navLoginButton} onClick={login}>
+            {t('landing.nav.logIn')}
+          </button>
+        </div>
       </nav>
 
       {/* Hero */}
