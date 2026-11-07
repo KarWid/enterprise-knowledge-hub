@@ -44,10 +44,13 @@ const en = {
   },
   documents: {
     title: "Documents",
-    subtitle: "Upload and manage PDF knowledge sources for your organization.",
+    subtitle: "Upload and manage knowledge sources for your organization.",
     uploadTitle: "Upload a document",
-    uploadDescription: "PDF files up to 25 MB are supported.",
-    chooseFile: "Choose a PDF file",
+    uploadDescription: "Supported files: {{formats}}. Maximum size: {{maxSize}} MiB.",
+    loadingFormats: "Loading supported file formats...",
+    uploadsDisabled: "Document uploads are currently disabled.",
+    invalidFile: "Choose a nonempty file with a supported extension within the displayed size limit.",
+    chooseFile: "Choose a document",
     upload: "Upload",
     uploading: "Uploading...",
     uploadProgressTitle: "Uploading document",
@@ -73,7 +76,7 @@ const en = {
       verified:
         "Upload verification passed. Knowledge processing is not yet available.",
       rejected:
-        "The document was rejected: it must be a PDF within the allowed size limit.",
+        "The document was rejected: its contents or size do not meet the upload requirements.",
       failed:
         "The upload could not be verified. Check its status before starting a new upload.",
     },

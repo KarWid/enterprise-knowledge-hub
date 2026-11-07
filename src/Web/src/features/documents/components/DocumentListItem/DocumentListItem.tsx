@@ -16,7 +16,7 @@ export function DocumentListItem({ document }: DocumentListItemProps) {
   return (
     <li className={styles.document}>
       <span className={styles.documentIcon} aria-hidden="true">
-        PDF
+        {document.name.split(".").pop()?.toUpperCase()}
       </span>
       <div>
         <strong>{document.name}</strong>

@@ -2,15 +2,19 @@ using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
+using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 
 namespace EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
 
 internal sealed class AzureBlobDocumentStorage(
     BlobServiceClient serviceClient,
-    BlobContainerClient containerClient) : IDocumentBlobStorage
+    BlobContainerClient containerClient,
+    IEnumerable<IDocumentContentValidator> contentValidators) : IDocumentBlobStorage
 {
-    private static readonly byte[] PdfSignature = "%PDF-"u8.ToArray();
+    private readonly IReadOnlyDictionary<DocumentFormat, IDocumentContentValidator> validatorsByFormat =
+        contentValidators.ToDictionary(validator => validator.Format);
 
     public async Task<Uri> CreateUploadUriAsync(
         string blobReference,
@@ -39,6 +43,7 @@ internal sealed class AzureBlobDocumentStorage(
 
     public async Task<DocumentUploadInspection?> InspectUploadAsync(
         string blobReference,
+        long maximumSizeBytes,
         CancellationToken cancellationToken,
         string? expectedETag = null)
     {
@@ -51,15 +56,25 @@ internal sealed class AzureBlobDocumentStorage(
                 : new BlobRequestConditions { IfMatch = new ETag(expectedETag) };
 
             var properties = await blob.GetPropertiesAsync(conditions: blobRequestConditions, cancellationToken: cancellationToken);
-            if (properties.Value.ContentLength < PdfSignature.Length)
+            var length = properties.Value.ContentLength;
+            var etag = properties.Value.ETag.ToString();
+            // Reject size before downloading. Browser MIME headers are not format evidence.
+            if (length <= 0 || length > maximumSizeBytes)
             {
-                return new DocumentUploadInspection(properties.Value.ContentLength, false, properties.Value.ETag.ToString());
+                return new DocumentUploadInspection(length, false, etag, "invalid_size");
+            }
+
+            var format = DocumentFormat.FromFileName(blobReference);
+            // Every supported format requires an explicitly registered content validator.
+            if (format is null || !validatorsByFormat.TryGetValue(format, out var validator))
+            {
+                return new DocumentUploadInspection(length, false, etag, "unsupported_format");    
             }
 
             var download = await blob.DownloadStreamingAsync(
                 new BlobDownloadOptions
                 {
-                    Range = new HttpRange(0, PdfSignature.Length),
+                    Range = new HttpRange(0, Math.Min(length, validator.MaximumInspectionBytes ?? length)),
                     Conditions = new BlobRequestConditions
                     {
                         IfMatch = properties.Value.ETag
@@ -69,12 +84,9 @@ internal sealed class AzureBlobDocumentStorage(
 
             await using var content = download.Value.Content;
 
-            (byte[]? header, int bytesRead) = await GetPdfHeaderAsync(content, cancellationToken);
+            var valid = await validator.ValidateAsync(content, length, cancellationToken);
 
-            return new DocumentUploadInspection(
-                properties.Value.ContentLength,
-                bytesRead == PdfSignature.Length && header != null && header.SequenceEqual(PdfSignature),
-                properties.Value.ETag.ToString());
+            return new DocumentUploadInspection(length, valid, etag, valid ? null : "invalid_format");
         }
         catch (RequestFailedException exception) when (exception.Status == 404 && exception.ErrorCode == "BlobNotFound")
         {
@@ -82,8 +94,24 @@ internal sealed class AzureBlobDocumentStorage(
         }
         catch (RequestFailedException exception) when (exception.Status == 412)
         {
-            // TODO @KWidla: Do we catch the exception?
             throw new DocumentBlobChangedException();
+        }
+    }
+
+    public async Task<string?> GetUploadETagAsync(string blobReference, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Cleanup needs identity only; malformed content must never prevent deletion.
+            var properties = await containerClient
+                .GetBlobClient(blobReference)
+                .GetPropertiesAsync(cancellationToken: cancellationToken);
+
+            return properties.Value.ETag.ToString();
+        }
+        catch (RequestFailedException exception) when (exception.Status == 404 && exception.ErrorCode == "BlobNotFound")
+        {
+            return null;
         }
     }
 
@@ -93,23 +121,5 @@ internal sealed class AzureBlobDocumentStorage(
             .GetBlobClient(blobReference)
             .DeleteIfExistsAsync(conditions: new BlobRequestConditions { IfMatch = new ETag(etag) },
                 cancellationToken: cancellationToken);
-    }
-
-    private async Task<(byte[]? header, int bytesRead)> GetPdfHeaderAsync(Stream stream, CancellationToken cancellationToken)
-    {
-        var header = new byte[PdfSignature.Length];
-        var bytesRead = 0;
-        while (bytesRead < header.Length)
-        {
-            var read = await stream.ReadAsync(header.AsMemory(bytesRead), cancellationToken);
-            if (read == 0)
-            {
-                break;
-            }
-
-            bytesRead += read;
-        }
-
-        return (header, bytesRead);
     }
 }

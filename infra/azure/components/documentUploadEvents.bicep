@@ -63,7 +63,8 @@ resource uploadEvents 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2022-
     filter: {
       includedEventTypes: ['Microsoft.Storage.BlobCreated']
       subjectBeginsWith: '/blobServices/default/containers/${documentsContainerName}/blobs/organizations/'
-      subjectEndsWith: '.pdf'
+      // Format validation belongs to the API catalog and the persisted reservation.
+      subjectEndsWith: ''
       isSubjectCaseSensitive: true
       advancedFilters: [
         { operatorType: 'StringIn', key: 'data.api', values: ['PutBlob'] }

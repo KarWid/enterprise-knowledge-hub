@@ -8,7 +8,7 @@ Instead of relying on tribal knowledge, employees should be able to ask question
 "What does our regulation say about this process?"
 "What was agreed with the customer?"
 The system should provide answers grounded in the organization's own knowledge sources and clearly indicate the supporting sources.
-The initial version focuses exclusively on PDF documents.
+The initial version focuses on uploaded PDF and Markdown documents.
 Future versions may extend the knowledge layer to include additional sources such as databases, meeting transcripts, audio recordings, and other enterprise systems.
 
 2. Product Model
@@ -50,12 +50,12 @@ Users join the organization through invitations.
 The application should not require the product operator to manually provision an Azure environment or Microsoft Entra tenant for each customer.
 
 5. Knowledge Hub — MVP
-The MVP supports one knowledge source:
-PDF documents.
+The MVP supports uploaded documents as its knowledge source:
+PDF and Markdown files. Both can be uploaded and verified; knowledge processing remains planned.
 The initial flow is:
 User
   ↓
-Upload PDF
+Upload PDF or Markdown
   ↓
 Blob Storage
   ↓
@@ -170,7 +170,7 @@ Create an account.
 Create an organization.
 Invite users.
 Authenticate securely.
-Upload PDF documents.
+Upload PDF and Markdown documents.
 Process documents into searchable knowledge.
 Ask questions through the chat.
 Receive answers grounded in uploaded documents.

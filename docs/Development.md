@@ -522,7 +522,7 @@ The exact order may change based on implementation requirements.
 26. AI Development
 AI functionality should be implemented only after the basic authenticated application works.
 The first AI milestone is:
-Upload PDF
+Upload PDF or Markdown
     ↓
 Store document
     ↓
@@ -787,18 +787,20 @@ Milestone 7 — Documents
 Goal:
 User
     ↓
-Upload PDF
+Upload PDF or Markdown
     ↓
 Blob Storage
     ↓
 Document record
 
 Requirements:
-- The API reserves an upload using only the PDF file name; it must not accept the document stream or proxy document bytes.
+- The API reserves an upload using only the file name; it must not accept the document stream or proxy document bytes. A built-in format catalog supports PDF (`.pdf`) and Markdown (`.md`); Documents:EnabledFormats flags select which formats can create new reservations.
 - Reserving the upload creates an Organization-scoped Document in PendingForUpload with a server-generated blob reference and upload expiration.
 - The API returns a short-lived (no more than 15 minutes), HTTPS-only, create-only user delegation SAS scoped to that exact blob. Storage account keys and broad container SAS tokens are forbidden.
 - React uses a single create-only PUT directly to Blob Storage, shows “Uploaded—verifying…”, and polls the authorized document-status endpoint with a bounded lifetime. A polling timeout leaves verification pending.
-- An Entra-authenticated Event Grid webhook durably records BlobCreated notifications in the Knowledge inbox. A BackgroundService in the existing API verifies the blob using conditional ETag reads, checks the PDF signature and configured size limit, and persists the ETag before changing the Document to Uploaded.
+- An Entra-authenticated Event Grid webhook durably records BlobCreated notifications in the Knowledge inbox. A BackgroundService in the existing API verifies the blob using conditional ETag reads, checks the configured size limit and format (PDF signature or nonempty strict UTF-8 Markdown), and persists the ETag before changing the Document to Uploaded.
+- GET /api/documents/upload-capabilities returns enabled extensions, content types, and size limit under Documents.Read. React uses these settings and the reservation's contentType for its direct PUT. New reservations require Documents.Upload; disabling a format does not strand earlier reservations.
+- Event Grid filters by the document prefix and PutBlob, without a PDF-only suffix. The webhook checks canonical paths against the supported-format catalog, and the worker requires an exact persisted reservation.
 - Invalid uploads become Rejected with an atomically scheduled, retryable cleanup job. Cleanup is conditional and delayed until after the SAS deadline plus grace. Pending reservations are reconciled after that deadline: existing blobs use the same finalizer; only genuinely absent blobs become Failed. SAS expiry alone does not reject a committed upload.
 - Configure Blob Storage CORS only for the known web application origin(s), PUT/OPTIONS, and required Azure upload headers. CORS does not replace SAS authorization.
 - Inbox uniqueness, expiring atomic leases, bounded retry/backoff, and document concurrency tokens handle duplicates, crashes, and concurrent API instances. Background ownership comes from the exact persisted reservation, not a current user.
@@ -807,7 +809,7 @@ Requirements:
 
 Milestone 8 — Knowledge Processing
 Goal:
-PDF
+PDF or Markdown (future processing; currently only upload verification exists)
     ↓
 Text extraction
     ↓
@@ -829,6 +831,22 @@ Azure OpenAI
 Grounded answer
     ↓
 Sources
+
+Security acceptance criteria:
+
+- Follow the [prompt injection and untrusted document content rules](Security.md#prompt-injection-and-untrusted-document-content)
+  and the source-material separation described in [AI prompt architecture](AI.md).
+- Keep retrieved content separate from application instructions and explicitly
+  tell the model to treat source content as data, not instructions.
+- Enforce Organization and document permissions before retrieval. Tests must
+  prove that unauthorized chunks never enter the model context, including when
+  a source document asks for data from another Organization or an inaccessible document.
+- Add adversarial document tests containing instructions to override application
+  rules, disclose secrets, or initiate tool actions. Verify that source instructions
+  are not promoted into application instructions and do not trigger tool execution.
+  Exercise the answer-generation behavior as well as the enforced backend boundaries.
+- Expose no action tools in the MVP chat. Encoding and format validation must not
+  be treated as evidence that retrieved content is safe from prompt injection.
 
 
 Milestone 10 - Document Versioning and Replacement

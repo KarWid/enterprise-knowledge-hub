@@ -17,6 +17,7 @@ public static class KnowledgeModule
             .Bind(configuration.GetSection(DocumentUploadOptions.SectionName))
             .Validate(o => o.UploadSasLifetimeMinutes is > 0 and <= 15 && o.MaxUploadSizeBytes is > 0 and <= 524288000,
                 "Uploads require a 1-15 minute SAS and a positive size limit of at most 500 MiB (single PUT).")
+            .Validate(o => o.HasValidFormats(), "Documents:EnabledFormats must contain only supported format identifiers: pdf, markdown.")
             .ValidateOnStart();
         services.AddOptions<DocumentUploadWorkerOptions>()
             .Bind(configuration.GetSection(DocumentUploadWorkerOptions.SectionName))

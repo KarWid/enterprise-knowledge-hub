@@ -10,6 +10,12 @@ const injectedRtkApi = api.injectEndpoints({
     getDocuments: build.query<GetDocumentsApiResponse, GetDocumentsApiArg>({
       query: () => ({ url: `/api/documents` }),
     }),
+    getDocumentUploadCapabilities: build.query<
+      GetDocumentUploadCapabilitiesApiResponse,
+      GetDocumentUploadCapabilitiesApiArg
+    >({
+      query: () => ({ url: `/api/documents/upload-capabilities` }),
+    }),
     beginDocumentUpload: build.mutation<
       BeginDocumentUploadApiResponse,
       BeginDocumentUploadApiArg
@@ -68,6 +74,9 @@ export type GetMeApiResponse = /** status 200 OK */ CurrentUserResponse;
 export type GetMeApiArg = void;
 export type GetDocumentsApiResponse = /** status 200 OK */ DocumentResponse[];
 export type GetDocumentsApiArg = void;
+export type GetDocumentUploadCapabilitiesApiResponse =
+  /** status 200 OK */ DocumentUploadCapabilitiesResponse;
+export type GetDocumentUploadCapabilitiesApiArg = void;
 export type BeginDocumentUploadApiResponse =
   /** status 201 Created */ DocumentUploadSessionResponse;
 export type BeginDocumentUploadApiArg = {
@@ -129,10 +138,20 @@ export type DocumentResponse = {
     | "Rejected";
   createdAt: string;
 };
+export type DocumentUploadFormatResponse = {
+  id: string;
+  extension: string;
+  contentType: string;
+};
+export type DocumentUploadCapabilitiesResponse = {
+  formats: DocumentUploadFormatResponse[];
+  maxSizeBytes: number;
+};
 export type DocumentUploadSessionResponse = {
   documentId: string;
   uploadUri: string;
   expiresAt: string;
+  contentType: string;
 };
 export type CreateDocumentUploadRequest = {
   fileName?: string | null;
@@ -147,6 +166,7 @@ export const {
   useGetHealthQuery,
   useGetMeQuery,
   useGetDocumentsQuery,
+  useGetDocumentUploadCapabilitiesQuery,
   useBeginDocumentUploadMutation,
   useGetDocumentQuery,
   useGetOrganizationsQuery,
