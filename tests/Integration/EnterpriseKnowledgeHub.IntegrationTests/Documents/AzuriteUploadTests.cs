@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 using EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
+using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
@@ -218,7 +219,8 @@ public sealed class AzuriteUploadTests
         // Azure identity and Event Grid delivery are substituted by the test environment.
         return new DocumentUploadFinalizer(
             db,
-            new AzureBlobDocumentStorage(serviceClient, container),
+            new AzureBlobDocumentStorage(serviceClient, container,
+                [new PdfDocumentContentValidator(), new MarkdownDocumentContentValidator()]),
             inbox,
             factory.Database.Clock,
             Options.Create(new DocumentUploadOptions()),

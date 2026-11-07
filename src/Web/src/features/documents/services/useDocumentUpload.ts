@@ -8,15 +8,15 @@ interface UseDocumentUploadOptions {
   onCompleted: () => void;
 }
 
+export type DocumentUploadNotice = "verifying" | "verified" | "rejected" | "failed" | "pending";
+
 export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
   const [file, setFile] = useState<File | null>(null);
   const [storageUploadError, setStorageUploadError] = useState<unknown>();
   const [isUploadingToStorage, setIsUploadingToStorage] = useState(false);
   const [documentId, setDocumentId] = useState<string>();
   const [pollingExpired, setPollingExpired] = useState(false);
-  const [notice, setNotice] = useState<
-    "verifying" | "verified" | "rejected" | "failed" | "pending"
-  >();
+  const [notice, setNotice] = useState<DocumentUploadNotice>();
   const uploadController = useRef<AbortController | null>(null);
   const mounted = useRef(true);
   const [
@@ -114,7 +114,7 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
         method: "PUT",
         headers: {
           "If-None-Match": "*",
-          "x-ms-blob-content-type": "application/pdf",
+          "x-ms-blob-content-type": reservation.data.contentType,
           "x-ms-blob-type": "BlockBlob",
           "x-ms-version": "2023-11-03",
         },

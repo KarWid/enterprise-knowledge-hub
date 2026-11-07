@@ -3,6 +3,7 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
 using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads;
+using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,8 @@ public static class EnterpriseKnowledgeHubInfrastructureModule
                 .Value
                 .ContainerName));
 
+        services.AddSingleton<IDocumentContentValidator, PdfDocumentContentValidator>();
+        services.AddSingleton<IDocumentContentValidator, MarkdownDocumentContentValidator>();
         services.AddSingleton<IDocumentBlobStorage, AzureBlobDocumentStorage>();
         services.AddHostedService<DocumentUploadWorker>();
 

@@ -136,7 +136,10 @@ The application remains responsible for creating the organization membership.
 
 8. Document
 Document represents a source document uploaded to the knowledge system.
-For the MVP, supported documents are PDF files.
+Supported upload formats are PDF (`.pdf`) and UTF-8 Markdown (`.md`). The built-in
+format catalog defines their canonical extensions and content types. Application
+configuration can disable new reservations for either format without invalidating
+existing documents or pending reservations.
 Example:
 Document
 ----------------
@@ -166,7 +169,7 @@ PendingForUpload means the application has reserved a server-generated blob
 reference and issued a short-lived upload capability, but has not yet verified
 the blob. Pending documents are not knowledge sources. UploadExpiresAt records
 when that capability expires, and is preserved after finalization for cleanup.
-An invalid signature or size transitions to Rejected; a genuinely absent blob
+Invalid format/content or size transitions to Rejected; a genuinely absent blob
 after the deadline plus grace transitions to Failed. A committed upload can be
 verified after SAS expiry. Only a basic format/size-verified upload transitions
 from PendingForUpload to Uploaded, with its verified ETag recorded. Uploaded
@@ -185,7 +188,8 @@ The application must validate organization ownership for every document operatio
 
 10. Knowledge
 Knowledge represents information derived from organization-owned sources.
-For the MVP, knowledge is derived from PDF documents.
+The planned MVP derives knowledge from uploaded PDF and Markdown documents.
+Upload verification supports both; text extraction and downstream knowledge processing are not implemented yet.
 Conceptually:
 Document
    ↓

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 using Microsoft.Extensions.Options;
 
 namespace EnterpriseKnowledgeHub.Api.StorageEvents;
@@ -125,7 +126,9 @@ public sealed partial class StorageEventParser(
         }
 
         var blobReference = subject[expectedSubjectPrefix.Length..];
-        if (!BlobReferencePattern().IsMatch(blobReference))
+        // Supported formats remain valid for reservations created before a format was disabled.
+        if (!BlobReferencePattern().IsMatch(blobReference) ||
+            DocumentFormat.FromFileName(blobReference) is null)
         {
             throw new ArgumentException("Unexpected blob reference.");
         }
@@ -208,7 +211,7 @@ public sealed partial class StorageEventParser(
             ? value.GetString()!
             : throw new ArgumentException("Missing event field.");
 
-    [GeneratedRegex("^organizations/[a-f0-9]{32}/documents/[a-f0-9]{32}\\.pdf$")]
+    [GeneratedRegex("\\Aorganizations/[a-f0-9]{32}/documents/[a-f0-9]{32}\\.[a-z0-9]+\\z")]
     private static partial Regex BlobReferencePattern();
     
     [GeneratedRegex("^0x[0-9a-fA-F]{1,64}$")]

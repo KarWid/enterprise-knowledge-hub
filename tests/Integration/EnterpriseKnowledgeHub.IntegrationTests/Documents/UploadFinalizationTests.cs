@@ -18,13 +18,17 @@ public sealed class UploadFinalizationTests
     private const string RecreatedBlobETag = "\"0x456\"";
     private const int AfterDeadlineSeconds = 3_600;
 
-    [Fact]
-    public async Task ValidUpload_AfterSasExpiry_IsFinalizedOnceAndPersistsETag()
+    [Theory]
+    [InlineData("regulations.pdf")]
+    [InlineData("notes.md")]
+    public async Task ValidUpload_AfterSasExpiry_IsFinalizedOnceAndPersistsETag(string fileName)
     {
         // Arrange
         using var fixture = new UploadTestDatabase();
         await using var db = fixture.CreateContext();
-        var document = await Reserve(db);
+        var document = await Reserve(db, fileName);
+        // New reservations can be disabled without stranding earlier uploads.
+        fixture.UploadOptions.EnabledFormats["markdown"] = false;
 
         // SAS expiry must not invalidate a blob that was successfully committed before processing.
         fixture.Clock.Advance(AfterDeadlineSeconds);
@@ -55,7 +59,7 @@ public sealed class UploadFinalizationTests
     [InlineData(100, false)]
     [InlineData(0, false)]
     [InlineData(26_214_401, true)]
-    public async Task InvalidUpload_IsRejectedAndSchedulesDelayedConditionalCleanup(long contentLength, bool hasPdfSignature)
+    public async Task InvalidUpload_IsRejectedAndSchedulesDelayedConditionalCleanup(long contentLength, bool isValidFormat)
     {
         // Arrange
         using var fixture = new UploadTestDatabase();
@@ -63,7 +67,7 @@ public sealed class UploadFinalizationTests
         var document = await Reserve(db);
         fixture.Storage.Inspection = new DocumentUploadInspection(
             contentLength,
-            hasPdfSignature,
+            isValidFormat,
             InitialETag);
             
         var finalizer = fixture.Finalizer(db);
@@ -85,7 +89,7 @@ public sealed class UploadFinalizationTests
         fixture.Storage.FailDeletion = false;
         fixture.Storage.Inspection = new DocumentUploadInspection(
             ContentLength: 100,
-            HasPdfSignature: true,
+            IsValidFormat: true,
             ETag: RecreatedBlobETag);
 
         await finalizer.ProcessAsync(cleanupWork, CancellationToken.None);
@@ -300,7 +304,7 @@ public sealed class UploadFinalizationTests
         // using the old Revision value that it loaded before event finalization.
         fixture.Storage.Inspection = new DocumentUploadInspection(
             ContentLength: 100,
-            HasPdfSignature: false,
+            IsValidFormat: false,
             ETag: InitialETag);
             
         Task CommitStaleRejection() => fixture.Finalizer(reconciliationDb).ProcessAsync(
@@ -320,11 +324,11 @@ public sealed class UploadFinalizationTests
         Assert.Empty(cleanupItems);
     }
 
-    internal static async Task<Document> Reserve(KnowledgeDbContext db)
+    internal static async Task<Document> Reserve(KnowledgeDbContext db, string fileName = "regulations.pdf")
     {
         var document = Document.CreatePendingUpload(
             Guid.NewGuid(),
-            "regulations.pdf",
+            fileName,
             Guid.NewGuid(),
             DateTime.UtcNow.AddMinutes(15));
 

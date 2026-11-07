@@ -100,16 +100,18 @@ public sealed class StorageWebhookTests
         Assert.Empty(inboxItems);
     }
 
-    [Fact]
-    public async Task ValidBatch_WhenDeliveredTwice_IsAcknowledgedWithoutCreatingDuplicateWork()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ValidBatch_WhenDeliveredTwice_IsAcknowledgedWithoutCreatingDuplicateWork(bool markdownEnabled)
     {
         // Arrange
-        using var factory = new StorageWebhookFactory();
+        using var factory = new StorageWebhookFactory { MarkdownEnabled = markdownEnabled };
         using var client = CreateAuthenticatedClient(factory);
         var events = new[]
         {
             CreateBlobCreatedEvent(),
-            CreateBlobCreatedEvent()
+            CreateBlobCreatedEvent(extension: ".md")
         };
 
         // Act
@@ -222,11 +224,28 @@ public sealed class StorageWebhookTests
         };
     }
 
-    private static object CreateBlobCreatedEvent(StorageEventFault? fault = null)
+    [Theory]
+    [InlineData(".exe")]
+    [InlineData(".md.exe")]
+    [InlineData(".md\n")]
+    [InlineData(".MD")]
+    public async Task NoncanonicalOrUnsupportedExtensionIsRejected(string extension)
+    {
+        using var factory = new StorageWebhookFactory();
+        using var client = CreateAuthenticatedClient(factory);
+
+        using var response = await client.PostAsJsonAsync(WebhookPath, new[] { CreateBlobCreatedEvent(extension: extension) });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await using var db = factory.Database.CreateContext();
+        Assert.Empty(await db.UploadInbox.ToListAsync());
+    }
+
+    private static object CreateBlobCreatedEvent(StorageEventFault? fault = null, string extension = ".pdf")
     {
         var reference = fault == StorageEventFault.InvalidBlobReference
             ? "../other.pdf"
-            : $"organizations/{Guid.NewGuid():N}/documents/{Guid.NewGuid():N}.pdf";
+            : $"organizations/{Guid.NewGuid():N}/documents/{Guid.NewGuid():N}{extension}";
         var containerName = fault == StorageEventFault.UnexpectedContainer
             ? "other"
             : "documents";

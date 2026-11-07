@@ -44,10 +44,13 @@ const pl = {
   },
   documents: {
     title: "Dokumenty",
-    subtitle: "Przeslij i zarzadzaj zrodlami wiedzy PDF dla organizacji.",
+    subtitle: "Przeslij i zarzadzaj zrodlami wiedzy dla organizacji.",
     uploadTitle: "Przeslij dokument",
-    uploadDescription: "Obslugiwane sa pliki PDF do 25 MB.",
-    chooseFile: "Wybierz plik PDF",
+    uploadDescription: "Obslugiwane pliki: {{formats}}. Maksymalny rozmiar: {{maxSize}} MiB.",
+    loadingFormats: "Wczytywanie obslugiwanych formatow...",
+    uploadsDisabled: "Przesylanie dokumentow jest obecnie wylaczone.",
+    invalidFile: "Wybierz niepusty plik z obslugiwanym rozszerzeniem w podanym limicie rozmiaru.",
+    chooseFile: "Wybierz dokument",
     upload: "Przeslij",
     uploading: "Przesylanie...",
     uploadProgressTitle: "Przesyłanie dokumentu",
@@ -73,7 +76,7 @@ const pl = {
       verified:
         "Przesłanie zweryfikowane. Przetwarzanie wiedzy nie jest jeszcze dostępne.",
       rejected:
-        "Dokument odrzucony: wymagany jest plik PDF w dozwolonym limicie rozmiaru.",
+        "Dokument odrzucony: zawartosc lub rozmiar pliku nie spelnia wymagan przesylania.",
       failed:
         "Nie udało się zweryfikować przesłania. Sprawdź status przed ponowną próbą.",
     },

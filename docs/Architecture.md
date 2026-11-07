@@ -223,7 +223,7 @@ ASP.NET Core API authorizes the current Organization and reserves a Document
   ↓
 User delegation SAS restricted to one server-generated blob, HTTPS, create-only, and a short lifetime
   ↓
-React PUTs the PDF directly to Blob Storage
+React PUTs the PDF or Markdown document directly to Blob Storage
   ↓
 BlobCreated (Event Grid schema) reaches an authenticated API webhook
   ↓
@@ -253,9 +253,15 @@ continue to use the original account. Inbox DeadLetter rows in SQL remain a
 separate mechanism for failures after the webhook has accepted an event.
 
 12. Knowledge Processing
-The MVP supports PDF documents.
+Uploads support PDF and UTF-8 Markdown through the Knowledge format catalog.
+Documents:EnabledFormats boolean flags control new reservations; an authorized
+capabilities endpoint supplies the UI's accepted extensions and size limit.
+Reservation responses supply the backend-selected content type. Event Grid uses
+the document prefix and PutBlob filter; the webhook and reservation lookup enforce
+supported canonical paths. Original files share the existing storage and schema.
+Format-specific upload verification is implemented; processing below remains planned.
 The conceptual pipeline is:
-PDF Upload
+PDF or Markdown Upload
     ↓
 Blob Storage
     ↓

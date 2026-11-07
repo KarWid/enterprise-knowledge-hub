@@ -164,8 +164,8 @@ Return Response + Sources
 
 5. Knowledge Ingestion Pipeline
 Documents become available for AI through an ingestion process.
-Initial MVP pipeline:
-PDF Upload
+Planned MVP pipeline (currently only upload and basic format verification are implemented):
+PDF or Markdown Upload
 
     |
 
@@ -311,6 +311,16 @@ User Question
 =
 
 AI Response
+
+Retrieved knowledge must be supplied as clearly labeled source material with
+source identifiers, separate from application instructions. Never place retrieved
+text in the system instructions. Application instructions must tell the model to
+treat source content as data and ignore instructions embedded in it.
+
+The backend must enforce Organization and document access before retrieval.
+Retrieved content cannot initiate tool actions or grant permissions; the MVP chat
+provides no action tools. Format and encoding checks do not detect prompt injection.
+Follow the authoritative [prompt injection and untrusted document content rules](Security.md#prompt-injection-and-untrusted-document-content).
 
 
 9. AI Response Requirements

@@ -1,32 +1,20 @@
-import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ErrorModal } from "../../../components/ErrorModal/ErrorModal";
 import { Button } from "../../../components/ui/Button/Button";
 import { Card } from "../../../components/ui/Card/Card";
 import { FilePicker } from "../../../components/ui/FilePicker/FilePicker";
 import { Heading } from "../../../components/ui/Heading/Heading";
+import { InlineMessage } from "../../../components/ui/InlineMessage/InlineMessage";
 import { Modal } from "../../../components/ui/Modal/Modal";
 import { Section } from "../../../components/ui/Section/Section";
-import { useGetDocumentsQuery } from "../../../services/api/generated/api";
-import { DocumentListItem } from "../components/DocumentListItem/DocumentListItem";
-import { useDocumentUpload } from "../services/useDocumentUpload";
+import { DocumentList } from "../components/DocumentList/DocumentList";
+import { DocumentUploadNotice } from "../components/DocumentUploadNotice/DocumentUploadNotice";
+import { useDocumentsPage } from "../services/useDocumentsPage";
 import styles from "./DocumentsPage.module.less";
 
 export function DocumentsPage() {
   const { t } = useTranslation();
-  const { data: documents = [], error: documentsError, isLoading, refetch } =
-    useGetDocumentsQuery(undefined, { refetchOnMountOrArgChange: true });
-  const refreshDocuments = useCallback(() => { void refetch(); }, [refetch]);
-  const upload = useDocumentUpload({ onCompleted: refreshDocuments });
-
-  function retry() {
-    if (upload.error !== undefined && upload.file !== null) {
-      upload.retryUpload();
-      return;
-    }
-
-    void refetch();
-  }
+  const { documents, isLoading, upload, error, retry } = useDocumentsPage();
 
   return (
     <Section>
@@ -38,50 +26,45 @@ export function DocumentsPage() {
       />
 
       <Card className={styles.uploadCard}>
-        <Heading
-          level="h2"
-          title={t("documents.uploadTitle")}
-          subtitle={t("documents.uploadDescription")}
-        />
-        <div className={styles.uploadControls}>
-          <FilePicker
-            id="document-upload-file"
-            selectedFileName={upload.file?.name}
-            placeholder={t("documents.chooseFile")}
-            accept="application/pdf,.pdf"
-            onFileChange={upload.setFile}
-            disabled={upload.isUploading}
+        <div className={styles.uploadRow}>
+          <Heading
+            level="h2"
+            title={t("documents.uploadTitle")}
+            subtitle={upload.description}
           />
-          <Button
-            type="button"
-            className={styles.uploadButton}
-            onClick={() => void upload.uploadSelectedFile()}
-            disabled={upload.file === null || upload.isUploading}
-          >
-            {upload.isUploading ? t("documents.uploading") : t("documents.upload")}
-          </Button>
+          <div className={styles.uploadControls}>
+            <FilePicker
+              id="document-upload-file"
+              selectedFileName={upload.file?.name}
+              placeholder={t("documents.chooseFile")}
+              accept={upload.accept}
+              onFileChange={upload.selectFile}
+              disabled={!upload.canSelectFile}
+            />
+            <Button
+              type="button"
+              className={styles.uploadButton}
+              onClick={upload.submit}
+              disabled={!upload.canSubmit}
+            >
+              {upload.isUploading ? t("documents.uploading") : t("documents.upload")}
+            </Button>
+          </div>
         </div>
-      </Card>
-
-      {upload.notice && <p role="status">{t(`documents.verification.${upload.notice}`)}</p>}
-
-      <Card>
-        <Heading level="h2" title={t("documents.listTitle")} />
-        {isLoading ? (
-          <p className={styles.muted}>{t("app.pleaseWait")}</p>
-        ) : documents.length === 0 ? (
-          <p className={styles.muted}>{t("documents.empty")}</p>
-        ) : (
-          <ul className={styles.documentList}>
-            {documents.map((document) => (
-              <DocumentListItem key={document.id} document={document} />
-            ))}
-          </ul>
+        {upload.showValidationError && (
+          <InlineMessage variant="error">{t("documents.invalidFile")}</InlineMessage>
         )}
       </Card>
 
+      <DocumentUploadNotice notice={upload.notice} className={styles.uploadNotice} />
+
+      <Card>
+        <Heading level="h2" title={t("documents.listTitle")} />
+        <DocumentList documents={documents} isLoading={isLoading} />
+      </Card>
+
       <ErrorModal
-        error={upload.error ?? documentsError}
+        error={error}
         fallbackMessage={t("documents.error")}
         onContinue={retry}
       />

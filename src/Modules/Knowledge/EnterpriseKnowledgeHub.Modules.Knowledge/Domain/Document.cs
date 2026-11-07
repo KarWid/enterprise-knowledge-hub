@@ -6,7 +6,6 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 public sealed class Document
 {
     private const int MaximumNameLength = 256;
-    private const string PdfContentType = "application/pdf";
 
     public Guid Id { get; private set; }
     public Guid OrganizationId { get; private set; }
@@ -41,8 +40,8 @@ public sealed class Document
             throw new DomainException("Upload expiration must be in the future.");
 
         var normalizedName = DomainGuard.Required(name, nameof(Name), MaximumNameLength).Trim();
-        if (!string.Equals(Path.GetExtension(normalizedName), ".pdf", StringComparison.OrdinalIgnoreCase))
-            throw new DomainException("Only PDF documents are supported.");
+        var format = DocumentFormat.FromFileName(normalizedName)
+            ?? throw new DomainException("Unsupported document extension.");
 
         var id = Guid.NewGuid();
 
@@ -51,8 +50,8 @@ public sealed class Document
             Id = id,
             OrganizationId = organizationId,
             Name = normalizedName,
-            BlobReference = $"organizations/{organizationId:N}/documents/{id:N}.pdf",
-            ContentType = PdfContentType,
+            BlobReference = $"organizations/{organizationId:N}/documents/{id:N}{format.Extension}",
+            ContentType = format.ContentType,
             Status = DocumentStatus.PendingForUpload,
             CreatedBy = createdBy,
             CreatedAt = DateTime.UtcNow,
@@ -82,7 +81,7 @@ public sealed class Document
         Revision = Guid.NewGuid();
     }
 
-    public void RejectUpload(string failureCode = "invalid_pdf_or_size")
+    public void RejectUpload(string failureCode = "invalid_format_or_size")
     {
         EnsurePendingUpload();
         Status = DocumentStatus.Rejected;

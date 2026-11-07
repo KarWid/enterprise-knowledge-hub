@@ -14,6 +14,7 @@ internal sealed class UploadTestDatabase : IDisposable
     public string ConnectionString { get; }
     public UploadClock Clock { get; } = new();
     public DocumentUploadWorkerOptions Options { get; } = new() { MaxAttempts = 3 };
+    public DocumentUploadOptions UploadOptions { get; } = new();
     public TestDocumentStorage Storage { get; } = new();
 
     public UploadTestDatabase()
@@ -54,7 +55,7 @@ internal sealed class UploadTestDatabase : IDisposable
         new UploadInbox(db, Clock, Microsoft.Extensions.Options.Options.Create(Options));
 
     public IDocumentUploadFinalizer Finalizer(KnowledgeDbContext db) => new DocumentUploadFinalizer(db, Storage, Inbox(db), Clock,
-        Microsoft.Extensions.Options.Options.Create(new DocumentUploadOptions()),
+        Microsoft.Extensions.Options.Options.Create(UploadOptions),
         Microsoft.Extensions.Options.Options.Create(Options), NullLogger<DocumentUploadFinalizer>.Instance);
 
     public void Dispose()
@@ -87,7 +88,7 @@ internal sealed class TestDocumentStorage : IDocumentBlobStorage
     public Task<Uri> CreateUploadUriAsync(string reference, DateTimeOffset expiry, CancellationToken ct) =>
         Task.FromResult(new Uri("https://teststore.blob.core.windows.net/documents/" + reference + "?sig=test-only"));
 
-    public async Task<DocumentUploadInspection?> InspectUploadAsync(string reference, CancellationToken ct, string? expectedETag = null)
+    public async Task<DocumentUploadInspection?> InspectUploadAsync(string reference, long maximumSizeBytes, CancellationToken ct, string? expectedETag = null)
     {
         Inspections++;
         
@@ -98,6 +99,9 @@ internal sealed class TestDocumentStorage : IDocumentBlobStorage
 
         return Inspection;
     }
+
+    public async Task<string?> GetUploadETagAsync(string reference, CancellationToken ct) =>
+        (await InspectUploadAsync(reference, long.MaxValue, ct))?.ETag;
 
     public Task DeleteIfExistsAsync(string reference, string etag, CancellationToken ct)
     {
