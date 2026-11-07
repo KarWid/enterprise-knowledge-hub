@@ -53,10 +53,17 @@ public class OrganizationInvitationTests
     [Fact]
     public async Task Accept_WhenExpired_MarksExpiredAndThrows()
     {
-        var invitation = CreateInvitation(DateTime.UtcNow.AddMilliseconds(1));
-        await Task.Delay(50);
+        // Arrange
+        // One second gives Create enough time to validate a future expiration date.
+        // Waiting slightly longer ensures the invitation has expired before exercising Accept.
+        var invitation = CreateInvitation(DateTime.UtcNow.AddSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(1100));
 
-        Assert.Throws<InvalidOperationException>(() => invitation.Accept());
+        // Act
+        void AcceptExpiredInvitation() => invitation.Accept();
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(AcceptExpiredInvitation);
         Assert.Equal(InvitationStatus.Expired, invitation.Status);
     }
 
@@ -82,17 +89,29 @@ public class OrganizationInvitationTests
     [Fact]
     public async Task IsExpired_WhenExpiresAtInPastAndStillPending_ReturnsTrue()
     {
-        var invitation = CreateInvitation(DateTime.UtcNow.AddMilliseconds(1));
-        await Task.Delay(50);
+        // Arrange
+        // Avoid the original one-millisecond race during creation, then allow the
+        // invitation to expire naturally before checking its state.
+        var invitation = CreateInvitation(DateTime.UtcNow.AddSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(1100));
 
-        Assert.True(invitation.IsExpired());
+        // Act
+        var isExpired = invitation.IsExpired();
+
+        // Assert
+        Assert.True(isExpired);
     }
 
     [Fact]
     public void IsExpired_WhenNotYetExpired_ReturnsFalse()
     {
+        // Arrange
         var invitation = CreateInvitation();
 
-        Assert.False(invitation.IsExpired());
+        // Act
+        var isExpired = invitation.IsExpired();
+
+        // Assert
+        Assert.False(isExpired);
     }
 }
