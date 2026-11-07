@@ -65,6 +65,24 @@
         }
       }
     },
+    "/api/documents/upload-capabilities": {
+      "get": {
+        "tags": ["Documents"],
+        "operationId": "GetDocumentUploadCapabilities",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentUploadCapabilitiesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/documents/uploads": {
       "post": {
         "tags": ["Documents"],
@@ -272,9 +290,31 @@
         },
         "additionalProperties": false
       },
+      "DocumentUploadCapabilitiesResponse": {
+        "type": "object",
+        "required": ["formats", "maxSizeBytes"],
+        "properties": {
+          "formats": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentUploadFormatResponse" }
+          },
+          "maxSizeBytes": { "type": "integer", "format": "int64" }
+        },
+        "additionalProperties": false
+      },
+      "DocumentUploadFormatResponse": {
+        "type": "object",
+        "required": ["id", "extension", "contentType"],
+        "properties": {
+          "id": { "type": "string" },
+          "extension": { "type": "string" },
+          "contentType": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
       "DocumentUploadSessionResponse": {
         "type": "object",
-        "required": ["documentId", "uploadUri", "expiresAt"],
+        "required": ["documentId", "uploadUri", "expiresAt", "contentType"],
         "properties": {
           "documentId": {
             "type": "string",
@@ -287,6 +327,9 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "contentType": {
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -4,6 +4,7 @@ using EnterpriseKnowledgeHub.Contracts.Knowledge;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.BeginDocumentUpload;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentUploadCapabilities;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,16 @@ namespace EnterpriseKnowledgeHub.Api.Controllers;
 [Authorize]
 public sealed class DocumentsController(IMediator mediator) : ApiControllerBase
 {
+    [HttpGet("upload-capabilities")]
+    [Authorize(Policy = Policies.Documents.Read)]
+    [SwaggerOperation(OperationId = "GetDocumentUploadCapabilities")]
+    [ProducesResponseType(typeof(DocumentUploadCapabilitiesResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUploadCapabilities(CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetDocumentUploadCapabilitiesQuery(), cancellationToken);
+        return Ok(DocumentMapper.MapToDocumentUploadCapabilitiesResponse(result));
+    }
+
     [HttpGet]
     [Authorize(Policy = Policies.Documents.Read)]
     [SwaggerOperation(OperationId = "GetDocuments")]

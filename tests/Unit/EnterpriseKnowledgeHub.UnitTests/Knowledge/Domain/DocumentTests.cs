@@ -6,28 +6,33 @@ namespace EnterpriseKnowledgeHub.UnitTests.Knowledge.Domain;
 
 public sealed class DocumentTests
 {
-    [Fact]
-    public void CreatePendingUpload_WithValidPdf_CreatesPendingDocumentBoundToOrganization()
+    [Theory]
+    [InlineData("handbook.pdf", "application/pdf", ".pdf")]
+    [InlineData("handbook.PDF", "application/pdf", ".pdf")]
+    [InlineData("notes.md", "text/markdown", ".md")]
+    [InlineData("notes.MD", "text/markdown", ".md")]
+    public void CreatePendingUpload_WithSupportedFormat_CreatesPendingDocumentBoundToOrganization(
+        string fileName, string contentType, string extension)
     {
         var organizationId = Guid.NewGuid();
         var createdBy = Guid.NewGuid();
 
         var expiresAt = DateTime.UtcNow.AddMinutes(15);
 
-        var document = Document.CreatePendingUpload(organizationId, "  handbook.PDF  ", createdBy, expiresAt);
+        var document = Document.CreatePendingUpload(organizationId, $"  {fileName}  ", createdBy, expiresAt);
 
         Assert.NotEqual(Guid.Empty, document.Id);
         Assert.Equal(organizationId, document.OrganizationId);
         Assert.Equal(createdBy, document.CreatedBy);
-        Assert.Equal("handbook.PDF", document.Name);
+        Assert.Equal(fileName, document.Name);
         Assert.Equal(DocumentStatus.PendingForUpload, document.Status);
         Assert.Equal(expiresAt, document.UploadExpiresAt);
-        Assert.Equal("application/pdf", document.ContentType);
-        Assert.Equal($"organizations/{organizationId:N}/documents/{document.Id:N}.pdf", document.BlobReference);
+        Assert.Equal(contentType, document.ContentType);
+        Assert.Equal($"organizations/{organizationId:N}/documents/{document.Id:N}{extension}", document.BlobReference);
     }
 
     [Fact]
-    public void CreatePendingUpload_WithNonPdfName_ThrowsDomainException()
+    public void CreatePendingUpload_WithUnsupportedName_ThrowsDomainException()
     {
         Assert.Throws<DomainException>(() => Document.CreatePendingUpload(
             Guid.NewGuid(),

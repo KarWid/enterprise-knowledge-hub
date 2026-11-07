@@ -40,7 +40,7 @@ internal sealed class DocumentUploadFinalizer(
         DocumentUploadInspection? inspection;
         try
         {
-            inspection = await storage.InspectUploadAsync(document.BlobReference, ct, work.ETag);
+            inspection = await storage.InspectUploadAsync(document.BlobReference, uploadOptions.Value.MaxUploadSizeBytes, ct, work.ETag);
         }
         catch (DocumentBlobChangedException) when (work.ETag is not null)
         {
@@ -58,9 +58,9 @@ internal sealed class DocumentUploadFinalizer(
             document.FailUpload();
             db.UploadInbox.Add(CleanupWork(document, document.Id.ToString("N")));
         }
-        else if (inspection.ContentLength <= 0 || inspection.ContentLength > uploadOptions.Value.MaxUploadSizeBytes || !inspection.HasPdfSignature)
+        else if (inspection.ContentLength <= 0 || inspection.ContentLength > uploadOptions.Value.MaxUploadSizeBytes || !inspection.IsValidFormat)
         {
-            document.RejectUpload();
+            document.RejectUpload(inspection.FailureCode ?? "invalid_format_or_size");
             // EF commits the rejection AND its cleanup job in one transaction.
             db.UploadInbox.Add(CleanupWork(document, document.Id.ToString("N")));
         }
@@ -92,10 +92,10 @@ internal sealed class DocumentUploadFinalizer(
 
         // A rejected reservation remains rejected even if its blob was recreated with the SAS.
         // Read current properties, then delete only those exact bytes. A 412 retries the job.
-        var inspection = await storage.InspectUploadAsync(document.BlobReference, ct);
-        if (inspection is not null)
+        var etag = await storage.GetUploadETagAsync(document.BlobReference, ct);
+        if (etag is not null)
         {
-            await storage.DeleteIfExistsAsync(document.BlobReference, inspection.ETag, ct);
+            await storage.DeleteIfExistsAsync(document.BlobReference, etag, ct);
         }
     }
 

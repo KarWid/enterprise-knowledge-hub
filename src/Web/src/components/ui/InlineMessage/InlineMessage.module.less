@@ -1,0 +1,42 @@
+@import "../../../styles/variables.less";
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.info {
+  color: @color-accent-hover;
+  border-color: fade(@color-accent, 25%);
+  background: fade(@color-accent, 6%);
+}
+
+.warning {
+  color: @text-warning;
+  border-color: fade(@text-warning, 30%);
+  background: fade(@text-warning, 7%);
+}
+
+.error {
+  color: @text-danger;
+  border-color: fade(@text-danger, 25%);
+  background: fade(@text-danger, 6%);
+}

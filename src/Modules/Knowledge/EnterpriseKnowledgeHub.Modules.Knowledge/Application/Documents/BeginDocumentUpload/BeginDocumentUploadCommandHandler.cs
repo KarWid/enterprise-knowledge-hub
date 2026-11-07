@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
+using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using Mediator;
@@ -26,9 +27,16 @@ internal sealed class BeginDocumentUploadCommandHandler(
 
         var expiresAt = GetUploadExpiration(uploadOptions.Value);
 
+        var fileName = Path.GetFileName(request.FileName ?? string.Empty).Trim();
+        var format = DocumentFormat.FromFileName(fileName);
+        if (format is null || !uploadOptions.Value.IsEnabled(format))
+        {
+            throw new DomainException("This document extension is not enabled for uploads.");
+        }
+
         var document = Document.CreatePendingUpload(
             membership.OrganizationId,
-            Path.GetFileName(request.FileName ?? string.Empty),
+            fileName,
             membership.UserId,
             expiresAt);
             

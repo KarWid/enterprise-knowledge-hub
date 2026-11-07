@@ -3,7 +3,7 @@
 This infrastructure deliberately contains only the services used by the current application:
 
 - Azure SQL Database with Microsoft Entra-only authentication
-- Azure Blob Storage for original PDF documents, with anonymous access and shared keys disabled
+- Azure Blob Storage for original PDF and Markdown documents, with anonymous access and shared keys disabled
 - A separate Standard GPv2 / Hot / LRS account for Event Grid dead letters, created when the webhook is enabled
 - Blob service CORS limited to the deployed Static Web App origin (and Vite only in `dev`) for direct document uploads
 - Azure Container Registry (ACR) for the API image

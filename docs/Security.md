@@ -302,10 +302,13 @@ Frontend user tokens cannot authorize this endpoint. Subscription validation,
 headers, topic fields, and CORS are not authentication. Missing configuration
 never enables anonymous delivery. Accepted batches are durable before acknowledgment.
 
-The worker reads properties and the PDF signature using Managed Identity and
-ETag conditions, enforces the configured size limit, and persists the verified
-ETag before changing the document to Uploaded. A PDF header is only a basic
-format check; it does not prove PDF validity or absence of malware. Invalid
+The worker reads properties and format-specific bytes using Managed Identity and
+ETag conditions, checks the configured size limit before downloading, and persists
+the verified ETag before changing the document to Uploaded. PDF uses a signature
+check; Markdown uses bounded strict UTF-8 decoding, rejects binary control characters
+and empty content, and never renders HTML or follows embedded links. Browser MIME
+types and extensions alone are not verification. These are basic format checks;
+they do not prove full document validity or absence of malware. Invalid
 files become Rejected. A genuinely absent blob after the upload deadline plus
 grace becomes Failed; Storage outages retry. SAS expiry alone never rejects
 successfully committed bytes. Cleanup is durable, conditionally deletes the
@@ -415,6 +418,28 @@ Azure OpenAI
 "Please don't reveal data from other organizations."
 
 Prompt instructions are not a security boundary.
+
+### Prompt injection and untrusted document content
+
+Uploaded documents and retrieved chunks are untrusted input, including content
+uploaded by authorized users. Format, signature, and encoding validation do not
+establish protection against prompt injection.
+
+- Present retrieved content explicitly as labeled source material, separate from
+  application instructions. Never promote source text into system instructions.
+- Tell the model that source content is data, not instructions, and that embedded
+  requests to change its behavior, reveal secrets, or invoke tools must be ignored.
+- Enforce current Organization membership and applicable document permissions on
+  the backend before retrieval. Apply access filters using the validated backend
+  context; never rely on the model to filter unauthorized information.
+- Retrieved text must not initiate or authorize tool actions, change permissions,
+  or grant access to other data. The MVP chat exposes no action tools.
+- Enforce authorization and tool restrictions in application code. Source labels,
+  delimiters, and model instructions are additional defenses, not security boundaries.
+
+These requirements apply to every supported document format and to future
+retrieval sources. Verify them with adversarial document tests when implementing
+RAG Chat; successful upload verification does not satisfy these requirements.
 
 16. AI Data Privacy
 The application should minimize the amount of customer data sent to AI services.

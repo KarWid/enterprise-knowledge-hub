@@ -6,10 +6,16 @@
 
 .uploadCard {
   display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.uploadRow {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 20px;
 }
 
 .uploadControls {
@@ -19,15 +25,8 @@
   flex-shrink: 0;
 }
 
-.muted {
-  margin: 16px 0 0;
-  color: @text-muted;
-}
-
-.documentList {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0 0;
+.uploadNotice {
+  margin-bottom: 20px;
 }
 
 .uploadButton {
@@ -35,7 +34,7 @@
 }
 
 @media (max-width: 720px) {
-  .uploadCard,
+  .uploadRow,
   .uploadControls {
     align-items: stretch;
     flex-direction: column;

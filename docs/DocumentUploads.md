@@ -1,13 +1,15 @@
 # Asynchronous document uploads
 
-The API never proxies PDF bytes. It authorizes Documents.Upload using the current
+The API never proxies document bytes. It authorizes Documents.Upload using the current
 Organization, constructs a unique reservation and a user delegation SAS, commits
 the reservation, and only then returns the SAS. SAS generation happens before
 the commit so a delegation-key failure leaves no unused row; no capability leaves
 the API before its reservation is durable. Neither the database nor logs store SAS URLs.
 
 React sends one `PUT Blob` with `If-None-Match: *`, `x-ms-blob-type: BlockBlob`,
-`x-ms-blob-content-type: application/pdf`, and `x-ms-version: 2023-11-03`.
+`x-ms-blob-content-type` set to the reservation response's `contentType`, and
+`x-ms-version: 2023-11-03`. The backend selects `application/pdf` for PDF and
+`text/markdown` for Markdown; browser MIME detection is not authoritative.
 This operation supports create (`sp=c`) permission. Chunked SDK uploads using
 Put Block/Put Block List are deliberately not used. The configured size limit
 defaults to 25 MiB and is capped at 500 MiB for this single-request implementation.
@@ -24,12 +26,47 @@ repository consumers were the React hook, generated client/schema, and tests;
 no other repository integration used it. External clients, if any, must migrate
 to the status GET before this API version is rolled out.
 
+## Supported upload formats
+
+The built-in `DocumentFormat` catalog maps `pdf` to `.pdf` / `application/pdf`
+and `markdown` to `.md` / `text/markdown`. File extensions are matched without
+case sensitivity; server-generated blob paths always use the canonical lowercase
+extension. The existing ContentType and BlobReference columns hold both formats;
+no database migration or new Azure resource is required.
+
+`GET /api/documents/upload-capabilities` requires Documents.Read and a validated
+Organization membership. It returns `formats` (id, extension, contentType) and
+`maxSizeBytes`. React uses these values for the file picker, allowed-format text,
+and client size checks. Upload reservation still requires Documents.Upload;
+only its backend validation authorizes a format. `POST /api/documents/uploads`
+returns documentId, uploadUri, expiresAt, and the backend-selected contentType.
+
+PDF inspection checks the first five bytes for `%PDF-`. Markdown inspection
+streams the entire file through a strict UTF-8 decoder with bounded memory,
+after checking its length against the configured limit. A UTF-8 BOM is allowed;
+UTF-16/32, invalid UTF-8 (including an incomplete final sequence), NUL and other
+control characters except tab/CR/LF are rejected. Whitespace-only and BOM-only
+files are rejected. Plain UTF-8 text is valid Markdown, so headings or Markdown
+syntax are not required. The worker does not render HTML, execute code, resolve
+links, extract text artifacts, or create chunks/embeddings.
+
+Content checks live in separate `PdfDocumentContentValidator` and
+`MarkdownDocumentContentValidator` classes under Infrastructure/DocumentUploads/Validation,
+sharing the `IDocumentContentValidator` contract. After size checks, storage selects
+an explicitly registered validator using the format catalog. Unknown extensions and catalog
+formats without a registered validator return `IsValidFormat = false` with
+`unsupported_format` before downloading content. There is no default UTF-8
+validator for other formats. Validators specify whether they need a limited
+header or the complete file; size limits and ETag conditions remain enforced by storage.
+
 ## Status and consistency policy
 
 - `PendingForUpload`: reservation exists but committed bytes have not passed verification.
-- `Uploaded`: size and `%PDF-` header checks passed for `ValidatedETag`. This is
-  neither full PDF validation nor proof that the file is malware-free.
-- `Rejected`: invalid header, empty file, or size above the configured limit.
+- `Uploaded`: size and the format-specific byte checks passed for `ValidatedETag`.
+  This is neither full PDF validation nor proof that the file is malware-free.
+- `Rejected`: invalid format/content, empty file, or size above the configured limit.
+  New failure codes are `invalid_format`, `invalid_size`, and `unsupported_format`
+  (with `invalid_format_or_size` as a fallback); historical failure codes remain unchanged.
 - `Failed`: the reserved blob was genuinely absent after deadline plus grace.
 - Existing Processing/Ready/Archived meanings are unchanged; this milestone never
   schedules extraction or indexing and `DocumentProcessingGate.CanStartExtraction`
@@ -52,7 +89,7 @@ identity, blob reference, and ETag—never the payload or arbitrary event URL.
 The worker looks up the exact reference and derives OrganizationId from that
 reservation. Unmatched events complete harmlessly without touching Storage.
 Stale ETags are ignored; deadline reconciliation verifies current committed bytes.
-Reads use If-Match for properties and signature. No database transaction is open
+Reads use If-Match for properties and content. No database transaction is open
 during Storage operations. Document Revision is an optimistic concurrency token.
 
 `knowledge.UploadInbox` has a unique `(Source, EventId)` index. Batch insertion
@@ -65,7 +102,7 @@ item per API instance, not one global worker.
 
 Rejection/failure and cleanup scheduling share one EF transaction. Cleanup waits
 until deadline plus grace, retaining the blob name while its create-only SAS can
-still recreate it. It reads the current rejected blob and conditionally deletes
+still recreate it. It reads only the current rejected blob's properties and conditionally deletes
 that ETag; changed content retries. Recreated blobs remain rejected and matching
 later notifications schedule another cleanup. Successful deletion followed by a
 worker crash is safe to repeat. Cleanup never touches Uploaded/Ready documents
@@ -73,6 +110,33 @@ or unmatched references. Keep inbox deduplication rows; do not purge them withou
 a separately designed retention/replay policy.
 
 ## Configuration
+
+Both formats are enabled by default in `appsettings.json`:
+
+```json
+"Documents": {
+  "EnabledFormats": { "pdf": true, "markdown": true },
+  "MaxUploadSizeBytes": 26214400,
+  "UploadSasLifetimeMinutes": 15
+}
+```
+
+These are application-wide settings, not Organization permissions. Named boolean
+flags allow a single environment override such as
+`Documents__EnabledFormats__markdown=false`; set both flags false to disable
+new uploads. Restart the API after configuration changes. Omitted flags retain
+their defaults, so disable explicitly. Unknown format identifiers fail options
+validation at startup, even if set false; arbitrary extensions cannot be enabled
+through configuration alone. A new format requires a catalog entry, its own
+`IDocumentContentValidator` implementation, and registration in
+`EnterpriseKnowledgeHubInfrastructureModule` before it can pass verification.
+No extractor registration is introduced yet.
+
+Disabling a format affects new reservations and the capability response. Existing
+reservations still finalize and clean up using their persisted canonical paths.
+The webhook accepts built-in supported extensions even when new uploads of that
+format are disabled; the worker requires an exact database reservation before
+accessing Storage. This preserves delayed events and in-flight uploads.
 
 `StorageEvents` is disabled by default locally. Disabled means authentication
 fails, not anonymous access. Enabled settings validate on startup:
@@ -206,15 +270,21 @@ In a second terminal, run `npm run dev` from `src/Web` and open
 `http://localhost:5173`. With `VITE_API_URL` unset, the existing Vite proxy forwards
 `/api` to `https://localhost:7189`. Select your Organization and:
 
-1. Upload a small PDF. Expect “Uploaded—verifying…” immediately after PUT.
+1. Upload a small PDF and a UTF-8 `.md` file. Expect “Uploaded—verifying…” immediately after each PUT.
 2. With events disabled, the worker reconciles after the original one-minute
    SAS lifetime plus the 60-second grace. It will normally finish in about two
    minutes from reservation, plus a polling interval. The UI's two-minute polling
    window may end just before that; refresh the document list to see Uploaded.
 3. Upload a text file renamed `.pdf`; after reconciliation it becomes Rejected,
-   and its blob is conditionally removed. Do not use real malicious files.
+   and its blob is conditionally removed. Repeat with NUL-containing or invalid
+   UTF-8 bytes named `.md`. Do not use real malicious files.
 4. Navigate away after a successful PUT, or stop/restart the API. The reserved
    document remains and verification completes independently of the browser.
+5. Disable Markdown in Documents configuration and restart the API. Reload the
+   page: only PDF should be offered, and a direct Markdown reservation request
+   must fail. Re-enable it and verify the PUT uses `text/markdown` from the API
+   response. Disabling both formats disables the upload controls. Existing
+   Markdown documents remain visible and already-reserved uploads can finish.
 
 This manual mode tests direct uploads and reconciliation. The Azurite/JWT test
 harness separately tests the webhook/inbox path; real Event Grid delivery needs
@@ -313,14 +383,22 @@ validation in phase 3 checks the authenticated handshake.
    It reuses the prepared resources and creates the webhook event subscription.
    Delivery uses Entra app authentication; dead-lettering uses the system topic
    managed identity. The subscription explicitly uses EventGridSchema, BlobCreated,
-   the documents/organizations prefix, `.pdf` suffix and PutBlob filter, up to
+   the documents/organizations prefix, an empty suffix filter, and PutBlob filter, up to
    50 events per batch, 30 delivery attempts, and a 24-hour delivery TTL.
    Role propagation can require waiting before subscription creation succeeds.
-7. Upload a small non-sensitive PDF from the deployed browser; verify the PUT
+7. Upload a small non-sensitive PDF and Markdown file from the deployed browser; verify each PUT
    returns 201, a second PUT cannot overwrite, the notification is committed,
    and the status becomes Uploaded. Test an invalid header, closing the tab after
    PUT, and worker downtime/lease recovery. These live checks are still required;
    local tests do not establish Azure delivery, Entra role propagation, or CORS.
+
+For an existing deployment, deploy the API supporting both formats, redeploy
+the Event Grid Bicep with `DEPLOY_STORAGE_EVENT_SUBSCRIPTION=true`, then deploy
+the updated frontend. The explicit empty `subjectEndsWith` clears the old `.pdf`
+filter; keep the container/prefix, source authentication and PutBlob checks.
+Until this infrastructure update, Markdown can only finish through deadline
+reconciliation because the old subscription does not deliver its events.
+Verify an `.md` notification in UploadInbox, not just an eventual Uploaded status.
 
 The subscription's synchronous validation POST must pass the same bearer policy.
 The endpoint returns `validationResponse` only after authentication and expected
@@ -401,7 +479,7 @@ The account-scoped grant follows Microsoft's
 [Event Grid managed-identity dead-letter setup](https://learn.microsoft.com/en-us/azure/event-grid/managed-service-identity).
 It grants read/write/delete access across the dedicated account, so keep application
 documents and other feature data in the original account. Dead letters contain
-event notifications rather than PDF copies, but their identifiers still require
+event notifications rather than document copies, but their identifiers still require
 private access. Both accounts disable anonymous access and shared keys and require
 HTTPS. Event Grid uses the dedicated account's public network endpoint with its
 managed identity; no browser CORS or API role is configured there. No Defender
