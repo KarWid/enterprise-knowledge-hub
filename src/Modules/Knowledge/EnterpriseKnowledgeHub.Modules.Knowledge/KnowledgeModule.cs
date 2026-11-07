@@ -19,10 +19,12 @@ public static class KnowledgeModule
                 "Uploads require a 1-15 minute SAS and a positive size limit of at most 500 MiB (single PUT).")
             .Validate(o => o.HasValidFormats(), "Documents:EnabledFormats must contain only supported format identifiers: pdf, markdown.")
             .ValidateOnStart();
+
         services.AddOptions<DocumentUploadWorkerOptions>()
             .Bind(configuration.GetSection(DocumentUploadWorkerOptions.SectionName))
             .Validate(o => o.IsValid(), "Invalid document upload worker timing, lease, batch, or retry options.")
             .ValidateOnStart();
+            
         services.AddScoped<IUploadInbox, UploadInbox>();
         services.AddScoped<IDocumentUploadFinalizer, DocumentUploadFinalizer>();
         services.AddScoped<IDocumentUploadReconciler, DocumentUploadReconciler>();

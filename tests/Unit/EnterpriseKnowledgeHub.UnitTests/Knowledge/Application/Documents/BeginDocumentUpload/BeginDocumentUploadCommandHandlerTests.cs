@@ -1,24 +1,25 @@
-using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
+using EnterpriseKnowledgeHub.BuildingBlocks.Domain;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.BeginDocumentUpload;
-using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
-using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
-using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
+using EnterpriseKnowledgeHub.UnitTests.Knowledge.Fakes;
 using EnterpriseKnowledgeHub.UnitTests.Organizations.Fakes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
-namespace EnterpriseKnowledgeHub.UnitTests.Knowledge.Application.Documents;
+namespace EnterpriseKnowledgeHub.UnitTests.Knowledge.Application.Documents.BeginDocumentUpload;
 
-public sealed class DocumentHandlersTests
+public sealed class BeginDocumentUploadCommandHandlerTests
 {
     private const string DocumentName = "handbook.pdf";
 
-    [Fact]
-    public async Task BeginDocumentUpload_CommitsOrganizationScopedReservationBeforeReturningUploadUri()
+    [Theory]
+    [InlineData("handbook.pdf", "application/pdf", ".pdf")]
+    [InlineData("handbook.MD", "text/markdown", ".md")]
+    public async Task BeginDocumentUpload_CommitsOrganizationScopedReservationBeforeReturningUploadUri(
+        string fileName, string contentType, string extension)
     {
         // Arrange
         await using var db = CreateDbContext();
@@ -28,7 +29,7 @@ public sealed class DocumentHandlersTests
 
         // Act
         var result = await handler.Handle(
-            new BeginDocumentUploadCommand(DocumentName),
+            new BeginDocumentUploadCommand(fileName),
             CancellationToken.None);
 
         // Assert
@@ -38,7 +39,9 @@ public sealed class DocumentHandlersTests
         Assert.Equal(result.Document.Id, document.Id);
         Assert.Equal(membership.OrganizationId, document.OrganizationId);
         Assert.Equal(membership.UserId, document.CreatedBy);
-        Assert.Equal(DocumentName, document.Name);
+        Assert.Equal(fileName, document.Name);
+        Assert.Equal(contentType, result.Document.ContentType);
+        Assert.EndsWith(extension, document.BlobReference);
         Assert.Equal(DocumentStatus.PendingForUpload, document.Status);
         Assert.NotNull(document.UploadExpiresAt);
         Assert.Contains(document.BlobReference, result.UploadUri.ToString());
@@ -63,73 +66,29 @@ public sealed class DocumentHandlersTests
         Assert.Empty(await db.Documents.AsNoTracking().ToListAsync());
     }
 
-    [Fact]
-    public async Task GetDocuments_ReturnsOnlyDocumentsFromCurrentOrganization()
+    [Theory]
+    [InlineData("notes.md")]
+    [InlineData("notes.MD")]
+    [InlineData("notes.docx")]
+    [InlineData("notes.md.exe")]
+    public async Task DisabledOrUnsupportedFormat_DoesNotCreateReservationOrSas(string fileName)
     {
         // Arrange
         await using var db = CreateDbContext();
-        var membership = CreateMembership();
-        var ownDocument = CreatePendingDocument(membership.OrganizationId, membership.UserId, "own.pdf");
-        var otherDocument = CreatePendingDocument(Guid.NewGuid(), membership.UserId, "other.pdf");
-        db.Documents.AddRange(ownDocument, otherDocument);
-        await db.SaveChangesAsync();
-        var handler = new GetDocumentsQueryHandler(
-            db,
-            new FakeOrganizationAccessService(membership));
+        var storage = new TestDocumentBlobStorage();
+        var settings = new DocumentUploadOptions();
+        settings.EnabledFormats["markdown"] = false;
+        var handler = CreateBeginDocumentUploadHandler(db, CreateMembership(), storage, settings);
 
         // Act
-        var documents = await handler.Handle(new GetDocumentsQuery(), CancellationToken.None);
+        Task BeginUpload() => handler.Handle(
+            new BeginDocumentUploadCommand(fileName), CancellationToken.None).AsTask();
 
         // Assert
-        var document = Assert.Single(documents);
-        Assert.Equal(ownDocument.Id, document.Id);
-        Assert.DoesNotContain(documents, item => item.Id == otherDocument.Id);
-    }
+        await Assert.ThrowsAsync<DomainException>(BeginUpload);
 
-    [Fact]
-    public async Task GetDocument_WhenDocumentBelongsToAnotherOrganization_ReturnsNull()
-    {
-        // Arrange
-        await using var db = CreateDbContext();
-        var membership = CreateMembership();
-        var otherDocument = CreatePendingDocument(Guid.NewGuid(), membership.UserId, "other.pdf");
-        db.Documents.Add(otherDocument);
-        await db.SaveChangesAsync();
-        var handler = new GetDocumentQueryHandler(
-            db,
-            new FakeOrganizationAccessService(membership));
-
-        // Act
-        var document = await handler.Handle(
-            new GetDocumentQuery(otherDocument.Id),
-            CancellationToken.None);
-
-        // Assert
-        Assert.Null(document);
-    }
-
-    [Fact]
-    public async Task GetDocument_WhenDocumentBelongsToCurrentOrganization_ReturnsDocument()
-    {
-        // Arrange
-        await using var db = CreateDbContext();
-        var membership = CreateMembership();
-        var ownDocument = CreatePendingDocument(membership.OrganizationId, membership.UserId, DocumentName);
-        db.Documents.Add(ownDocument);
-        await db.SaveChangesAsync();
-        var handler = new GetDocumentQueryHandler(
-            db,
-            new FakeOrganizationAccessService(membership));
-
-        // Act
-        var document = await handler.Handle(
-            new GetDocumentQuery(ownDocument.Id),
-            CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(document);
-        Assert.Equal(ownDocument.Id, document.Id);
-        Assert.Equal(DocumentName, document.Name);
+        Assert.Empty(storage.UploadUriRequests);
+        Assert.Empty(await db.Documents.ToListAsync());
     }
 
     private static KnowledgeDbContext CreateDbContext()
@@ -144,29 +103,17 @@ public sealed class DocumentHandlersTests
     private static BeginDocumentUploadCommandHandler CreateBeginDocumentUploadHandler(
         KnowledgeDbContext db,
         TestOrganizationMembership membership,
-        TestDocumentBlobStorage blobStorage) =>
+        TestDocumentBlobStorage blobStorage,
+        DocumentUploadOptions? settings = null) =>
         new(
             db,
             new FakeOrganizationAccessService(membership),
             blobStorage,
-            Options.Create(new DocumentUploadOptions()),
+            Options.Create(settings ?? new DocumentUploadOptions()),
             NullLogger<BeginDocumentUploadCommandHandler>.Instance);
 
     private static TestOrganizationMembership CreateMembership() =>
         new(Guid.NewGuid(), Guid.NewGuid());
-
-    private static Document CreatePendingDocument(Guid organizationId, Guid userId, string name) =>
-        Document.CreatePendingUpload(
-            organizationId,
-            name,
-            userId,
-            DateTime.UtcNow.AddMinutes(15));
-
-    private sealed record TestOrganizationMembership(Guid OrganizationId, Guid UserId) : IOrganizationMembership
-    {
-        public Guid MembershipId { get; } = Guid.NewGuid();
-        public string Role => "KnowledgeManager";
-    }
 
     private sealed class TestDocumentBlobStorage : IDocumentBlobStorage
     {
@@ -191,8 +138,12 @@ public sealed class DocumentHandlersTests
 
         public Task<DocumentUploadInspection?> InspectUploadAsync(
             string reference,
+            long maximumSizeBytes,
             CancellationToken cancellationToken,
             string? expectedETag = null) =>
+            throw new NotSupportedException();
+
+        public Task<string?> GetUploadETagAsync(string reference, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task DeleteIfExistsAsync(
