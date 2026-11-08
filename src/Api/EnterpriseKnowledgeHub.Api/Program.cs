@@ -3,6 +3,7 @@ using EnterpriseKnowledgeHub.Api.Authentication;
 using EnterpriseKnowledgeHub.Api.Authorization;
 using EnterpriseKnowledgeHub.Api.Middleware;
 using EnterpriseKnowledgeHub.Api.StorageEvents;
+using EnterpriseKnowledgeHub.Api.Swagger;
 using EnterpriseKnowledgeHub.Application;
 using EnterpriseKnowledgeHub.BuildingBlocks;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
@@ -140,6 +141,7 @@ static void ConfigureOpenApi(WebApplicationBuilder builder)
         });
 
         options.EnableAnnotations();
+        options.OperationFilter<OrganizationHeaderOperationFilter>();
 
         options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
         {
