@@ -74,7 +74,7 @@ A preferred progression is:
        ↓
 13. Document processing
        ↓
-14. AI Search
+14. SQL knowledge retrieval
        ↓
 15. RAG chat
 
@@ -513,7 +513,7 @@ Managed Identity permissions
     ↓
 Application Insights
     ↓
-AI Search
+SQL vector retrieval
     ↓
 Azure OpenAI
 
@@ -539,7 +539,7 @@ Generate grounded answer
 AI services must never be used as an authorization mechanism.
 
 27. AI Retrieval Security
-Every AI Search query must be scoped to the current Organization.
+Every SQL knowledge-retrieval query must be scoped to the validated current Organization.
 The retrieval layer must never perform unrestricted searches across all customer data.
 The application determines which chunks are allowed to reach Azure OpenAI.
 Prompt instructions are not considered a security boundary.
@@ -804,12 +804,12 @@ Requirements:
 - Invalid uploads become Rejected with an atomically scheduled, retryable cleanup job. Cleanup is conditional and delayed until after the SAS deadline plus grace. Pending reservations are reconciled after that deadline: existing blobs use the same finalizer; only genuinely absent blobs become Failed. SAS expiry alone does not reject a committed upload.
 - Configure Blob Storage CORS only for the known web application origin(s), PUT/OPTIONS, and required Azure upload headers. CORS does not replace SAS authorization.
 - Inbox uniqueness, expiring atomic leases, bounded retry/backoff, and document concurrency tokens handle duplicates, crashes, and concurrent API instances. Background ownership comes from the exact persisted reservation, not a current user.
-- Uploaded currently means basic verification, not malware clearance. The application extraction gate is closed; future malware checks and extraction/indexing are separate durable steps. See [Document upload operations](DocumentUploads.md) for required local tests, migration, Azure/Entra bootstrap, and future gate requirements.
+- Uploaded currently means basic verification, not malware clearance. Milestone 8.1 adds independently configured Markdown extraction as durable work; future required scans must add exact-source clean evidence to its gate. See [Document upload operations](DocumentUploads.md) for required local tests, migration, Azure/Entra bootstrap, and future gate requirements.
 
 
 Milestone 8 — Knowledge Processing
 Goal:
-PDF or Markdown (future processing; currently only upload verification exists)
+Markdown (PDF extraction remains disabled)
     ↓
 Text extraction
     ↓
@@ -817,7 +817,18 @@ Chunking
     ↓
 Embeddings
     ↓
-Azure AI Search
+Azure SQL chunks and vectors
+
+Milestone 8.1 — Durable Markdown Text Extraction (implemented)
+- Atomically schedule extraction with successful upload verification and reconcile existing verified uploads.
+- Persist Organization/source-scoped text and execution state in KnowledgeDbContext with leases, retries, and fenced completion.
+- Keep extraction state separate from upload state; extraction failures preserve the original document.
+- Configure extraction independently of uploads; Markdown extraction is enabled and PDF extraction is disabled.
+- Expose authorized metadata and a bounded escaped-text preview with bounded browser polling.
+- Follow [Text extraction operations](DocumentTextExtraction.md) for migration, limits, tests, and recovery.
+
+Later slices add SQL-backed chunks, embeddings, and Organization-scoped SQL vector
+retrieval. Azure AI Search is no longer required by the MVP plan.
 
 
 Milestone 9 — RAG Chat

@@ -4,7 +4,9 @@ using Azure.Storage.Blobs;
 using EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
 using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads;
 using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
+using EnterpriseKnowledgeHub.Infrastructure.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -46,7 +48,9 @@ public static class EnterpriseKnowledgeHubInfrastructureModule
         services.AddSingleton<IDocumentContentValidator, PdfDocumentContentValidator>();
         services.AddSingleton<IDocumentContentValidator, MarkdownDocumentContentValidator>();
         services.AddSingleton<IDocumentBlobStorage, AzureBlobDocumentStorage>();
+        services.AddSingleton<IDocumentTextExtractor, MarkdownDocumentTextExtractor>();
         services.AddHostedService<DocumentUploadWorker>();
+        services.AddHostedService<DocumentTextExtractionWorker>();
 
         return services;
     }

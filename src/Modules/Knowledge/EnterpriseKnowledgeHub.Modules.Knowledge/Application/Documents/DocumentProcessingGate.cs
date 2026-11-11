@@ -8,8 +8,8 @@ public static class DocumentProcessingGate
     public static bool HasVerifiedUpload(Document document) =>
         document.Status == DocumentStatus.Uploaded && !string.IsNullOrEmpty(document.ValidatedETag);
 
-    // Extraction/indexing is not enabled in this milestone. Replace this gate only when
-    // every required check has durable evidence tied to document.ValidatedETag.
-    // In particular, a PDF header is never evidence of a clean malware scan.
-    public static bool CanStartExtraction(Document document) => false;
+    // Only explicitly registered/enabled extractors may consume verified bytes. The
+    // current Markdown extractor only decodes text; verification is not malware clearance.
+    // Any future required scan must add durable clean evidence for this exact ETag here.
+    public static bool CanStartExtraction(Document document) => HasVerifiedUpload(document);
 }

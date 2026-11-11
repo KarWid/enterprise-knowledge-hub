@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace EnterpriseKnowledgeHub.Contracts.Knowledge;
 
 public sealed record DocumentUploadSessionResponse(
-    Guid DocumentId,
-    Uri UploadUri,
-    DateTime ExpiresAt,
-    string ContentType);
+    [property: Required] Guid DocumentId,
+    [property: Required] Uri UploadUri,
+    [property: Required] DateTime ExpiresAt,
+    [property: Required] string ContentType);

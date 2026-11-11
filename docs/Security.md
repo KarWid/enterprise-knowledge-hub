@@ -315,7 +315,12 @@ successfully committed bytes. Cleanup is durable, conditionally deletes the
 current rejected blob, and waits until the SAS deadline plus grace to avoid
 recreation with an unexpired create-only SAS. Terminal reservations never reopen.
 Pending, Rejected, and Failed documents must never enter knowledge processing.
-Uploaded does not mean Ready; the extraction gate remains closed this milestone.
+Uploaded does not mean Ready. Enabled, explicitly registered extractors may consume
+verified bytes; currently this is bounded, nonexecuting Markdown decoding. Extraction
+uses conditional ETag reads, durable leases, fenced completion, and an Organization/
+Document ownership foreign key. Status and escaped-text previews require Documents.Read
+and validated membership. Any future required scan must add durable exact-ETag clean
+evidence to the processing gate. See [Text extraction](DocumentTextExtraction.md).
 See [Document upload operations](DocumentUploads.md) for setup and recovery.
 
 12. Azure Managed Identity
@@ -364,9 +369,12 @@ included in frontend bundles,
 logged,
 returned by APIs.
 
-14. Azure AI Search Security
-Azure AI Search contains searchable representations of customer knowledge.
-Indexed documents/chunks must contain sufficient tenant metadata to enforce organization-level filtering.
+14. Azure SQL Knowledge Retrieval Security
+The planned MVP stores chunks and vectors in Azure SQL, replacing Azure AI Search.
+Derived text/chunks/vectors must retain Organization and source ownership metadata.
+Similarity queries must enforce validated Organization membership and document
+permissions before content reaches the application model context. Vector processing
+remains a later slice.
 Example:
 Chunk
 ----------------
@@ -382,7 +390,7 @@ User Question
       ↓
 Current Organization
       ↓
-AI Search
+Organization-scoped SQL vector search
       ↓
 Organization filter
       ↓
@@ -467,7 +475,7 @@ Chunking
   ↓
 Embedding
   ↓
-AI Search
+SQL chunks and vectors
 
 At every stage, the system must retain the document's Organization ownership.
 A processing failure must not cause data to be associated with another organization.
@@ -601,7 +609,7 @@ Azure SQL security,
 Blob Storage with public access disabled,
 Managed Identity where supported,
 Key Vault for required secrets,
-organization-filtered AI Search,
+organization-filtered SQL knowledge retrieval,
 secure Azure OpenAI integration,
 security-aware logging.
 The MVP does not require:

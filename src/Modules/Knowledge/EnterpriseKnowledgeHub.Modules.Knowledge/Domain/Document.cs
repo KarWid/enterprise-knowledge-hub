@@ -7,6 +7,10 @@ public sealed class Document
 {
     private const int MaximumNameLength = 256;
 
+    // Durable text-extraction records intentionally are not a navigation collection on this aggregate.
+    // Their lease/retry lifecycle belongs to the persistence processing model; a composite database
+    // relationship enforces Organization and document ownership without coupling Domain to Persistence.
+
     public Guid Id { get; private set; }
     public Guid OrganizationId { get; private set; }
     public string Name { get; private set; } = string.Empty;

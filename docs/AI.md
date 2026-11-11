@@ -44,7 +44,7 @@ AI Orchestrator
 
                 v
 
-        Azure AI Search
+        Azure SQL Vector Retrieval
 
                 |
 
@@ -85,13 +85,14 @@ user question,
 retrieved knowledge context,
 system instructions.
 
-3.2 Azure AI Search
-Azure AI Search provides semantic and vector-based retrieval.
+3.2 Azure SQL Knowledge Retrieval
+The planned MVP uses Azure SQL for chunk/vector storage and similarity queries,
+replacing the earlier Azure AI Search plan to avoid a separate search service.
+Vector storage/retrieval remain future slices.
 Responsibilities:
-indexing knowledge fragments,
-semantic search,
+persisting knowledge fragments and their vectors,
 vector similarity search,
-filtering by metadata.
+filtering by validated Organization and document access.
 The service allows the system to find relevant information before generating an answer.
 
 3.3 Azure Storage
@@ -139,7 +140,7 @@ Generate Search Query
 
 ↓
 
-Azure AI Search
+Azure SQL Vector Retrieval
 
 ↓
 
@@ -164,7 +165,8 @@ Return Response + Sources
 
 5. Knowledge Ingestion Pipeline
 Documents become available for AI through an ingestion process.
-Planned MVP pipeline (currently only upload and basic format verification are implemented):
+MVP pipeline (upload/basic verification and Markdown extraction are implemented;
+PDF extraction, chunking, embeddings, and retrieval remain planned):
 PDF or Markdown Upload
 
     |
@@ -201,7 +203,7 @@ Embedding Generation
 
     v
 
-Azure AI Search Index
+Azure SQL Chunks and Vectors
 
     |
 
@@ -213,6 +215,10 @@ Available Knowledge
 6. Document Processing
 Text Extraction
 The system extracts readable content from uploaded documents.
+Markdown extraction persists bounded normalized UTF-8 text in Azure SQL. It
+preserves Markdown as data without rendering HTML or fetching resources. Durable
+work/results retain Organization, Document, and validated source ETag. Format flags
+control extraction independently of uploads. See [Text extraction](DocumentTextExtraction.md).
 Future extensions may include:
 OCR,
 scanned documents,
@@ -431,7 +437,7 @@ Security and tenant isolation apply to every AI operation.
 Enterprise Knowledge Hub uses AI as a knowledge access layer.
 The MVP implementation uses Retrieval-Augmented Generation based on:
 Azure Blob Storage,
-Azure AI Search,
+Azure SQL chunks, vectors, and Organization-scoped retrieval,
 Azure OpenAI.
 The architecture intentionally separates:
 knowledge ownership,

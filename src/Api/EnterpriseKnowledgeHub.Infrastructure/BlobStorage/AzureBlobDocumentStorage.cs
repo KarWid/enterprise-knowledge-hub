@@ -4,6 +4,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 
 namespace EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
@@ -112,6 +113,33 @@ internal sealed class AzureBlobDocumentStorage(
         catch (RequestFailedException exception) when (exception.Status == 404 && exception.ErrorCode == "BlobNotFound")
         {
             return null;
+        }
+    }
+
+    public async Task<DocumentTextSource> OpenVerifiedReadAsync(
+        string blobReference, string expectedETag, long maximumSizeBytes, CancellationToken cancellationToken)
+    {
+        var blob = containerClient.GetBlobClient(blobReference);
+        var conditions = new BlobRequestConditions { IfMatch = new ETag(expectedETag) };
+        try
+        {
+            var properties = await blob.GetPropertiesAsync(conditions, cancellationToken: cancellationToken);
+            if (properties.Value.ContentLength <= 0 || properties.Value.ContentLength > maximumSizeBytes)
+            {
+                throw new DocumentTextExtractionException(DocumentTextExtractionErrorCodes.SourceSizeLimit);
+            }
+
+            var download = await blob.DownloadStreamingAsync(new BlobDownloadOptions { Conditions = conditions }, cancellationToken);
+            return new DocumentTextSource(download.Value.Content, properties.Value.ContentLength);
+        }
+        catch (RequestFailedException exception) when (exception.Status == 404 && exception.ErrorCode == "BlobNotFound")
+        {
+            throw new DocumentTextExtractionException(DocumentTextExtractionErrorCodes.SourceMissing);
+        }
+        catch (RequestFailedException exception) when (exception.Status == 412)
+        {
+            // Never accept different bytes by replacing the persisted verified ETag.
+            throw new DocumentTextExtractionException(DocumentTextExtractionErrorCodes.SourceETagChanged);
         }
     }
 

@@ -68,10 +68,10 @@ header or the complete file; size limits and ETag conditions remain enforced by 
   New failure codes are `invalid_format`, `invalid_size`, and `unsupported_format`
   (with `invalid_format_or_size` as a fallback); historical failure codes remain unchanged.
 - `Failed`: the reserved blob was genuinely absent after deadline plus grace.
-- Existing Processing/Ready/Archived meanings are unchanged; this milestone never
-  schedules extraction or indexing and `DocumentProcessingGate.CanStartExtraction`
-  remains false. Historical Uploaded rows have no validated ETag and are not
-  automatically promoted through future gates.
+- Processing/Ready/Archived meanings are unchanged. Successful verification now
+  atomically schedules independently configured Markdown extraction work.
+  Extraction completion/failure leaves the Document Uploaded. Historical Uploaded
+  rows without a validated ETag remain blocked. See [Text extraction](DocumentTextExtraction.md).
 
 The upload deadline is the original SAS expiry. The grace period defaults to
 five minutes. Existing committed bytes are accepted even if processed much later.
@@ -534,9 +534,10 @@ result for the validated bytes may satisfy a required malware gate. Error,
 NotScanned, missing results, and timeouts remain blocked when scanning is required.
 Results for other bytes cannot clear the gate. A later scan-result event can use
 the same authenticated inbox and lease worker with a dedicated handler. Keep
-extraction and indexing as separate retryable steps. When implemented, update
-DocumentProcessingGate and atomically record any scheduled work with the gated
-document transition, preserving Organization ownership and immutable source version.
+extraction and downstream processing as separate retryable steps. Markdown extraction
+now uses DocumentProcessingGate and atomic upload/work scheduling. If scanning becomes
+required, extend that gate with durable exact-ETag clean evidence, preserving
+Organization ownership and immutable source identity.
 
 References: [Put Blob SAS permissions](https://learn.microsoft.com/en-us/rest/api/storageservices/put-blob),
 [Entra-secured Event Grid delivery](https://learn.microsoft.com/en-us/azure/event-grid/secure-webhook-delivery),

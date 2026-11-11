@@ -51,7 +51,8 @@ The application should not require the product operator to manually provision an
 
 5. Knowledge Hub — MVP
 The MVP supports uploaded documents as its knowledge source:
-PDF and Markdown files. Both can be uploaded and verified; knowledge processing remains planned.
+PDF and Markdown files. Both can be uploaded and verified; Markdown text extraction
+is implemented. Chunking, embeddings, and retrieval remain planned.
 The initial flow is:
 User
   ↓
@@ -65,7 +66,7 @@ Text Extraction / Chunking
   ↓
 Embeddings
   ↓
-Azure AI Search
+Azure SQL chunks and vectors
   ↓
 User Question
   ↓
@@ -101,7 +102,7 @@ public access to Blob Storage disabled,
 AI access restricted to application-controlled data,
 no unnecessary exposure of customer data,
 auditable access to sensitive operations.
-Azure OpenAI and Azure AI Search are application infrastructure components and should not be treated as independent sources of customer authorization.
+Azure OpenAI and SQL vector retrieval are application infrastructure capabilities and should not be treated as independent sources of customer authorization.
 Authorization must be enforced by the application before customer data is retrieved or processed.
 
 8. Technology Direction
@@ -122,7 +123,7 @@ Data
 Azure SQL Database
 Azure Blob Storage
 AI
-Azure AI Search
+Azure SQL vector retrieval
 Azure OpenAI
 Identity
 Microsoft Entra / Microsoft Entra External ID

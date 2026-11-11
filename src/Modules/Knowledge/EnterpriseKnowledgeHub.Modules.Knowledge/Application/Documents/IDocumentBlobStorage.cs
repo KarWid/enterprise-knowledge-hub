@@ -15,10 +15,15 @@ public interface IDocumentBlobStorage
 
     Task<string?> GetUploadETagAsync(string blobReference, CancellationToken cancellationToken);
 
+    Task<DocumentTextSource> OpenVerifiedReadAsync(
+        string blobReference, string expectedETag, long maximumSizeBytes, CancellationToken cancellationToken);
+
     Task DeleteIfExistsAsync(string blobReference, string etag, CancellationToken cancellationToken);
 }
 
 public sealed record DocumentUploadInspection(long ContentLength, bool IsValidFormat, string ETag, string? FailureCode = null);
+
+public sealed record DocumentTextSource(Stream Content, long ContentLength);
 
 // A stale event must not validate or delete the replacement bytes.
 public sealed class DocumentBlobChangedException : Exception;

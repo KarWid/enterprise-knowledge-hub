@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,8 @@ internal sealed class DocumentUploadFinalizer(
     TimeProvider clock,
     IOptions<DocumentUploadOptions> uploadOptions,
     IOptions<DocumentUploadWorkerOptions> workerOptions,
-    ILogger<DocumentUploadFinalizer> logger) : IDocumentUploadFinalizer
+    ILogger<DocumentUploadFinalizer> logger,
+    IDocumentTextExtractionScheduler extractionScheduler) : IDocumentUploadFinalizer
 {
     public async Task ProcessAsync(UploadInboxItem work, CancellationToken ct)
     {
@@ -68,8 +70,7 @@ internal sealed class DocumentUploadFinalizer(
         {
             // Expired SAS does not invalidate bytes successfully committed to the reserved blob.
             document.CompleteUpload(inspection.ETag);
-            // Uploaded means basic verification only. No extraction/indexing job is scheduled.
-            // Future scheduling belongs here, behind DocumentProcessingGate, in this same commit.
+            extractionScheduler.Stage(document);
         }
 
         await db.SaveChangesAsync(ct); // Revision protects event/reconciliation races.
