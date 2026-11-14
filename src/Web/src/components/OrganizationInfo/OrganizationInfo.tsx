@@ -6,6 +6,7 @@ import { useGetMeQuery } from "../../services/api/generated/api";
 import { useAppDispatch, useAppSelector } from "../../services/hooks";
 import {
   selectCurrentOrganizationId,
+  selectOrganizationSwitchingLocked,
   setCurrentOrganizationId,
 } from "../../services/organization/organizationSlice";
 import styles from "./OrganizationInfo.module.less";
@@ -15,6 +16,7 @@ export function OrganizationInfo() {
   const { data } = useGetMeQuery();
   const dispatch = useAppDispatch();
   const currentOrganizationId = useAppSelector(selectCurrentOrganizationId);
+  const switchingLocked = useAppSelector(selectOrganizationSwitchingLocked);
 
   const organizations = useMemo(
     () => (data?.organizations ?? []).filter((org) => !!org.id && !!org.name),
@@ -58,6 +60,8 @@ export function OrganizationInfo() {
     <div className={styles.wrapper}>
       <BuildingIcon className={styles.icon} />
       <Dropdown
+        disabled={switchingLocked}
+        title={switchingLocked ? t("organization.switchingLocked") : undefined}
         options={organizations.map((org) => ({
           label: org.name!,
           value: org.id!,

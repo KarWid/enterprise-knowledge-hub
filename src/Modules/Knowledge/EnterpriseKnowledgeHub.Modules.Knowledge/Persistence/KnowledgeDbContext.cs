@@ -8,10 +8,12 @@ public sealed class KnowledgeDbContext(DbContextOptions<KnowledgeDbContext> opti
 {
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<UploadInboxItem> UploadInbox => Set<UploadInboxItem>();
+    public DbSet<DocumentTextExtraction> DocumentTextExtractions => Set<DocumentTextExtraction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new DocumentConfiguration());
         modelBuilder.ApplyConfiguration(new UploadInboxItemConfiguration());
+        modelBuilder.ApplyConfiguration(new DocumentTextExtractionConfiguration());
     }
 }

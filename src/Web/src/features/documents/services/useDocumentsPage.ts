@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,19 +8,50 @@ import {
 } from "../../../services/api/generated/api";
 import { isValidUploadFile } from "../utils/isValidUploadFile";
 import { useDocumentUpload } from "./useDocumentUpload";
+import { useAppSelector } from "../../../services/hooks";
+import { selectCurrentOrganizationId } from "../../../services/organization/organizationSlice";
 
 export function useDocumentsPage() {
   const { t } = useTranslation();
-  const documentsQuery = useGetDocumentsQuery(undefined, { refetchOnMountOrArgChange: true });
-  const capabilitiesQuery = useGetDocumentUploadCapabilitiesQuery(undefined, { refetchOnMountOrArgChange: true });
+  const organizationId = useAppSelector(selectCurrentOrganizationId);
+  const [pollingExpired, setPollingExpired] = useState(false);
+  const [pollingCycle, setPollingCycle] = useState(0);
+  const organizationHeaders = { "X-Organization-Id": organizationId ?? "" };
+  const documentsQuery = useGetDocumentsQuery(organizationHeaders, {
+    skip: !organizationId,
+    refetchOnMountOrArgChange: true,
+    pollingInterval: pollingExpired ? 0 : 5000,
+    skipPollingIfUnfocused: true,
+  });
+
+  const capabilitiesQuery = useGetDocumentUploadCapabilitiesQuery(
+    organizationHeaders,
+    {
+      skip: !organizationId,
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  useEffect(() => {
+    setPollingExpired(false);
+    const timer = window.setTimeout(() => setPollingExpired(true), 20_000);
+    return () => window.clearTimeout(timer);
+  }, [organizationId, pollingCycle]);
+
   const { refetch: refetchDocuments } = documentsQuery;
-  const refreshDocuments = useCallback(() => { void refetchDocuments(); }, [refetchDocuments]);
+  const refreshDocuments = useCallback(() => {
+    if (organizationId) {
+      void refetchDocuments();
+      setPollingCycle((cycle) => cycle + 1);
+    }
+  }, [refetchDocuments, organizationId]);
   const upload = useDocumentUpload({ onCompleted: refreshDocuments });
 
-  const capabilities = capabilitiesQuery.data;
+  const capabilities = capabilitiesQuery.currentData;
   const formats = capabilities?.formats ?? [];
   const hasEnabledFormats = formats.length > 0;
-  const canSelectFile = capabilitiesQuery.error === undefined && hasEnabledFormats;
+  const canSelectFile =
+    capabilitiesQuery.error === undefined && hasEnabledFormats;
   const hasSelectedFile = upload.file !== null;
   const selectedFileIsValid =
     upload.file !== null &&
@@ -49,7 +80,9 @@ export function useDocumentsPage() {
   }
 
   return {
-    documents: documentsQuery.data ?? [],
+    documents: documentsQuery.currentData ?? [],
+    refreshDocuments,
+    pollingExpired,
     isLoading: documentsQuery.isLoading,
     error: capabilitiesQuery.error ?? upload.error ?? documentsQuery.error,
     retry,
@@ -59,10 +92,13 @@ export function useDocumentsPage() {
       isUploading: upload.isUploading,
       notice: upload.notice,
       description: getUploadDescription(capabilities, t),
-      accept: formats.flatMap(format => [format.extension, format.contentType]).join(","),
+      accept: formats
+        .flatMap((format) => [format.extension, format.contentType])
+        .join(","),
       canSelectFile: canSelectFile && !upload.isUploading,
       canSubmit,
-      showValidationError: hasSelectedFile && canSelectFile && !selectedFileIsValid,
+      showValidationError:
+        hasSelectedFile && canSelectFile && !selectedFileIsValid,
       submit: submitUpload,
     },
   };
@@ -76,7 +112,7 @@ function getUploadDescription(
   if (capabilities.formats.length === 0) return t("documents.uploadsDisabled");
 
   return t("documents.uploadDescription", {
-    formats: capabilities.formats.map(format => format.extension).join(", "),
+    formats: capabilities.formats.map((format) => format.extension).join(", "),
     maxSize: capabilities.maxSizeBytes / (1024 * 1024),
   });
 }

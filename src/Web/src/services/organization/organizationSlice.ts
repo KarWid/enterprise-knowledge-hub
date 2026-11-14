@@ -21,10 +21,12 @@ function writeStoredOrganizationId(organizationId: string): void {
 
 interface OrganizationState {
   currentOrganizationId: string | null;
+  switchingLocks: string[];
 }
 
 const initialState: OrganizationState = {
   currentOrganizationId: readStoredOrganizationId(),
+  switchingLocks: [],
 };
 
 const organizationSlice = createSlice({
@@ -32,14 +34,30 @@ const organizationSlice = createSlice({
   initialState,
   reducers: {
     setCurrentOrganizationId(state, action: PayloadAction<string>) {
+      if (state.switchingLocks.length > 0) return;
       state.currentOrganizationId = action.payload;
       writeStoredOrganizationId(action.payload);
+    },
+    lockOrganizationSwitching(state, action: PayloadAction<string>) {
+      if (!state.switchingLocks.includes(action.payload)) {
+        state.switchingLocks.push(action.payload);
+      }
+    },
+    unlockOrganizationSwitching(state, action: PayloadAction<string>) {
+      state.switchingLocks = state.switchingLocks.filter(id => id !== action.payload);
     },
   },
 });
 
-export const { setCurrentOrganizationId } = organizationSlice.actions;
+export const {
+  setCurrentOrganizationId,
+  lockOrganizationSwitching,
+  unlockOrganizationSwitching,
+} = organizationSlice.actions;
 export const organizationReducer = organizationSlice.reducer;
 
 export const selectCurrentOrganizationId = (state: RootState): string | null =>
   state.organization.currentOrganizationId;
+
+export const selectOrganizationSwitchingLocked = (state: RootState): boolean =>
+  state.organization.switchingLocks.length > 0;

@@ -17,6 +17,11 @@
   font-family: @font-stack;
   cursor: pointer;
   outline: none;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 }
 
 .triggerLabel {

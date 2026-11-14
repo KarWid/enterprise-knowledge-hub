@@ -83,6 +83,76 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
                     b.ToTable("Documents", "knowledge");
                 });
 
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentTextExtraction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CharacterCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExtractorVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("FormatId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LeaseOwner")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SourceETag")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Text")
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "DocumentId", "SourceETag")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "NextAttemptAt", "LeaseExpiresAt");
+
+                    b.ToTable("DocumentTextExtractions", "knowledge");
+                });
+
             modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.UploadInboxItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -149,6 +219,16 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
                     b.HasIndex("Status", "NextAttemptAt", "LeaseExpiresAt");
 
                     b.ToTable("UploadInbox", "knowledge");
+                });
+
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentTextExtraction", b =>
+                {
+                    b.HasOne("EnterpriseKnowledgeHub.Modules.Knowledge.Domain.Document", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "DocumentId")
+                        .HasPrincipalKey("OrganizationId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

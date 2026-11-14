@@ -38,7 +38,9 @@ function addOrganizationHeader(
 ): void {
   const organizationId = selectCurrentOrganizationId(getState());
 
-  if (organizationId) {
+  // Generated document endpoints carry an explicit Organization in their query
+  // cache key. Preserve it if selection changes while token acquisition awaits.
+  if (organizationId && !headers.has("X-Organization-Id")) {
     headers.set("X-Organization-Id", organizationId);
   }
 }

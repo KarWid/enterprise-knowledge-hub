@@ -225,7 +225,8 @@ public sealed class AzuriteUploadTests
             factory.Database.Clock,
             Options.Create(new DocumentUploadOptions()),
             Options.Create(factory.Database.Options),
-            NullLogger<DocumentUploadFinalizer>.Instance);
+            NullLogger<DocumentUploadFinalizer>.Instance,
+            factory.Database.ExtractionScheduler(db));
     }
 }
 
