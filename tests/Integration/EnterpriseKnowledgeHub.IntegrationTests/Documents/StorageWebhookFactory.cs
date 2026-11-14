@@ -50,6 +50,7 @@ internal sealed class StorageWebhookFactory : WebApplicationFactory<Program>
             ["StorageEvents:SenderApplicationId"] = Sender,
             ["StorageEvents:ExpectedSource"] = Source, 
             ["DocumentUploadWorker:Enabled"] = "false",
+            ["DocumentTextExtractionWorker:Enabled"] = "false",
             ["Documents:EnabledFormats:markdown"] = MarkdownEnabled.ToString(),
             ["BlobStorage:AccountUrl"] = "https://teststore.blob.core.windows.net", 
             ["BlobStorage:ContainerName"] = ContainerName

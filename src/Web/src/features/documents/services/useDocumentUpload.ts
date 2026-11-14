@@ -3,14 +3,24 @@ import {
   useBeginDocumentUploadMutation,
   useGetDocumentQuery,
 } from "../../../services/api/generated/api";
+import { useAppDispatch, useAppSelector } from "../../../services/hooks";
+import {
+  selectCurrentOrganizationId,
+  lockOrganizationSwitching,
+  unlockOrganizationSwitching,
+} from "../../../services/organization/organizationSlice";
 
 interface UseDocumentUploadOptions {
   onCompleted: () => void;
 }
 
-export type DocumentUploadNotice = "verifying" | "verified" | "rejected" | "failed" | "pending";
+export type DocumentUploadNotice =
+  "verifying" | "verified" | "rejected" | "failed" | "pending";
 
 export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
+  const organizationId = useAppSelector(selectCurrentOrganizationId);
+  const dispatch = useAppDispatch();
+  const switchingLock = useRef<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [storageUploadError, setStorageUploadError] = useState<unknown>();
   const [isUploadingToStorage, setIsUploadingToStorage] = useState(false);
@@ -24,10 +34,14 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
     { error: beginUploadError, isLoading: isBeginningUpload },
   ] = useBeginDocumentUploadMutation();
 
-  const { data: document } = useGetDocumentQuery(
-    { documentId: documentId ?? "" },
+  const { currentData: document } = useGetDocumentQuery(
+    { documentId: documentId ?? "", "X-Organization-Id": organizationId ?? "" },
     {
-      skip: !documentId || pollingExpired || notice !== "verifying",
+      skip:
+        !documentId ||
+        !organizationId ||
+        pollingExpired ||
+        notice !== "verifying",
       pollingInterval: 2000,
       refetchOnMountOrArgChange: true,
     },
@@ -39,8 +53,20 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
     return () => {
       mounted.current = false;
       uploadController.current?.abort();
+      if (switchingLock.current) {
+        dispatch(unlockOrganizationSwitching(switchingLock.current));
+        switchingLock.current = null;
+      }
     };
-  }, []);
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Verification belongs to the previous Organization; its server work continues.
+    setDocumentId(undefined);
+    setNotice(undefined);
+    setStorageUploadError(undefined);
+    setFile(null);
+  }, [organizationId]);
 
   useEffect(() => {
     if (!isUploadingToStorage) return;
@@ -88,7 +114,13 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
   }, [document, documentId, onCompleted]);
 
   async function uploadSelectedFile() {
-    if (!file || isBeginningUpload || isUploadingToStorage) {
+    if (
+      !file ||
+      !organizationId ||
+      switchingLock.current ||
+      isBeginningUpload ||
+      isUploadingToStorage
+    ) {
       return;
     }
 
@@ -96,61 +128,73 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
     setNotice(undefined);
     setDocumentId(undefined);
 
-    const reservation = await beginDocumentUpload({
-      createDocumentUploadRequest: { fileName: file.name },
-    });
-
-    if (!mounted.current || "error" in reservation) {
-      return;
-    }
-
-    const controller = new AbortController();
-    uploadController.current = controller;
-    setIsUploadingToStorage(true);
+    const lockId = crypto.randomUUID();
+    switchingLock.current = lockId;
+    dispatch(lockOrganizationSwitching(lockId));
 
     try {
-      // A single Put Blob works with sp=c. Do not replace with chunked Put Block/Put Block List.
-      const response = await fetch(reservation.data.uploadUri, {
-        method: "PUT",
-        headers: {
-          "If-None-Match": "*",
-          "x-ms-blob-content-type": reservation.data.contentType,
-          "x-ms-blob-type": "BlockBlob",
-          "x-ms-version": "2023-11-03",
-        },
-        body: file,
-        signal: controller.signal,
+      const reservation = await beginDocumentUpload({
+        "X-Organization-Id": organizationId,
+        createDocumentUploadRequest: { fileName: file.name },
       });
-      if (!mounted.current) return;
-      if (!response.ok) {
-        setStorageUploadError({
-          data: {
-            message: `Storage upload failed with status ${response.status}.`,
-          },
-        });
+
+      if (!mounted.current || "error" in reservation) {
         return;
       }
 
-      setFile(null);
-      setDocumentId(reservation.data.documentId);
-      setPollingExpired(false);
-      setNotice("verifying");
-      onCompleted();
-    } catch {
-      if (mounted.current && !controller.signal.aborted)
-        setStorageUploadError({
-          data: {
-            message:
-              "The browser could not confirm the upload. Check the document list before trying again.",
-          },
-        });
-    } finally {
-      if (uploadController.current === controller) {
-        uploadController.current = null;
-      }
+      const controller = new AbortController();
+      uploadController.current = controller;
+      setIsUploadingToStorage(true);
 
-      if (mounted.current) {
-        setIsUploadingToStorage(false);
+      try {
+        // A single Put Blob works with sp=c. Do not replace with chunked Put Block/Put Block List.
+        const response = await fetch(reservation.data.uploadUri, {
+          method: "PUT",
+          headers: {
+            "If-None-Match": "*",
+            "x-ms-blob-content-type": reservation.data.contentType,
+            "x-ms-blob-type": "BlockBlob",
+            "x-ms-version": "2023-11-03",
+          },
+          body: file,
+          signal: controller.signal,
+        });
+        if (!mounted.current) return;
+        if (!response.ok) {
+          setStorageUploadError({
+            data: {
+              message: `Storage upload failed with status ${response.status}.`,
+            },
+          });
+          return;
+        }
+
+        setFile(null);
+        setDocumentId(reservation.data.documentId);
+        setPollingExpired(false);
+        setNotice("verifying");
+        onCompleted();
+      } catch {
+        if (mounted.current && !controller.signal.aborted)
+          setStorageUploadError({
+            data: {
+              message:
+                "The browser could not confirm the upload. Check the document list before trying again.",
+            },
+          });
+      } finally {
+        if (uploadController.current === controller) {
+          uploadController.current = null;
+        }
+
+        if (mounted.current) {
+          setIsUploadingToStorage(false);
+        }
+      }
+    } finally {
+      dispatch(unlockOrganizationSwitching(lockId));
+      if (switchingLock.current === lockId) {
+        switchingLock.current = null;
       }
     }
   }

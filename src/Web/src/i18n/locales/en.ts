@@ -58,6 +58,25 @@ const en = {
     listTitle: "Your documents",
     empty: "No documents have been uploaded yet.",
     uploadedAt: "Uploaded {{date}}",
+    refresh: "Refresh",
+    extraction: {
+      viewText: "View content preview",
+      previewTitle: "Document content preview",
+      previewError: "The document content preview could not be loaded.",
+      characterCount: "Character count: {{count}}.",
+      truncated: "Showing the beginning of the document.",
+      pollingExpired: "Automatic refresh has paused. Content preparation continues; refresh to check progress.",
+      status: {
+        NotAvailable: "Content preparation unavailable",
+        Disabled: "Content preparation disabled for this format",
+        Paused: "Content preparation paused",
+        Pending: "Waiting for content preparation",
+        Processing: "Preparing content…",
+        Completed: "Content prepared",
+        Failed: "Content preparation failed",
+        DeadLetter: "Content preparation needs attention",
+      },
+    },
     error: "We couldn't load or upload documents. Please try again.",
     status: {
       PendingForUpload: "Awaiting upload verification",
@@ -74,7 +93,7 @@ const en = {
       pending:
         "Verification is still pending. Return to the document list later to check its status.",
       verified:
-        "Upload verification passed. Knowledge processing is not yet available.",
+        "Upload verification passed. Check the document list for content preparation progress.",
       rejected:
         "The document was rejected: its contents or size do not meet the upload requirements.",
       failed:
@@ -82,6 +101,7 @@ const en = {
     },
   },
   organization: {
+    switchingLocked: "Wait for the document upload to finish before switching organizations.",
     selectLabel: "Select organization",
   },
   health: {

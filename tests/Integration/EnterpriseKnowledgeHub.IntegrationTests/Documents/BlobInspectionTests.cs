@@ -6,11 +6,70 @@ using Azure.Storage.Blobs;
 using EnterpriseKnowledgeHub.Infrastructure.BlobStorage;
 using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 
 namespace EnterpriseKnowledgeHub.IntegrationTests.Documents;
 
 public sealed class BlobInspectionTests
 {
+    [Fact]
+    public async Task Extraction_ReadsPropertiesAndContentWithValidatedETag()
+    {
+        // Arrange
+        var requestedETags = new List<string?>();
+        var bytes = "# Source\nText"u8.ToArray();
+        using var httpClient = CreateHttpClient(request =>
+        {
+            requestedETags.Add(request.Headers.IfMatch.SingleOrDefault()?.Tag);
+            return CreateContentResponse(request, bytes);
+        });
+
+        // Act
+        var source = await CreateStorage(httpClient).OpenVerifiedReadAsync("reserved.md", ExpectedETag, 100, CancellationToken.None);
+        await using var content = source.Content;
+        using var reader = new StreamReader(content);
+        var text = await reader.ReadToEndAsync();
+
+        // Assert
+        Assert.Equal(Encoding.UTF8.GetString(bytes), text);
+        Assert.Equal(bytes.Length, source.ContentLength);
+        Assert.Equal([ExpectedETag, ExpectedETag], requestedETags);
+    }
+
+    [Fact]
+    public async Task Extraction_RejectsOversizedSourceBeforeDownloading()
+    {
+        // Arrange
+        using var httpClient = CreateHttpClient(request =>
+        {
+            Assert.Equal(HttpMethod.Head, request.Method);
+            return CreateContentResponse(request, new byte[100]);
+        });
+
+        // Act
+        var read = () => CreateStorage(httpClient).OpenVerifiedReadAsync("reserved.md", ExpectedETag, 50, CancellationToken.None);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<DocumentTextExtractionException>(read);
+        Assert.Equal(DocumentTextExtractionErrorCodes.SourceSizeLimit, exception.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Extraction_ChangedBlobIsPermanentFailureWithoutReadingReplacement()
+    {
+        // Arrange
+        using var httpClient = CreateHttpClient(request => request.Method == HttpMethod.Head
+            ? CreateContentResponse(request, "# Source"u8.ToArray())
+            : new HttpResponseMessage(HttpStatusCode.PreconditionFailed));
+
+        // Act
+        var read = () => CreateStorage(httpClient).OpenVerifiedReadAsync("reserved.md", ExpectedETag, 100, CancellationToken.None);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<DocumentTextExtractionException>(read);
+        Assert.Equal(DocumentTextExtractionErrorCodes.SourceETagChanged, exception.ErrorCode);
+    }
+
     private const string BlobReference = "reserved.pdf";
     private const string ContainerName = "documents";
     private const string ExpectedETag = "\"0x123\"";

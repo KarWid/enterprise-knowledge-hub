@@ -146,6 +146,9 @@ public sealed class BeginDocumentUploadCommandHandlerTests
         public Task<string?> GetUploadETagAsync(string reference, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<DocumentTextSource> OpenVerifiedReadAsync(string reference, string expectedETag, long maximumSizeBytes, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
         public Task DeleteIfExistsAsync(
             string reference,
             string etag,
