@@ -33,7 +33,6 @@ The system is designed to keep the first implementation simple while providing c
               │            │            │
               │            │            ├── Azure SQL
               │            │            ├── Blob Storage
-              │            │            ├── AI Search
               │            │            ├── Azure OpenAI
               │            │            └── Key Vault
               │            │
@@ -239,8 +238,9 @@ The worker runs in the existing Always On App Service, with atomic database leas
 bounded retries, and an inbox dead-letter state. No separate worker deployment is used.
 It resolves ownership from the exact reserved blob reference, not a current user.
 Deadline reconciliation uses the same finalizer when events are missing or delayed.
-Uploaded means basic format/size checks passed; malware scanning and extraction
-are not enabled. See [Document upload operations](DocumentUploads.md) for the
+Uploaded means basic format/size checks passed; malware scanning is not enabled.
+Eligible Markdown verification atomically schedules separate durable extraction.
+See [Document upload operations](DocumentUploads.md) for the
 lease, cleanup, delayed-event, and future validation-gate policies.
 
 Storage is separated by responsibility. The original application account holds
@@ -259,7 +259,11 @@ capabilities endpoint supplies the UI's accepted extensions and size limit.
 Reservation responses supply the backend-selected content type. Event Grid uses
 the document prefix and PutBlob filter; the webhook and reservation lookup enforce
 supported canonical paths. Original files share the existing storage and schema.
-Format-specific upload verification is implemented; processing below remains planned.
+Format-specific upload verification and durable Markdown extraction are implemented.
+Extraction runs in a separate BackgroundService in the same API and persists bounded
+Organization/source-owned text in KnowledgeDbContext with leases and retries.
+PDF extraction is disabled; chunking and embeddings remain planned.
+See [Document text extraction](DocumentTextExtraction.md).
 The conceptual pipeline is:
 PDF or Markdown Upload
     ↓
@@ -273,7 +277,7 @@ Chunking
     ↓
 Embedding Generation
     ↓
-Azure AI Search
+Azure SQL chunks and vectors
 
 The processing pipeline should preserve organization ownership throughout the entire process.
 
@@ -285,7 +289,7 @@ Authorization
       ↓
 Organization Context
       ↓
-Azure AI Search
+Organization-scoped SQL vector retrieval
       ↓
 Relevant Chunks
       ↓
@@ -298,17 +302,19 @@ Sources / Citations
 Retrieval must be organization-aware.
 The AI layer must never be allowed to retrieve data belonging to another organization.
 
-14. Azure AI Search
-Azure AI Search stores searchable knowledge representations.
-The application is responsible for ensuring that indexed documents contain sufficient tenant information to enforce isolation.
-Possible indexing metadata:
+14. Azure SQL Vector Retrieval
+The MVP will store chunks and vectors in the existing Azure SQL database, replacing
+the earlier Azure AI Search plan to avoid a separate search service. Vector storage
+and retrieval are not implemented in the extraction slice. The application must
+enforce Organization/document access in SQL before supplying chunks to Azure OpenAI.
+Planned ownership/source metadata includes:
 OrganizationId
 DocumentId
 DocumentName
 ChunkId
 Content
 
-Search queries must be filtered by the current Organization context.
+Similarity queries must be filtered by the validated current Organization context.
 
 15. Azure OpenAI
 Azure OpenAI is used for:
@@ -369,7 +375,7 @@ The application determines what a user can access.
 Tenant Isolation Is Mandatory
 Every tenant-owned operation must execute within an explicit organization context.
 Azure Services Are Infrastructure
-Azure SQL, Blob Storage, AI Search, Azure OpenAI, and Key Vault should not leak into the domain model.
+Azure SQL, Blob Storage, Azure OpenAI, and Key Vault should not leak into the domain model.
 Prefer Managed Services
 Use Azure managed services instead of implementing infrastructure capabilities ourselves.
 Avoid Premature Distribution

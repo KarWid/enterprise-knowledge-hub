@@ -14,7 +14,7 @@ import styles from "./DocumentsPage.module.less";
 
 export function DocumentsPage() {
   const { t } = useTranslation();
-  const { documents, isLoading, upload, error, retry } = useDocumentsPage();
+  const { documents, isLoading, upload, error, retry, refreshDocuments, pollingExpired } = useDocumentsPage();
 
   return (
     <Section>
@@ -60,6 +60,8 @@ export function DocumentsPage() {
 
       <Card>
         <Heading level="h2" title={t("documents.listTitle")} />
+        <Button variant="secondary" onClick={refreshDocuments}>{t("documents.refresh")}</Button>
+        {pollingExpired && <p>{t("documents.extraction.pollingExpired")}</p>}
         <DocumentList documents={documents} isLoading={isLoading} />
       </Card>
 

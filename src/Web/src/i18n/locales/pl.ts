@@ -59,6 +59,25 @@ const pl = {
     listTitle: "Twoje dokumenty",
     empty: "Nie przeslano jeszcze zadnych dokumentow.",
     uploadedAt: "Przeslano {{date}}",
+    refresh: "Odśwież",
+    extraction: {
+      viewText: "Pokaż podgląd treści",
+      previewTitle: "Podgląd treści dokumentu",
+      previewError: "Nie udało się wczytać podglądu treści dokumentu.",
+      characterCount: "Liczba znaków: {{count}}.",
+      truncated: "Wyświetlany jest początek dokumentu.",
+      pollingExpired: "Automatyczne odświeżanie wstrzymano. Przygotowywanie treści trwa; odśwież, aby sprawdzić postęp.",
+      status: {
+        NotAvailable: "Przygotowanie treści niedostępne",
+        Disabled: "Przygotowanie treści wyłączone dla tego formatu",
+        Paused: "Przygotowywanie treści wstrzymane",
+        Pending: "Oczekuje na przygotowanie treści",
+        Processing: "Przygotowywanie treści…",
+        Completed: "Treść przygotowana",
+        Failed: "Nie udało się przygotować treści",
+        DeadLetter: "Przygotowanie treści wymaga interwencji",
+      },
+    },
     error: "Nie mozna wczytac lub przeslac dokumentow. Sprobuj ponownie.",
     status: {
       PendingForUpload: "Oczekuje na weryfikację przesłania",
@@ -74,7 +93,7 @@ const pl = {
       pending:
         "Weryfikacja nadal trwa. Sprawdź status później na liście dokumentów.",
       verified:
-        "Przesłanie zweryfikowane. Przetwarzanie wiedzy nie jest jeszcze dostępne.",
+        "Przesłanie zweryfikowane. Postęp przygotowywania treści znajdziesz na liście dokumentów.",
       rejected:
         "Dokument odrzucony: zawartosc lub rozmiar pliku nie spelnia wymagan przesylania.",
       failed:
@@ -82,6 +101,7 @@ const pl = {
     },
   },
   organization: {
+    switchingLocked: "Poczekaj na zakończenie przesyłania dokumentu przed zmianą organizacji.",
     selectLabel: "Wybierz organizację",
   },
   health: {

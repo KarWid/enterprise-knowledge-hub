@@ -140,6 +140,7 @@ public sealed class DocumentUploadWorkerTests
 
         // Use the real inbox, finalizer, and reconciler implementations under test.
         services.AddScoped<IUploadInbox, UploadInbox>();
+        services.AddScoped(provider => fixture.ExtractionScheduler(provider.GetRequiredService<KnowledgeDbContext>()));
         services.AddScoped<IDocumentUploadFinalizer, DocumentUploadFinalizer>();
         services.AddScoped<IDocumentUploadReconciler, DocumentUploadReconciler>();
 

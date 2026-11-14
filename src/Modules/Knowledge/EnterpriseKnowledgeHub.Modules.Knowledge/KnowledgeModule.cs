@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +14,17 @@ public static class KnowledgeModule
         IConfiguration configuration,
         string connectionStringName)
     {
+        AddDocumentUpload(services, configuration);
+        AddDocumentTextExtraction(services, configuration);
+        AddPersistence(services, configuration, connectionStringName);
+
+        return services;
+    }
+
+    private static void AddDocumentUpload(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
         services.AddOptions<DocumentUploadOptions>()
             .Bind(configuration.GetSection(DocumentUploadOptions.SectionName))
             .Validate(o => o.UploadSasLifetimeMinutes is > 0 and <= 15 && o.MaxUploadSizeBytes is > 0 and <= 524288000,
@@ -24,13 +36,41 @@ public static class KnowledgeModule
             .Bind(configuration.GetSection(DocumentUploadWorkerOptions.SectionName))
             .Validate(o => o.IsValid(), "Invalid document upload worker timing, lease, batch, or retry options.")
             .ValidateOnStart();
-            
+
         services.AddScoped<IUploadInbox, UploadInbox>();
         services.AddScoped<IDocumentUploadFinalizer, DocumentUploadFinalizer>();
         services.AddScoped<IDocumentUploadReconciler, DocumentUploadReconciler>();
+    }
+
+    private static void AddDocumentTextExtraction(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddSingleton<DocumentTextExtractorRegistry>();
+        services.AddOptions<DocumentTextExtractionOptions>()
+            .Bind(configuration.GetSection(DocumentTextExtractionOptions.SectionName))
+            .Validate(options => options.IsValid(), "Invalid extraction size limits or format identifiers.")
+            .Validate<DocumentTextExtractorRegistry>((options, extractors) => extractors.SupportsEnabledFormats(options),
+                "Every enabled extraction format requires a registered, versioned text extractor.")
+            .ValidateOnStart();
+
+        services.AddOptions<DocumentTextExtractionWorkerOptions>()
+            .Bind(configuration.GetSection(DocumentTextExtractionWorkerOptions.SectionName))
+            .Validate(options => options.IsValid(), "Invalid extraction worker timing, lease, batch, or retry options.")
+            .ValidateOnStart();
+
+        services.AddScoped<IDocumentTextExtractionScheduler, DocumentTextExtractionScheduler>();
+        services.AddScoped<IDocumentTextExtractionQueue, DocumentTextExtractionQueue>();
+        services.AddScoped<IDocumentTextExtractionProcessor, DocumentTextExtractionProcessor>();
+        services.AddScoped<DocumentTextExtractionStatusResolver>();
+    }
+
+    private static void AddPersistence(
+        IServiceCollection services,
+        IConfiguration configuration,
+        string connectionStringName)
+    {
         services.AddDbContext<KnowledgeDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString(connectionStringName)));
-
-        return services;
     }
 }

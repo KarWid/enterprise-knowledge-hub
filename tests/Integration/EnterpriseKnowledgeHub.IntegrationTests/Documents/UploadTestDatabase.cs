@@ -1,4 +1,6 @@
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
+using EnterpriseKnowledgeHub.Infrastructure.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,9 @@ internal sealed class UploadTestDatabase : IDisposable
     public DocumentUploadWorkerOptions Options { get; } = new() { MaxAttempts = 3 };
     public DocumentUploadOptions UploadOptions { get; } = new();
     public TestDocumentStorage Storage { get; } = new();
+    public DocumentTextExtractionOptions ExtractionOptions { get; } = new();
+    public DocumentTextExtractionWorkerOptions ExtractionWorkerOptions { get; } = new() { MaxAttempts = 3 };
+    public DocumentTextExtractorRegistry Extractors { get; } = new([new MarkdownDocumentTextExtractor()]);
 
     public UploadTestDatabase()
     {
@@ -56,7 +61,20 @@ internal sealed class UploadTestDatabase : IDisposable
 
     public IDocumentUploadFinalizer Finalizer(KnowledgeDbContext db) => new DocumentUploadFinalizer(db, Storage, Inbox(db), Clock,
         Microsoft.Extensions.Options.Options.Create(UploadOptions),
-        Microsoft.Extensions.Options.Options.Create(Options), NullLogger<DocumentUploadFinalizer>.Instance);
+        Microsoft.Extensions.Options.Options.Create(Options), NullLogger<DocumentUploadFinalizer>.Instance, ExtractionScheduler(db));
+
+    public IDocumentTextExtractionScheduler ExtractionScheduler(KnowledgeDbContext db) => new DocumentTextExtractionScheduler(
+        db, Extractors, Microsoft.Extensions.Options.Options.Create(ExtractionOptions),
+        Microsoft.Extensions.Options.Options.Create(ExtractionWorkerOptions), Clock);
+
+    public IDocumentTextExtractionQueue ExtractionQueue(KnowledgeDbContext db) => new DocumentTextExtractionQueue(
+        db, Clock, Microsoft.Extensions.Options.Options.Create(ExtractionOptions), Microsoft.Extensions.Options.Options.Create(ExtractionWorkerOptions));
+
+    public IDocumentTextExtractionProcessor ExtractionProcessor(KnowledgeDbContext db) => new DocumentTextExtractionProcessor(
+        db, Storage, ExtractionQueue(db), Extractors, Microsoft.Extensions.Options.Options.Create(ExtractionOptions));
+
+    public DocumentTextExtractionStatusResolver ExtractionStatus() => new(
+        Microsoft.Extensions.Options.Options.Create(ExtractionOptions), Microsoft.Extensions.Options.Options.Create(ExtractionWorkerOptions));
 
     public void Dispose()
     {
@@ -84,6 +102,32 @@ internal sealed class TestDocumentStorage : IDocumentBlobStorage
     public int Inspections { get; private set; }
     public List<(string Reference, string ETag)> Deletions { get; } = [];
     public Func<Task>? BeforeInspection { get; set; }
+    public byte[] TextBytes { get; set; } = System.Text.Encoding.UTF8.GetBytes("# Test document\nKnowledge content.");
+    public Exception? ReadError { get; set; }
+    public List<(string Reference, string ETag)> Reads { get; } = [];
+    public Func<Task>? BeforeRead { get; set; }
+
+    public async Task<DocumentTextSource> OpenVerifiedReadAsync(string reference, string expectedETag, long maximumSizeBytes, CancellationToken ct)
+    {
+        Reads.Add((reference, expectedETag));
+        if (BeforeRead is not null)
+        {
+            await BeforeRead();
+        }
+        if (ReadError is not null)
+        {
+            throw ReadError;
+        }
+        if (expectedETag != Inspection?.ETag)
+        {
+            throw new DocumentTextExtractionException(DocumentTextExtractionErrorCodes.SourceETagChanged);
+        }
+        if (TextBytes.Length > maximumSizeBytes)
+        {
+            throw new DocumentTextExtractionException(DocumentTextExtractionErrorCodes.SourceSizeLimit);
+        }
+        return new(new MemoryStream(TextBytes), TextBytes.Length);
+    }
 
     public Task<Uri> CreateUploadUriAsync(string reference, DateTimeOffset expiry, CancellationToken ct) =>
         Task.FromResult(new Uri("https://teststore.blob.core.windows.net/documents/" + reference + "?sig=test-only"));

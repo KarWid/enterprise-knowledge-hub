@@ -1,6 +1,7 @@
 using EnterpriseKnowledgeHub.Contracts.Knowledge;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentUploadCapabilities;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentTextPreview;
 
 namespace EnterpriseKnowledgeHub.Api.Mappers;
 
@@ -11,7 +12,13 @@ internal static class DocumentMapper
         document.Name,
         document.ContentType,
         document.Status.ToString(),
-        document.CreatedAt);
+        document.CreatedAt,
+        document.TextExtraction is { } extraction
+            ? new DocumentTextExtractionResponse(extraction.Status, extraction.CharacterCount, extraction.CompletedAt, extraction.FailureCode)
+            : null);
+
+    internal static DocumentTextPreviewResponse MapToDocumentTextPreviewResponse(DocumentTextPreviewResult preview) =>
+        new(preview.Text, preview.CharacterCount, preview.IsTruncated, preview.CompletedAt);
 
     internal static IReadOnlyList<DocumentResponse> MapToDocumentResponses(IEnumerable<DocumentResult> documents) =>
         [.. documents.Select(MapToDocumentResponse)];

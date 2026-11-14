@@ -1,4 +1,6 @@
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
+using Microsoft.Extensions.Options;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using EnterpriseKnowledgeHub.UnitTests.Knowledge.Fakes;
@@ -25,7 +27,7 @@ public sealed class GetDocumentQueryHandlerTests
         db.Documents.Add(otherDocument);
         await db.SaveChangesAsync();
 
-        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership));
+        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus());
 
         // Act
         var document = await handler.Handle(new GetDocumentQuery(otherDocument.Id), CancellationToken.None);
@@ -44,7 +46,7 @@ public sealed class GetDocumentQueryHandlerTests
 
         db.Documents.Add(ownDocument);
         await db.SaveChangesAsync();
-        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership));
+        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus());
 
         // Act
         var document = await handler.Handle(new GetDocumentQuery(ownDocument.Id), CancellationToken.None);
@@ -63,6 +65,9 @@ public sealed class GetDocumentQueryHandlerTests
 
         return new KnowledgeDbContext(options);
     }
+
+    private static DocumentTextExtractionStatusResolver CreateExtractionStatus() => new(
+        Options.Create(new DocumentTextExtractionOptions()), Options.Create(new DocumentTextExtractionWorkerOptions()));
 
     private static TestOrganizationMembership CreateMembership() =>
         new(Guid.NewGuid(), Guid.NewGuid());

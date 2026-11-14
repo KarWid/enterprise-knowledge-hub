@@ -5,6 +5,7 @@ using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.BeginDocume
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentUploadCapabilities;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentTextPreview;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,5 +69,16 @@ public sealed class DocumentsController(IMediator mediator) : ApiControllerBase
             cancellationToken);
 
         return result is null ? NotFound() : Ok(DocumentMapper.MapToDocumentResponse(result));
+    }
+
+    [HttpGet("{documentId:guid}/text-preview")]
+    [Authorize(Policy = Policies.Documents.Read)]
+    [SwaggerOperation(OperationId = "GetDocumentTextPreview")]
+    [ProducesResponseType(typeof(DocumentTextPreviewResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTextPreview(Guid documentId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetDocumentTextPreviewQuery(documentId), cancellationToken);
+        return result is null ? NotFound() : Ok(DocumentMapper.MapToDocumentTextPreviewResponse(result));
     }
 }

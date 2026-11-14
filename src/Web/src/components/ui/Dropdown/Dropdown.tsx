@@ -17,6 +17,7 @@ interface DropdownProps {
   className?: string;
   triggerClassName?: string;
   triggerContent?: ReactNode;
+  disabled?: boolean;
 }
 
 export function Dropdown({
@@ -28,6 +29,7 @@ export function Dropdown({
   className,
   triggerClassName,
   triggerContent,
+  disabled = false,
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((option) => option.value === value);
@@ -37,6 +39,7 @@ export function Dropdown({
   }));
 
   function handleSelect({ key }: { key: string }) {
+    if (disabled) return;
     onChange(key);
     setIsOpen(false);
   }
@@ -44,7 +47,8 @@ export function Dropdown({
   return (
     <div className={`${styles.dropdown}${className ? ` ${className}` : ""}`}>
       <AntDropdown
-        open={isOpen}
+        disabled={disabled}
+        open={!disabled && isOpen}
         onOpenChange={setIsOpen}
         trigger={["click"]}
         placement="bottomRight"
@@ -60,9 +64,10 @@ export function Dropdown({
       >
         <button
           type="button"
+          disabled={disabled}
           className={`${styles.trigger}${triggerClassName ? ` ${triggerClassName}` : ""}`}
           aria-haspopup="menu"
-          aria-expanded={isOpen}
+          aria-expanded={!disabled && isOpen}
           aria-label={ariaLabel}
           title={title}
         >

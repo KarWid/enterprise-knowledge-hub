@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Contracts.Knowledge;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using EnterpriseKnowledgeHub.Modules.Organizations.Exceptions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,6 +20,104 @@ namespace EnterpriseKnowledgeHub.IntegrationTests.Documents;
 
 public sealed class DocumentUploadApiTests
 {
+    [Fact]
+    public async Task CompletedExtraction_ReturnsMetadataAndBoundedTextPreview()
+    {
+        // Arrange
+        using var storageFactory = new StorageWebhookFactory();
+        var membership = new TestMembership("OrganizationOwner");
+
+        await using var db = storageFactory.Database.CreateContext();
+        var document = await DocumentTextExtractionTests.ReserveAsync(db, organizationId: membership.OrganizationId);
+        document.CompleteUpload("\"0x123\"");
+        storageFactory.Database.ExtractionScheduler(db).Stage(document);
+        await db.SaveChangesAsync();
+
+        var work = await storageFactory.Database
+            .ExtractionQueue(db)
+            .ClaimAsync(CancellationToken.None);
+        var text = "<script>untrusted source</script>" + new string('a', 5000);
+        
+        await storageFactory.Database.ExtractionQueue(db).CompleteAsync(work!, text, CancellationToken.None);
+        using var factory = ConfigureDocumentsApi(storageFactory, membership);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-Signed-In", "true");
+
+        // Act
+        var status = await client.GetFromJsonAsync<DocumentResponse>($"/api/documents/{document.Id}");
+        var preview = await client.GetFromJsonAsync<DocumentTextPreviewResponse>($"/api/documents/{document.Id}/text-preview");
+        var listJson = await client.GetStringAsync("/api/documents");
+
+        // Assert
+        Assert.Equal("Uploaded", status!.Status);
+        Assert.Equal("Completed", status.TextExtraction!.Status);
+        Assert.Equal(text.Length, status.TextExtraction.CharacterCount);
+        Assert.Equal(text[..4000], preview!.Text);
+        Assert.True(preview.IsTruncated);
+        Assert.DoesNotContain("untrusted source", listJson);
+        Assert.DoesNotContain("validatedETag", listJson, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(false, "OrganizationOwner", HttpStatusCode.Unauthorized)]
+    [InlineData(true, "Employee", HttpStatusCode.Forbidden)]
+    [InlineData(true, null, HttpStatusCode.Forbidden)]
+    public async Task TextPreview_RequiresAuthenticationAndDocumentsRead(bool signedIn, string? role, HttpStatusCode expected)
+    {
+        // Arrange
+        using var storageFactory = new StorageWebhookFactory();
+        using var factory = ConfigureDocumentsApi(storageFactory, role is null ? null : new TestMembership(role));
+        using var client = factory.CreateClient();
+        if (signedIn)
+        {
+            client.DefaultRequestHeaders.Add("X-Test-Signed-In", "true");
+        }
+
+        // Act
+        using var response = await client.GetAsync($"/api/documents/{Guid.NewGuid()}/text-preview");
+
+        // Assert
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/text-preview")]
+    public async Task ExtractionEndpoints_HideOtherOrganizationsDocuments(string suffix)
+    {
+        // Arrange
+        using var storageFactory = new StorageWebhookFactory();
+        await using var db = storageFactory.Database.CreateContext();
+        var requestingMembership = new TestMembership("OrganizationOwner");
+        var documentOwnerOrganizationId = Guid.NewGuid();
+
+        var otherOrganizationDocument = await DocumentTextExtractionTests.ReserveAsync(
+            db, organizationId: documentOwnerOrganizationId);
+        otherOrganizationDocument.CompleteUpload("\"0x123\"");
+        storageFactory.Database.ExtractionScheduler(db).Stage(otherOrganizationDocument);
+        await db.SaveChangesAsync();
+
+        var work = await storageFactory.Database.ExtractionQueue(db).ClaimAsync(CancellationToken.None);
+        await storageFactory.Database.ExtractionQueue(db).CompleteAsync(work!, "private content", CancellationToken.None);
+
+        using var factory = ConfigureDocumentsApi(storageFactory, requestingMembership);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-Signed-In", "true");
+        // Deliberately request the document owner's Organization. The fake access service
+        // ignores headers and returns requestingMembership as the established context.
+        // This tests handler isolation, not the real header-to-membership validation.
+        client.DefaultRequestHeaders.Add("X-Organization-Id", documentOwnerOrganizationId.ToString());
+
+        // Act
+        using var response = await client.GetAsync($"/api/documents/{otherOrganizationDocument.Id}{suffix}");
+
+        // Assert
+        Assert.Equal(documentOwnerOrganizationId, otherOrganizationDocument.OrganizationId);
+        Assert.NotEqual(requestingMembership.OrganizationId, otherOrganizationDocument.OrganizationId);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.DoesNotContain("private content", await response.Content.ReadAsStringAsync());
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

@@ -49,9 +49,9 @@ public sealed class UploadFinalizationTests
         Assert.True(
             fixture.Storage.Inspections == 1,
             "A duplicate event for an already uploaded document must not inspect Blob Storage again.");
-        Assert.False(
+        Assert.True(
             DocumentProcessingGate.CanStartExtraction(document),
-            "Basic upload verification must not start extraction before future processing gates exist.");
+            "A verified ETag provides the source gate; registered extractors and independent format settings control scheduling.");
         Assert.Empty(await db.UploadInbox.AsNoTracking().ToListAsync());
     }
 
