@@ -1,16 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { Button } from "../../../../components/ui/Button/Button";
+import { MoreVerticalIcon } from "../../../../components/icons";
+import { Dropdown, type DropdownOption } from "../../../../components/ui/Dropdown/Dropdown";
 import type { DocumentResponse } from "../../../../services/api/generated/api";
 import { DocumentTextPreview } from "../DocumentTextPreview/DocumentTextPreview";
 import { DocumentChunkPreview } from "../DocumentChunkPreview/DocumentChunkPreview";
+import { DocumentStatusIndicator } from "../DocumentStatusIndicator/DocumentStatusIndicator";
 import styles from "./DocumentListItem.module.less";
 
 interface DocumentListItemProps {
   document: DocumentResponse;
 }
 
-// TODO @KWidla: statuses should be represented by some smaller components or icons
 export function DocumentListItem({ document }: DocumentListItemProps) {
   const { t } = useTranslation();
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -19,39 +20,46 @@ export function DocumentListItem({ document }: DocumentListItemProps) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(document.createdAt));
+  const actions: DropdownOption[] = [];
+
+  // Chunking metadata is included only in the authorized diagnostics view.
+  if (document.chunking && document.textExtraction?.status === "Completed") {
+    actions.push({ value: "content", label: t("documents.extraction.viewText") });
+  }
+
+  if (document.chunking?.status === "Completed") {
+    actions.push({ value: "chunks", label: t("documents.chunking.viewChunks") });
+  }
+
+  function handleAction(action: string) {
+    if (action === "content") {
+      setPreviewOpen(true);
+    } else if (action === "chunks") {
+      setChunksOpen(true);
+    }
+  }
 
   return (
     <li className={styles.document}>
       <span className={styles.documentIcon} aria-hidden="true">
         {document.name.split(".").pop()?.toUpperCase()}
       </span>
-      <div>
+      <div className={styles.details}>
         <strong>{document.name}</strong>
         <span className={styles.documentMeta}>
           {t("documents.uploadedAt", { date: createdAt })}
         </span>
       </div>
-      <div className={styles.status}>
-        <span>{t(`documents.status.${document.status}`)}</span>
-        {document.textExtraction && (
-          <span className={styles.documentMeta}>
-            {t(`documents.extraction.status.${document.textExtraction.status}`)}
-          </span>
-        )}
-        {document.textExtraction?.status === "Completed" && (
-          <Button variant="secondary" onClick={() => setPreviewOpen(true)}>
-            {t("documents.extraction.viewText")}
-          </Button>
-        )}
-        {document.chunking && (
-          <span className={styles.documentMeta}>
-            {t(`documents.chunking.status.${document.chunking.status}`)}
-          </span>
-        )}
-        {document.chunking?.status === "Completed" && (
-          <Button variant="secondary" onClick={() => setChunksOpen(true)}>
-            {t("documents.chunking.viewChunks")}
-          </Button>
+      <div className={styles.controls}>
+        <DocumentStatusIndicator document={document} />
+        {actions.length > 0 && (
+          <Dropdown
+            options={actions}
+            onChange={handleAction}
+            ariaLabel={t("documents.actions", { name: document.name })}
+            triggerClassName={styles.actionsTrigger}
+            triggerContent={<MoreVerticalIcon />}
+          />
         )}
       </div>
       <DocumentTextPreview
