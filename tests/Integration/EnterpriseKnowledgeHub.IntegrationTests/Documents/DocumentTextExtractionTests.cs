@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Text;
 using EnterpriseKnowledgeHub.Infrastructure.TextExtraction;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentTextPreview;
@@ -81,7 +82,7 @@ public sealed class DocumentTextExtractionTests
 
         // Act
         await fixture.ExtractionProcessor(db).ProcessAsync(work!, CancellationToken.None);
-        var preview = await new GetDocumentTextPreviewQueryHandler(db, new ExtractionAccess(document.OrganizationId))
+        var preview = await new GetDocumentTextPreviewQueryHandler(db, new ExtractionAccess(document.OrganizationId), fixture.Diagnostics())
             .Handle(new(document.Id), CancellationToken.None);
 
         // Assert
@@ -125,7 +126,7 @@ public sealed class DocumentTextExtractionTests
         // Act
         // Disabled formats cannot be claimed. The API reports the existing work as Paused.
         var pausedClaim = await fixture.ExtractionQueue(db).ClaimAsync(CancellationToken.None);
-        var pausedStatus = await new GetDocumentQueryHandler(db, new ExtractionAccess(document.OrganizationId), fixture.ExtractionStatus())
+        var pausedStatus = await new GetDocumentQueryHandler(db, new ExtractionAccess(document.OrganizationId), fixture.ExtractionStatus(), fixture.ChunkingStatus(), fixture.Diagnostics())
             .Handle(new(document.Id), CancellationToken.None);
 
         // Resume the same work and complete its first processing attempt.
@@ -135,7 +136,7 @@ public sealed class DocumentTextExtractionTests
 
         // Disabling future processing must not hide or downgrade a completed extraction.
         fixture.ExtractionOptions.EnabledFormats["markdown"] = false;
-        var completedStatus = await new GetDocumentQueryHandler(db, new ExtractionAccess(document.OrganizationId), fixture.ExtractionStatus())
+        var completedStatus = await new GetDocumentQueryHandler(db, new ExtractionAccess(document.OrganizationId), fixture.ExtractionStatus(), fixture.ChunkingStatus(), fixture.Diagnostics())
             .Handle(new(document.Id), CancellationToken.None);
 
         // Assert
@@ -162,7 +163,7 @@ public sealed class DocumentTextExtractionTests
         var text = prefix + new string(' ', 10_000);
 
         await fixture.ExtractionQueue(db).CompleteAsync(work!, text, CancellationToken.None);
-        var handler = new GetDocumentTextPreviewQueryHandler(db, new ExtractionAccess(document.OrganizationId));
+        var handler = new GetDocumentTextPreviewQueryHandler(db, new ExtractionAccess(document.OrganizationId), fixture.Diagnostics());
 
         // Act
         var preview = await handler.Handle(new(document.Id), CancellationToken.None);
@@ -440,9 +441,9 @@ public sealed class DocumentTextExtractionTests
         var otherOrganization = new ExtractionAccess(Guid.NewGuid());
 
         // Act
-        var preview = await new GetDocumentTextPreviewQueryHandler(db, otherOrganization).Handle(new(document.Id), CancellationToken.None);
-        var status = await new GetDocumentQueryHandler(db, otherOrganization, fixture.ExtractionStatus()).Handle(new(document.Id), CancellationToken.None);
-        var list = await new GetDocumentsQueryHandler(db, otherOrganization, fixture.ExtractionStatus()).Handle(new(), CancellationToken.None);
+        var preview = await new GetDocumentTextPreviewQueryHandler(db, otherOrganization, fixture.Diagnostics()).Handle(new(document.Id), CancellationToken.None);
+        var status = await new GetDocumentQueryHandler(db, otherOrganization, fixture.ExtractionStatus(), fixture.ChunkingStatus(), fixture.Diagnostics()).Handle(new(document.Id), CancellationToken.None);
+        var list = await new GetDocumentsQueryHandler(db, otherOrganization, fixture.ExtractionStatus(), fixture.ChunkingStatus(), fixture.Diagnostics()).Handle(new(), CancellationToken.None);
 
         // Assert
         Assert.Null(preview);
@@ -451,7 +452,7 @@ public sealed class DocumentTextExtractionTests
     }
 
     [Fact]
-    public async Task GetDocument_LoadsDocumentAndCurrentExtractionStatusWithOneDatabaseCommand()
+    public async Task BasicProjection_OmitsChunkingWithoutQueryingItsTable()
     {
         // Arrange
         using var fixture = new UploadTestDatabase();
@@ -459,6 +460,37 @@ public sealed class DocumentTextExtractionTests
         var document = await VerifyAsync(fixture, setupDb);
         var work = await fixture.ExtractionQueue(setupDb).ClaimAsync(CancellationToken.None);
         await fixture.ExtractionProcessor(setupDb).ProcessAsync(work!, CancellationToken.None);
+        await DocumentChunkingTests.CompleteAsync(fixture, setupDb);
+        var commandCounter = new QueryCommandCounter();
+        await using var queryDb = new KnowledgeDbContext(fixture.Configure(new DbContextOptionsBuilder<KnowledgeDbContext>())
+            .AddInterceptors(commandCounter).Options);
+
+        // Act
+        var projection = await queryDb.Documents.AsNoTracking()
+            .Where(item => item.OrganizationId == document.OrganizationId && item.Id == document.Id)
+            .SelectDocumentResults(queryDb.DocumentTextExtractions.AsNoTracking())
+            .SingleAsync();
+        var result = projection.ToResult(fixture.ExtractionStatus());
+
+        // Assert
+        Assert.Equal("Completed", result.TextExtraction!.Status);
+        Assert.Null(result.Chunking);
+        Assert.Equal(1, commandCounter.ReaderCommands);
+        Assert.DoesNotContain(commandCounter.CommandTexts, sql => sql.Contains("DocumentChunkings", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetDocument_LoadsDocumentAndCurrentProcessingStatusesWithOneMetadataQuery(bool diagnosticsEnabled)
+    {
+        // Arrange
+        using var fixture = new UploadTestDatabase();
+        await using var setupDb = fixture.CreateContext();
+        var document = await VerifyAsync(fixture, setupDb);
+        var work = await fixture.ExtractionQueue(setupDb).ClaimAsync(CancellationToken.None);
+        await fixture.ExtractionProcessor(setupDb).ProcessAsync(work!, CancellationToken.None);
+        await DocumentChunkingTests.CompleteAsync(fixture, setupDb);
         var commandCounter = new QueryCommandCounter();
         var options = fixture.Configure(new DbContextOptionsBuilder<KnowledgeDbContext>())
             .AddInterceptors(commandCounter)
@@ -467,18 +499,31 @@ public sealed class DocumentTextExtractionTests
         var handler = new GetDocumentQueryHandler(
             queryDb,
             new ExtractionAccess(document.OrganizationId),
-            fixture.ExtractionStatus());
+            fixture.ExtractionStatus(), fixture.ChunkingStatus(), fixture.Diagnostics(diagnosticsEnabled));
 
         // Act
         var result = await handler.Handle(new(document.Id), CancellationToken.None);
 
         // Assert
         Assert.Equal("Completed", result!.TextExtraction!.Status);
+        if (diagnosticsEnabled)
+        {
+            Assert.Equal("Completed", result.Chunking!.Status);
+            Assert.Equal(1, result.Chunking.ChunkCount);
+        }
+        else
+        {
+            Assert.Null(result.Chunking);
+            Assert.DoesNotContain(commandCounter.CommandTexts, sql => sql.Contains("DocumentChunkings", StringComparison.Ordinal));
+        }
+
         Assert.Equal(1, commandCounter.ReaderCommands);
     }
 
-    [Fact]
-    public async Task GetDocuments_LoadsDocumentsAndCurrentExtractionStatusesWithOneDatabaseCommand()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetDocuments_LoadsDocumentsAndCurrentProcessingStatusesWithOneMetadataQuery(bool diagnosticsEnabled)
     {
         // Arrange
         using var fixture = new UploadTestDatabase();
@@ -486,6 +531,7 @@ public sealed class DocumentTextExtractionTests
         var document = await VerifyAsync(fixture, setupDb);
         var work = await fixture.ExtractionQueue(setupDb).ClaimAsync(CancellationToken.None);
         await fixture.ExtractionProcessor(setupDb).ProcessAsync(work!, CancellationToken.None);
+        await DocumentChunkingTests.CompleteAsync(fixture, setupDb);
         var commandCounter = new QueryCommandCounter();
         var options = fixture.Configure(new DbContextOptionsBuilder<KnowledgeDbContext>())
             .AddInterceptors(commandCounter)
@@ -494,7 +540,7 @@ public sealed class DocumentTextExtractionTests
         var handler = new GetDocumentsQueryHandler(
             queryDb,
             new ExtractionAccess(document.OrganizationId),
-            fixture.ExtractionStatus());
+            fixture.ExtractionStatus(), fixture.ChunkingStatus(), fixture.Diagnostics(diagnosticsEnabled));
 
         // Act
         var results = await handler.Handle(new(), CancellationToken.None);
@@ -502,6 +548,17 @@ public sealed class DocumentTextExtractionTests
         // Assert
         var result = Assert.Single(results);
         Assert.Equal("Completed", result.TextExtraction!.Status);
+        if (diagnosticsEnabled)
+        {
+            Assert.Equal("Completed", result.Chunking!.Status);
+            Assert.Equal(1, result.Chunking.ChunkCount);
+        }
+        else
+        {
+            Assert.Null(result.Chunking);
+            Assert.DoesNotContain(commandCounter.CommandTexts, sql => sql.Contains("DocumentChunkings", StringComparison.Ordinal));
+        }
+
         Assert.Equal(1, commandCounter.ReaderCommands);
     }
 
@@ -655,6 +712,7 @@ public sealed class DocumentTextExtractionTests
     private sealed class QueryCommandCounter : DbCommandInterceptor
     {
         public int ReaderCommands { get; private set; }
+        public List<string> CommandTexts { get; } = [];
 
         public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
             DbCommand command,
@@ -663,6 +721,7 @@ public sealed class DocumentTextExtractionTests
             CancellationToken cancellationToken = default)
         {
             ReaderCommands++;
+            CommandTexts.Add(command.CommandText);
             return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
         }
     }
