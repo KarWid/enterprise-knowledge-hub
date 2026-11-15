@@ -66,7 +66,7 @@ internal sealed class UploadInbox(
         return null;
     }
 
-    public Task<int> CompleteAsync(UploadInboxItem item, CancellationToken ct) => Owned(item)
+    public Task<int> CompleteAsync(UploadInboxItem item, CancellationToken ct) => WithActiveLease(item)
         .ExecuteUpdateAsync(setters => setters
             .SetProperty(x => x.Status, UploadWorkStatus.Completed)
             .SetProperty(x => x.CompletedAt, clock.GetUtcNow().UtcDateTime)
@@ -80,7 +80,7 @@ internal sealed class UploadInbox(
         var delay = Math.Min(options.Value.RetryMaxSeconds,
             options.Value.RetryBaseSeconds * Math.Pow(2, Math.Min(item.Attempts - 1, 20)));
             
-        return Owned(item).ExecuteUpdateAsync(setters => setters
+        return WithActiveLease(item).ExecuteUpdateAsync(setters => setters
             .SetProperty(x => x.Status, exhausted ? UploadWorkStatus.DeadLetter : UploadWorkStatus.Pending)
             .SetProperty(x => x.NextAttemptAt, clock.GetUtcNow().UtcDateTime.AddSeconds(delay))
             .SetProperty(x => x.CompletedAt, exhausted ? clock.GetUtcNow().UtcDateTime : (DateTime?)null)
@@ -93,7 +93,7 @@ internal sealed class UploadInbox(
         (x.Status == UploadWorkStatus.Pending && x.NextAttemptAt <= now) ||
         (x.Status == UploadWorkStatus.Processing && x.LeaseExpiresAt <= now));
 
-    private IQueryable<UploadInboxItem> Owned(UploadInboxItem item)
+    private IQueryable<UploadInboxItem> WithActiveLease(UploadInboxItem item)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         return db.UploadInbox.Where(x => x.Id == item.Id && x.Status == UploadWorkStatus.Processing &&

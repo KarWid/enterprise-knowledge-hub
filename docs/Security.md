@@ -321,6 +321,10 @@ uses conditional ETag reads, durable leases, fenced completion, and an Organizat
 Document ownership foreign key. Status and escaped-text previews require Documents.Read
 and validated membership. Any future required scan must add durable exact-ETag clean
 evidence to the processing gate. See [Text extraction](DocumentTextExtraction.md).
+Markdown chunking retains exact extraction/source ownership, uses composite foreign
+keys and leased atomic publication, and exposes bounded escaped-text previews only
+after Documents.Read and Organization validation. Chunking does not sanitize
+prompt instructions or make a document Ready. See [Document chunking](DocumentChunking.md).
 See [Document upload operations](DocumentUploads.md) for setup and recovery.
 
 12. Azure Managed Identity

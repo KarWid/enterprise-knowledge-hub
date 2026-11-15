@@ -827,7 +827,15 @@ Milestone 8.1 — Durable Markdown Text Extraction (implemented)
 - Expose authorized metadata and a bounded escaped-text preview with bounded browser polling.
 - Follow [Text extraction operations](DocumentTextExtraction.md) for migration, limits, tests, and recovery.
 
-Later slices add SQL-backed chunks, embeddings, and Organization-scoped SQL vector
+Milestone 8.2 — Durable Markdown Chunking (implemented)
+- Discover completed current-source extractions and persist versioned chunk sets in KnowledgeDbContext.
+- Parse Markdown structure with plain-text fallback and enforce token, source, and chunk-count bounds.
+- Configure formats independently; enabled formats require a registered, versioned chunker at startup.
+- Use expiring leases, bounded retries, and atomic completion without changing Document upload status.
+- Expose Organization-scoped metadata and paged escaped-text previews under Documents.Read.
+- Follow [Document chunking operations](DocumentChunking.md) for configuration, migration, tests, and recovery.
+
+Later slices add embeddings and Organization-scoped SQL vector
 retrieval. Azure AI Search is no longer required by the MVP plan.
 
 

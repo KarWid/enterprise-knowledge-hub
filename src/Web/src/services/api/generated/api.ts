@@ -41,6 +41,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getDocumentChunks: build.query<
+      GetDocumentChunksApiResponse,
+      GetDocumentChunksApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/documents/${queryArg.documentId}/chunks`,
+        headers: {
+          "X-Organization-Id": queryArg["X-Organization-Id"],
+        },
+        params: {
+          offset: queryArg.offset,
+          limit: queryArg.limit,
+        },
+      }),
+    }),
     getDocumentTextPreview: build.query<
       GetDocumentTextPreviewApiResponse,
       GetDocumentTextPreviewApiArg
@@ -121,6 +136,15 @@ export type GetDocumentApiArg = {
   /** Organization selected for this request. Access is validated by the API. */
   "X-Organization-Id": string;
 };
+export type GetDocumentChunksApiResponse =
+  /** status 200 OK */ DocumentChunksResponse;
+export type GetDocumentChunksApiArg = {
+  documentId: string;
+  offset?: number;
+  limit?: number;
+  /** Organization selected for this request. Access is validated by the API. */
+  "X-Organization-Id": string;
+};
 export type GetDocumentTextPreviewApiResponse =
   /** status 200 OK */ DocumentTextPreviewResponse;
 export type GetDocumentTextPreviewApiArg = {
@@ -166,6 +190,12 @@ export type DocumentTextExtractionResponse = {
   completedAt?: string | null;
   failureCode?: string | null;
 };
+export type DocumentChunkingResponse = {
+  status: string;
+  chunkCount?: number | null;
+  completedAt?: string | null;
+  failureCode?: string | null;
+};
 export type DocumentResponse = {
   id: string;
   name: string;
@@ -173,6 +203,7 @@ export type DocumentResponse = {
   status: string;
   createdAt: string;
   textExtraction?: DocumentTextExtractionResponse;
+  chunking?: DocumentChunkingResponse;
 };
 export type DocumentUploadSessionResponse = {
   documentId: string;
@@ -190,6 +221,20 @@ export type ProblemDetails = {
   detail?: string | null;
   instance?: string | null;
   [key: string]: any;
+};
+export type DocumentChunkPreviewResponse = {
+  id: string;
+  ordinal: number;
+  content: string;
+  headingPath?: string | null;
+  tokenCount: number;
+  isTruncated: boolean;
+};
+export type DocumentChunksResponse = {
+  items: DocumentChunkPreviewResponse[];
+  chunkCount: number;
+  offset: number;
+  hasMore: boolean;
 };
 export type DocumentTextPreviewResponse = {
   text: string;
@@ -235,6 +280,7 @@ export const {
   useGetDocumentsQuery,
   useBeginDocumentUploadMutation,
   useGetDocumentQuery,
+  useGetDocumentChunksQuery,
   useGetDocumentTextPreviewQuery,
   useGetHealthQuery,
   useGetMeQuery,

@@ -189,8 +189,8 @@ The application must validate organization ownership for every document operatio
 10. Knowledge
 Knowledge represents information derived from organization-owned sources.
 The planned MVP derives knowledge from uploaded PDF and Markdown documents.
-Upload verification supports both. Markdown text extraction is implemented;
-PDF extraction, chunking, embeddings, and retrieval remain planned.
+Upload verification supports both. Markdown extraction and chunking are implemented;
+PDF extraction, embeddings, and retrieval remain planned.
 Conceptually:
 Document
    ↓
@@ -207,6 +207,9 @@ The original document remains in Blob Storage.
 Extracted Markdown is persisted in the Knowledge database, tied to its Organization,
 Document, and validated source ETag. Its durable state is independent of Document.Status:
 completion/failure leaves the Document Uploaded and never triggers original cleanup.
+Chunk sets are derived from exact completed extractions and versioned configuration.
+Their ownership and durable state are independent of Document.Status.
+See [Document chunking](DocumentChunking.md).
 Completed extraction does not mean Ready. The planned MVP stores chunks and vectors
 in Azure SQL for Organization-scoped retrieval, replacing the Azure AI Search plan.
 

@@ -1,0 +1,5 @@
+# TODO
+
+- [ ] Replace the development-only `hasPermission = true` placeholder in both document handlers with backend authorization for full processing statuses before release to regular users. Decide the required Organization role or future permission, enforce it on the backend, and test both basic and authorized detailed responses. The placeholder currently enables chunking diagnostics for development under the existing Documents.Read policy and validated Organization context. No permissions system is implemented yet.
+
+- [ ] Before release to regular users, restrict document chunk previews to authorized Organization administrators. Treat previews as development/admin diagnostics: protect `GET /api/documents/{documentId}/chunks` with a dedicated backend authorization policy and hide the preview controls for other users. Preserve Organization isolation and add tests proving that regular users cannot access the endpoint directly. Chunk generation must remain independent of preview access.

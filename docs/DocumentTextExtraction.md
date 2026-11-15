@@ -2,8 +2,9 @@
 
 Markdown (`.md`) uploads now produce durable extracted text in Azure SQL.
 PDF uploads still verify, but PDF extraction is disabled and no PDF extractor is
-registered. Chunking, embeddings, and retrieval remain future slices. The agreed
-MVP retrieval backend is Azure SQL with chunk-owned vectors, replacing the earlier
+registered. Markdown [chunking](DocumentChunking.md) is a separate durable stage;
+embeddings and retrieval remain future slices. The agreed MVP retrieval backend
+is Azure SQL with chunk-owned vectors, replacing the earlier
 Azure AI Search plan.
 
 ## Processing and ownership
@@ -72,7 +73,7 @@ numbers, and format flags use actual values. Both upload formats are enabled.
 },
 "DocumentTextExtractionWorker": {
   "Enabled": true,
-  "PollSeconds": 5,
+  "PollSeconds": 60,
   "BatchSize": 10,
   "MaxAttempts": 8,
   "RetryBaseSeconds": 10,
@@ -111,7 +112,7 @@ queries join/filter by Organization, Document, and matching source ETag. They ne
 expose storage references, SAS values, or lease internals.
 
 React separates query caches by selected Organization, renders previews as escaped
-text, and polls for up to two minutes after page load/upload/Refresh. Poll expiry
+text, and polls every 15 seconds for up to 90 seconds after page load/upload/Refresh. Poll expiry
 only stops browser refresh; durable processing continues. Manual Refresh restarts
 the window. Do not interpret source text as Markdown/HTML in the preview.
 

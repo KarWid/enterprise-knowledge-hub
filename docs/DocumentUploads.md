@@ -19,7 +19,7 @@ App Service managed identity; no account keys reach the browser.
 
 BlobCreated → authenticated API webhook → SQL inbox → API BackgroundService →
 conditional blob inspection → persisted document status. React polls
-`GET /api/documents/{documentId}` every two seconds for up to two minutes and can
+`GET /api/documents/{documentId}` every 15 seconds for up to 90 seconds and can
 navigate away. Poll expiry or a status-query outage is not an upload rejection.
 Returning to the list fetches persisted status again. `/complete` was removed:
 repository consumers were the React hook, generated client/schema, and tests;
@@ -156,7 +156,7 @@ appsettings and true in the Azure App Service template:
 
 | Setting | Default |
 | --- | --- |
-| PollSeconds / BatchSize | 5 / 10 |
+| PollSeconds / BatchSize | 60 / 10 |
 | MaxAttempts | 8 |
 | RetryBaseSeconds / RetryMaxSeconds | 10 / 600 (bounded exponential backoff) |
 | LeaseSeconds / ProcessingTimeoutSeconds | 120 / 90 (lease must exceed timeout by at least 15 s) |
@@ -273,7 +273,7 @@ In a second terminal, run `npm run dev` from `src/Web` and open
 1. Upload a small PDF and a UTF-8 `.md` file. Expect “Uploaded—verifying…” immediately after each PUT.
 2. With events disabled, the worker reconciles after the original one-minute
    SAS lifetime plus the 60-second grace. It will normally finish in about two
-   minutes from reservation, plus a polling interval. The UI's two-minute polling
+   minutes from reservation, plus a polling interval. The UI's 90-second polling
    window may end just before that; refresh the document list to see Uploaded.
 3. Upload a text file renamed `.pdf`; after reconciliation it becomes Rejected,
    and its blob is conditionally removed. Repeat with NUL-containing or invalid
