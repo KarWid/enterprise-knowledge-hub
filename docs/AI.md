@@ -166,7 +166,7 @@ Return Response + Sources
 5. Knowledge Ingestion Pipeline
 Documents become available for AI through an ingestion process.
 MVP pipeline (upload/basic verification and Markdown extraction are implemented;
-PDF extraction, chunking, embeddings, and retrieval remain planned):
+PDF extraction, embeddings, and retrieval remain planned; Markdown chunking is implemented):
 PDF or Markdown Upload
 
     |
@@ -242,7 +242,9 @@ Chunking allows:
 better search accuracy,
 smaller AI context,
 improved response quality.
-Chunking strategy should be configurable because different document types may require different approaches.
+Markdown chunking is implemented with structure-aware, token-bounded chunks,
+independent format flags, durable work, and protected previews. See
+[Document chunking](DocumentChunking.md). Different formats require explicitly registered chunkers.
 
 Embeddings
 Each knowledge fragment is transformed into a numerical representation.

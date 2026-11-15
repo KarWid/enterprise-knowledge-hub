@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { DOCUMENT_POLL_DURATION_MS, DOCUMENT_POLL_INTERVAL_MS } from "./documentPolling";
 import {
   useBeginDocumentUploadMutation,
   useGetDocumentQuery,
@@ -42,7 +43,7 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
         !organizationId ||
         pollingExpired ||
         notice !== "verifying",
-      pollingInterval: 2000,
+      pollingInterval: DOCUMENT_POLL_INTERVAL_MS,
       refetchOnMountOrArgChange: true,
     },
   );
@@ -87,7 +88,7 @@ export function useDocumentUpload({ onCompleted }: UseDocumentUploadOptions) {
     const timer = window.setTimeout(() => {
       setPollingExpired(true);
       setNotice("pending"); // Server verification continues; timeout is NOT upload failure.
-    }, 120_000);
+    }, DOCUMENT_POLL_DURATION_MS);
 
     return () => window.clearTimeout(timer);
   }, [documentId, notice]);

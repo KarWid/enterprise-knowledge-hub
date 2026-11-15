@@ -1,3 +1,4 @@
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.Chunking;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using Microsoft.Extensions.Options;
@@ -27,7 +28,7 @@ public sealed class GetDocumentQueryHandlerTests
         db.Documents.Add(otherDocument);
         await db.SaveChangesAsync();
 
-        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus());
+        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus(), CreateChunkingStatus(), new FakeDocumentDiagnosticsAccessService());
 
         // Act
         var document = await handler.Handle(new GetDocumentQuery(otherDocument.Id), CancellationToken.None);
@@ -46,7 +47,7 @@ public sealed class GetDocumentQueryHandlerTests
 
         db.Documents.Add(ownDocument);
         await db.SaveChangesAsync();
-        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus());
+        var handler = new GetDocumentQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus(), CreateChunkingStatus(), new FakeDocumentDiagnosticsAccessService());
 
         // Act
         var document = await handler.Handle(new GetDocumentQuery(ownDocument.Id), CancellationToken.None);
@@ -65,6 +66,9 @@ public sealed class GetDocumentQueryHandlerTests
 
         return new KnowledgeDbContext(options);
     }
+
+    private static DocumentChunkingStatusResolver CreateChunkingStatus() => new(
+        new DocumentChunkerRegistry([]), Options.Create(new DocumentChunkingOptions()), Options.Create(new DocumentChunkingWorkerOptions()));
 
     private static DocumentTextExtractionStatusResolver CreateExtractionStatus() => new(
         Options.Create(new DocumentTextExtractionOptions()), Options.Create(new DocumentTextExtractionWorkerOptions()));

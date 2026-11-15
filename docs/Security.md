@@ -321,6 +321,18 @@ uses conditional ETag reads, durable leases, fenced completion, and an Organizat
 Document ownership foreign key. Status and escaped-text previews require Documents.Read
 and validated membership. Any future required scan must add durable exact-ETag clean
 evidence to the processing gate. See [Text extraction](DocumentTextExtraction.md).
+Markdown chunking retains exact extraction/source ownership, uses composite foreign
+keys and leased atomic publication, and exposes bounded escaped-text previews only
+after Documents.Read and Organization validation. Chunking does not sanitize
+prompt instructions or make a document Ready. See [Document chunking](DocumentChunking.md).
+`IDocumentDiagnosticsAccessService` additionally gates text/chunk previews and chunking
+metadata in document responses. Its API implementation requires both
+`DocumentDiagnostics:Enabled` and `Documents.Diagnostics` policy authorization.
+This policy requires an authenticated user with the `OrganizationOwner` role in the
+validated current Organization membership. Roles claimed in a token or ownership of
+another Organization do not grant diagnostics access. The flag is enabled for
+development. Readable documents remain available through the basic view when
+diagnostics access is denied; preview handlers return 404.
 See [Document upload operations](DocumentUploads.md) for setup and recovery.
 
 12. Azure Managed Identity

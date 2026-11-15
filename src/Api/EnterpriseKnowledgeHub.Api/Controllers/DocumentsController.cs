@@ -6,6 +6,7 @@ using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocument
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentUploadCapabilities;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentTextPreview;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentChunks;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -69,6 +70,21 @@ public sealed class DocumentsController(IMediator mediator) : ApiControllerBase
             cancellationToken);
 
         return result is null ? NotFound() : Ok(DocumentMapper.MapToDocumentResponse(result));
+    }
+
+    [HttpGet("{documentId:guid}/chunks")]
+    [Authorize(Policy = Policies.Documents.Read)]
+    [SwaggerOperation(OperationId = "GetDocumentChunks")]
+    [ProducesResponseType(typeof(DocumentChunksResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetChunks(
+        Guid documentId, 
+        CancellationToken cancellationToken,
+        [FromQuery] int offset = 0,
+        [FromQuery] int limit = GetDocumentChunksQuery.DefaultLimit)
+    {
+        var result = await mediator.Send(new GetDocumentChunksQuery(documentId, offset, limit), cancellationToken);
+        return result is null ? NotFound() : Ok(DocumentMapper.MapToDocumentChunksResponse(result));
     }
 
     [HttpGet("{documentId:guid}/text-preview")]

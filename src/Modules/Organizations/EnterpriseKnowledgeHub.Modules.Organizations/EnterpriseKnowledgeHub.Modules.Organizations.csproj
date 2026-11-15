@@ -10,6 +10,8 @@
 	  <PackageReference Include="Scrutor" Version="6.1.0" />
 	  <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+      <!-- Override the vulnerable transitive version from SqlClient. -->
+      <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>

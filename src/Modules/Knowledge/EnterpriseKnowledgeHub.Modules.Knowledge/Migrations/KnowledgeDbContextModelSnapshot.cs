@@ -83,6 +83,136 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
                     b.ToTable("Documents", "knowledge");
                 });
 
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentChunk", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChunkingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("HeadingPath")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TokenCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChunkingId", "Ordinal")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "DocumentId", "ChunkingId");
+
+                    b.ToTable("DocumentChunks", "knowledge");
+                });
+
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentChunking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ChunkCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChunkerVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ConfigurationKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ExtractionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FormatId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LeaseOwner")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MaxChunksPerDocument")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxSourceCharacters")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxTokens")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OverlapTokens")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SourceETag")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("TargetTokens")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExtractionId", "ConfigurationKey")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "DocumentId", "ExtractionId");
+
+                    b.HasIndex("Status", "NextAttemptAt", "LeaseExpiresAt");
+
+                    b.ToTable("DocumentChunkings", "knowledge");
+                });
+
             modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentTextExtraction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -219,6 +349,26 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Migrations
                     b.HasIndex("Status", "NextAttemptAt", "LeaseExpiresAt");
 
                     b.ToTable("UploadInbox", "knowledge");
+                });
+
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentChunk", b =>
+                {
+                    b.HasOne("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentChunking", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "DocumentId", "ChunkingId")
+                        .HasPrincipalKey("OrganizationId", "DocumentId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentChunking", b =>
+                {
+                    b.HasOne("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentTextExtraction", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "DocumentId", "ExtractionId")
+                        .HasPrincipalKey("OrganizationId", "DocumentId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EnterpriseKnowledgeHub.Modules.Knowledge.Persistence.DocumentTextExtraction", b =>

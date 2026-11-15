@@ -17,7 +17,9 @@ public sealed class DocumentAccessAuthorizationHandler(IOrganizationAccessServic
                 .GetCurrentOrganizationMembershipAsync(CancellationToken.None);
 
             if (requirement.Allows(membership.Role))
+            {
                 context.Succeed(requirement);
+            }
         }
         catch (OrganizationAccessDeniedException)
         {

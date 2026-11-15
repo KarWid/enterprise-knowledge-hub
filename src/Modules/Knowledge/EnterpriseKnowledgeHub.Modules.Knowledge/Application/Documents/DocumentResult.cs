@@ -1,5 +1,6 @@
 using EnterpriseKnowledgeHub.Modules.Knowledge.Domain.Enums;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.Chunking;
 
 namespace EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 
@@ -10,4 +11,5 @@ internal sealed record DocumentResult(
     DocumentStatus Status,
     DateTime CreatedAt,
     string? ValidatedETag = null,
-    DocumentTextExtractionResult? TextExtraction = null);
+    DocumentTextExtractionResult? TextExtraction = null,
+    DocumentChunkingResult? Chunking = null);
