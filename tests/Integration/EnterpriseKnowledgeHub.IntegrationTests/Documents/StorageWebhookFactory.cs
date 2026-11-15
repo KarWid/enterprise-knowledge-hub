@@ -33,6 +33,7 @@ internal sealed class StorageWebhookFactory : WebApplicationFactory<Program>
     internal bool SimulateInboxPersistenceFailure { get; init; }
     internal string ContainerName { get; init; } = "documents";
     internal bool MarkdownEnabled { get; init; } = true;
+    internal bool DiagnosticsEnabled { get; init; } = true;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -51,6 +52,8 @@ internal sealed class StorageWebhookFactory : WebApplicationFactory<Program>
             ["StorageEvents:ExpectedSource"] = Source, 
             ["DocumentUploadWorker:Enabled"] = "false",
             ["DocumentTextExtractionWorker:Enabled"] = "false",
+            ["DocumentChunkingWorker:Enabled"] = "false",
+            ["DocumentDiagnostics:Enabled"] = DiagnosticsEnabled.ToString(),
             ["Documents:EnabledFormats:markdown"] = MarkdownEnabled.ToString(),
             ["BlobStorage:AccountUrl"] = "https://teststore.blob.core.windows.net", 
             ["BlobStorage:ContainerName"] = ContainerName

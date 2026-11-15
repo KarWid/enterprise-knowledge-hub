@@ -10,12 +10,18 @@ namespace EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocu
 internal sealed class GetDocumentChunksQueryHandler(
     KnowledgeDbContext db,
     IOrganizationAccessService access,
-    DocumentChunkingStatusResolver status)
+    DocumentChunkingStatusResolver status,
+    IDocumentDiagnosticsAccessService diagnosticsAccess)
     : IRequestHandler<GetDocumentChunksQuery, DocumentChunksResult?>
 {
     public async ValueTask<DocumentChunksResult?> Handle(GetDocumentChunksQuery request, CancellationToken cancellationToken)
     {
         var membership = await access.GetCurrentOrganizationMembershipAsync(cancellationToken);
+        if (!await diagnosticsAccess.CanViewDiagnosticsAsync(cancellationToken))
+        {
+            return null;
+        }
+
         var eligibleChunkings = GetEligibleChunkings(membership.OrganizationId, request.DocumentId);
         var source = await eligibleChunkings
             .Select(chunking => new { chunking.Id, chunking.ChunkCount })

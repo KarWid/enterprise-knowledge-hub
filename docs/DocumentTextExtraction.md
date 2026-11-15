@@ -107,7 +107,12 @@ or Paused when the format/worker is disabled and extraction is pending.
 `GET /api/documents/{documentId}/text-preview` returns up to 4,000 UTF-16 code units
 without a trailing split surrogate, full character count, truncation flag, and
 completion time. SQL projects only that bounded substring. Unavailable/inaccessible
-results return 404. Both endpoints require Documents.Read and validated membership;
+results return 404. `IDocumentDiagnosticsAccessService` also gates the preview:
+access requires `DocumentDiagnostics:Enabled` (currently `true` in `appsettings.json`,
+`false` if absent) and the `Documents.Diagnostics` policy, which requires an
+authenticated `OrganizationOwner` in the validated current Organization.
+Denied diagnostics access returns 404 for text and chunk previews without stopping
+extraction/chunking or hiding basic extraction status. Both endpoints require Documents.Read and validated membership;
 queries join/filter by Organization, Document, and matching source ETag. They never
 expose storage references, SAS values, or lease internals.
 

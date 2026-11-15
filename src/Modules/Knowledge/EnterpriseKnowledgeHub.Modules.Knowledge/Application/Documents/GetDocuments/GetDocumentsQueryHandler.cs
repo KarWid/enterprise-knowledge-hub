@@ -11,7 +11,8 @@ internal sealed class GetDocumentsQueryHandler(
     KnowledgeDbContext db,
     IOrganizationAccessService organizationAccessService,
     DocumentTextExtractionStatusResolver extractionStatusResolver,
-    DocumentChunkingStatusResolver chunkingStatusResolver)
+    DocumentChunkingStatusResolver chunkingStatusResolver,
+    IDocumentDiagnosticsAccessService diagnosticsAccess)
     : IRequestHandler<GetDocumentsQuery, IReadOnlyList<DocumentResult>>
 {
     // TODO @KWidla: consider adding filtering, paging, or other query optimizations
@@ -22,15 +23,14 @@ internal sealed class GetDocumentsQueryHandler(
         var membership = await organizationAccessService
             .GetCurrentOrganizationMembershipAsync(cancellationToken);
 
-        // TODO: Replace this development placeholder with backend role/permission authorization.
-        var hasPermission = true;
+        var includeDiagnostics = await diagnosticsAccess.CanViewDiagnosticsAsync(cancellationToken);
         var documentsQuery = db.Documents
             .AsNoTracking()
             .Where(document => document.OrganizationId == membership.OrganizationId)
             .OrderByDescending(document => document.CreatedAt);
 
         IQueryable<DocumentResultProjection> projection;
-        if (hasPermission)
+        if (includeDiagnostics)
         {
             var configurationKeys = chunkingStatusResolver.CurrentConfigurationKeys();
             projection = documentsQuery.SelectDocumentResults(db.DocumentTextExtractions.AsNoTracking(),
@@ -43,7 +43,7 @@ internal sealed class GetDocumentsQueryHandler(
 
         var documents = await projection.ToListAsync(cancellationToken);
 
-        return documents.Select(document => hasPermission
+        return documents.Select(document => includeDiagnostics
             ? document.ToResult(extractionStatusResolver, chunkingStatusResolver)
             : document.ToResult(extractionStatusResolver)).ToList();
     }

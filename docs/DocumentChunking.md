@@ -100,15 +100,35 @@ for the new configuration, and an incomplete new set does not fall back to an ol
 set. Retention and operator redrive remain explicit maintenance concerns; never
 edit source ownership or ETags to bypass validation.
 
+Diagnostics availability is configured separately from processing:
+
+```json
+"DocumentDiagnostics": {
+  "Enabled": true
+}
+```
+
+Set `DocumentDiagnostics__Enabled=false` in environment configuration to disable
+previews and chunking metadata. Restart the API after changing this setting. The
+current implementation uses standard .NET configuration options; it does not yet
+connect to Azure App Configuration or its feature-management SDK.
+
 ## API and UI
 
 The shared `SelectDocumentResults` projection has two overloads: the basic view
 loads document and current-source extraction metadata; the full view additionally
 loads current-configuration chunking metadata. Both document handlers select the
-projection and result mapping using a local `hasPermission` flag, currently `true`
-for development. Replace this placeholder with a backend role/permission check
-before release to regular users; see [TODO](TODO.md). Existing Documents.Read and
-Organization validation still apply. No permission system is introduced.
+projection and result mapping using `IDocumentDiagnosticsAccessService`. The text
+and chunk preview handlers await the same service. Its API implementation requires
+both `DocumentDiagnostics:Enabled` and successful `Documents.Diagnostics` policy
+authorization. The policy requires authentication and the `OrganizationOwner` role
+on the validated current Organization membership. Owner claims or ownership of a
+different Organization do not grant access. Existing Documents.Read and Organization
+validation still apply. Knowledge depends only on the asynchronous access-service
+interface; ASP.NET authorization and HTTP context remain in the API.
+The flag is currently `true` in `appsettings.json` for development and defaults to
+`false` when absent. When diagnostics access is denied, document handlers return
+the basic view and preview handlers return 404.
 Each view uses one SQL query and neither loads source
 or chunk text. Status resolvers calculate availability after materialization
 without database access.
@@ -130,15 +150,20 @@ and validated Organization membership are required. Ownership/current-source
 filters are checked when reading content. Successful extraction is verified when
 the chunk set is completed, so preview queries do not recheck the extraction table.
 Inaccessible or unavailable sets return
-404. No storage references, source ETags, lease details, or configuration keys cross
-the API boundary.
+404. When the diagnostics access service denies access, both the chunk and extracted-text
+preview handlers return 404 without querying preview data. Extraction and chunking
+continue independently of diagnostics availability. No storage references, source
+ETags, lease details, or configuration keys cross the API boundary.
 
 React shows extraction and chunking status with passage-preview controls while the
-development placeholder selects the full view. The basic view omits chunking status
-and hides these controls. The development preview endpoint remains
-available under its existing Documents.Read policy, pending the separate admin
-authorization TODO. The paged passage preview renders escaped text. Query
-caches include the selected Organization, and content is never interpreted as
+diagnostics access service allows the full view. The basic view omits chunking status
+and hides passage-preview controls. Extracted-text preview requests are also rejected
+on the backend when diagnostics access is denied; the existing extraction status remains
+available in the basic view. The endpoints retain their existing Documents.Read
+policy; the shared service additionally evaluates Documents.Diagnostics. Hiding all
+text-preview controls for callers without diagnostics access remains a [TODO](TODO.md).
+The paged passage preview
+renders escaped text. Query caches include the selected Organization, and content is never interpreted as
 Markdown/HTML. Document list and upload-status polling runs every 15 seconds for
 up to 90 seconds. Manual Refresh restarts the list polling window. Processing can
 finish after browser polling stops; refresh to check progress.

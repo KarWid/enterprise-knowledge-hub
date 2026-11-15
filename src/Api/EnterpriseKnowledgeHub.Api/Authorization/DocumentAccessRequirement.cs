@@ -23,5 +23,11 @@ public sealed class DocumentAccessRequirement(IReadOnlySet<string> allowedRoles)
 
     public static readonly DocumentAccessRequirement Upload = new(DocumentUploadManagementRoles);
 
+    public static readonly DocumentAccessRequirement Diagnostics = new(
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            nameof(OrganizationRole.OrganizationOwner)
+        });
+
     public bool Allows(string role) => allowedRoles.Count == 0 || allowedRoles.Contains(role);
 }

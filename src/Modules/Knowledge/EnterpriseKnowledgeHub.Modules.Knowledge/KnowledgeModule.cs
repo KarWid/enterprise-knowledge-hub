@@ -15,6 +15,10 @@ public static class KnowledgeModule
         IConfiguration configuration,
         string connectionStringName)
     {
+        services.AddOptions<DocumentDiagnosticsOptions>()
+            .Bind(configuration.GetSection(DocumentDiagnosticsOptions.SectionName))
+            .ValidateOnStart();
+
         AddDocumentUpload(services, configuration);
         AddDocumentTextExtraction(services, configuration);
         AddDocumentChunking(services, configuration);

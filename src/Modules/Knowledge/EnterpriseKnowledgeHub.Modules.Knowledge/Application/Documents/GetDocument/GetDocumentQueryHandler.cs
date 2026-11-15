@@ -11,19 +11,19 @@ internal sealed class GetDocumentQueryHandler(
     KnowledgeDbContext db, 
     IOrganizationAccessService access,
     DocumentTextExtractionStatusResolver extractionStatus,
-    DocumentChunkingStatusResolver chunkingStatus)
+    DocumentChunkingStatusResolver chunkingStatus,
+    IDocumentDiagnosticsAccessService diagnosticsAccess)
     : IRequestHandler<GetDocumentQuery, DocumentResult?>
 {
     public async ValueTask<DocumentResult?> Handle(GetDocumentQuery request, CancellationToken ct)
     {
         var membership = await access.GetCurrentOrganizationMembershipAsync(ct);
-        // TODO: Replace this development placeholder with backend role/permission authorization.
-        var hasPermission = true;
+        var includeDiagnostics = await diagnosticsAccess.CanViewDiagnosticsAsync(ct);
         var documentsQuery = db.Documents.AsNoTracking()
             .Where(d => d.Id == request.DocumentId && d.OrganizationId == membership.OrganizationId);
 
         IQueryable<DocumentResultProjection> projection;
-        if (hasPermission)
+        if (includeDiagnostics)
         {
             var configurationKeys = chunkingStatus.CurrentConfigurationKeys();
             projection = documentsQuery.SelectDocumentResults(db.DocumentTextExtractions.AsNoTracking(),
@@ -36,9 +36,12 @@ internal sealed class GetDocumentQueryHandler(
 
         var document = await projection.SingleOrDefaultAsync(ct);
 
-        if (document is null) return null;
+        if (document is null)
+        {
+            return null;
+        }
 
-        return hasPermission
+        return includeDiagnostics
             ? document.ToResult(extractionStatus, chunkingStatus)
             : document.ToResult(extractionStatus);
     }
