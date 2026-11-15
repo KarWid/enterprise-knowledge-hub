@@ -60,6 +60,7 @@ const pl = {
     empty: "Nie przeslano jeszcze zadnych dokumentow.",
     uploadedAt: "Przeslano {{date}}",
     refresh: "Odśwież",
+    actions: "Akcje dla {{name}}",
     chunking: {
       viewChunks: "Pokaż fragmenty",
       previewTitle: "Fragmenty dokumentu",
