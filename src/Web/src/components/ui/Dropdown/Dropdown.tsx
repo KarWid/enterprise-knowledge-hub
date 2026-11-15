@@ -10,7 +10,7 @@ export interface DropdownOption {
 
 interface DropdownProps {
   options: DropdownOption[];
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
   ariaLabel?: string;
   title?: string;
@@ -39,7 +39,9 @@ export function Dropdown({
   }));
 
   function handleSelect({ key }: { key: string }) {
-    if (disabled) return;
+    if (disabled) {
+      return;
+    }
     onChange(key);
     setIsOpen(false);
   }
@@ -57,8 +59,8 @@ export function Dropdown({
         classNames={{ root: styles.dropdownContainer }}
         menu={{
           items,
-          selectable: true,
-          selectedKeys: [value],
+          selectable: value !== undefined,
+          selectedKeys: value === undefined ? [] : [value],
           onClick: handleSelect,
         }}
       >

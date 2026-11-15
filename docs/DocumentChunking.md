@@ -155,15 +155,16 @@ preview handlers return 404 without querying preview data. Extraction and chunki
 continue independently of diagnostics availability. No storage references, source
 ETags, lease details, or configuration keys cross the API boundary.
 
-React shows extraction and chunking status with passage-preview controls while the
-diagnostics access service allows the full view. The basic view omits chunking status
-and hides passage-preview controls. Extracted-text preview requests are also rejected
-on the backend when diagnostics access is denied; the existing extraction status remains
-available in the basic view. The endpoints retain their existing Documents.Read
-policy; the shared service additionally evaluates Documents.Diagnostics. Hiding all
-text-preview controls for callers without diagnostics access remains a [TODO](TODO.md).
-The paged passage preview
-renders escaped text. Query caches include the selected Organization, and content is never interpreted as
+React shows one colored status icon per document. Hovering or focusing it reveals
+the upload, extraction, and chunking descriptions; missing or disabled processing
+stages are omitted. Errors take precedence over paused or active work when choosing
+the indicator color.
+A vertical three-dot menu offers content preview after successful extraction and
+chunk preview after successful chunking. Both actions require the optional chunking
+metadata that identifies the current full diagnostics view. The basic view omits
+these actions. The endpoints retain their existing Documents.Read policy; the
+shared service additionally evaluates Documents.Diagnostics. Previews render escaped
+text. Query caches include the selected Organization, and content is never interpreted as
 Markdown/HTML. Document list and upload-status polling runs every 15 seconds for
 up to 90 seconds. Manual Refresh restarts the list polling window. Processing can
 finish after browser polling stops; refresh to check progress.
