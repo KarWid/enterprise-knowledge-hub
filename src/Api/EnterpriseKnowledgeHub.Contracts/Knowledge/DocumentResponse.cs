@@ -8,4 +8,5 @@ public sealed record DocumentResponse(
     [property: Required] string ContentType,
     [property: Required] string Status,
     [property: Required] DateTime CreatedAt,
-    DocumentTextExtractionResponse? TextExtraction = null);
+    DocumentTextExtractionResponse? TextExtraction = null,
+    DocumentChunkingResponse? Chunking = null);

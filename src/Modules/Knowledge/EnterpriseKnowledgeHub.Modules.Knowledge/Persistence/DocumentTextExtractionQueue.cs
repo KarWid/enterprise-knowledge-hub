@@ -61,7 +61,7 @@ internal sealed class DocumentTextExtractionQueue(
     }
 
     public Task<int> CompleteAsync(DocumentTextExtraction work, string text, CancellationToken cancellationToken) =>
-        Owned(work).Where(item => db.Documents.Any(document =>
+        WithActiveLease(work).Where(item => db.Documents.Any(document =>
             document.Id == item.DocumentId && document.OrganizationId == item.OrganizationId &&
             document.Status == DocumentStatus.Uploaded && document.ValidatedETag == item.SourceETag))
         .ExecuteUpdateAsync(setters => setters
@@ -74,7 +74,7 @@ internal sealed class DocumentTextExtractionQueue(
             .SetProperty(item => item.LeaseExpiresAt, (DateTime?)null), cancellationToken);
 
     public Task<int> FailAsync(DocumentTextExtraction work, string errorCode, CancellationToken cancellationToken) =>
-        Owned(work).ExecuteUpdateAsync(setters => setters
+        WithActiveLease(work).ExecuteUpdateAsync(setters => setters
             .SetProperty(item => item.Status, TextExtractionStatus.Failed)
             .SetProperty(item => item.LastError, errorCode)
             .SetProperty(item => item.CompletedAt, clock.GetUtcNow().UtcDateTime)
@@ -87,7 +87,7 @@ internal sealed class DocumentTextExtractionQueue(
         var delay = Math.Min(options.Value.RetryMaxSeconds,
             options.Value.RetryBaseSeconds * Math.Pow(2, Math.Min(work.Attempts - 1, 20)));
             
-        return Owned(work).ExecuteUpdateAsync(setters => setters
+        return WithActiveLease(work).ExecuteUpdateAsync(setters => setters
             .SetProperty(item => item.Status, exhausted ? TextExtractionStatus.DeadLetter : TextExtractionStatus.Pending)
             .SetProperty(item => item.NextAttemptAt, clock.GetUtcNow().UtcDateTime.AddSeconds(delay))
             .SetProperty(item => item.CompletedAt, exhausted ? clock.GetUtcNow().UtcDateTime : (DateTime?)null)
@@ -96,7 +96,7 @@ internal sealed class DocumentTextExtractionQueue(
             .SetProperty(item => item.LeaseExpiresAt, (DateTime?)null), cancellationToken);
     }
 
-    private IQueryable<DocumentTextExtraction> Owned(DocumentTextExtraction work)
+    private IQueryable<DocumentTextExtraction> WithActiveLease(DocumentTextExtraction work)
     {
         var now = clock.GetUtcNow().UtcDateTime;
 

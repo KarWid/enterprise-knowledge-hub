@@ -262,7 +262,9 @@ supported canonical paths. Original files share the existing storage and schema.
 Format-specific upload verification and durable Markdown extraction are implemented.
 Extraction runs in a separate BackgroundService in the same API and persists bounded
 Organization/source-owned text in KnowledgeDbContext with leases and retries.
-PDF extraction is disabled; chunking and embeddings remain planned.
+PDF extraction is disabled. Markdown chunking is implemented as a separate durable
+BackgroundService with SQL-owned chunk sets; embeddings remain planned.
+See [Document chunking](DocumentChunking.md).
 See [Document text extraction](DocumentTextExtraction.md).
 The conceptual pipeline is:
 PDF or Markdown Upload

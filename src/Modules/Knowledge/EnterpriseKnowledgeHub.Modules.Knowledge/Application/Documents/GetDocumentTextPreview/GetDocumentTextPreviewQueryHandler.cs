@@ -7,12 +7,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentTextPreview;
 
-internal sealed class GetDocumentTextPreviewQueryHandler(KnowledgeDbContext db, IOrganizationAccessService access)
+internal sealed class GetDocumentTextPreviewQueryHandler(
+    KnowledgeDbContext db,
+    IOrganizationAccessService access,
+    IDocumentDiagnosticsAccessService diagnosticsAccess)
     : IRequestHandler<GetDocumentTextPreviewQuery, DocumentTextPreviewResult?>
 {
     public async ValueTask<DocumentTextPreviewResult?> Handle(GetDocumentTextPreviewQuery request, CancellationToken cancellationToken)
     {
         var membership = await access.GetCurrentOrganizationMembershipAsync(cancellationToken);
+        if (!await diagnosticsAccess.CanViewDiagnosticsAsync(cancellationToken))
+        {
+            return null;
+        }
+
         const int limit = DocumentTextExtractionOptions.PreviewCharacterLimit;
         
         var preview = await db.Documents

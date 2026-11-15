@@ -6,5 +6,6 @@ public static class Policies
     {
         public const string Read = "Documents.Read";
         public const string Upload = "Documents.Upload";
+        public const string Diagnostics = "Documents.Diagnostics";
     }
 }

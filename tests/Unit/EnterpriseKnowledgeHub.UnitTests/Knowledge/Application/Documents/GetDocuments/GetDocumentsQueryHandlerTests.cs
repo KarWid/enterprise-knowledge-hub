@@ -1,3 +1,4 @@
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.Chunking;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocuments;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using Microsoft.Extensions.Options;
@@ -26,7 +27,12 @@ public sealed class GetDocumentsQueryHandlerTests
         db.Documents.AddRange(ownDocument, otherDocument);
         await db.SaveChangesAsync();
 
-        var handler = new GetDocumentsQueryHandler(db, new FakeOrganizationAccessService(membership), CreateExtractionStatus());
+        var handler = new GetDocumentsQueryHandler(
+            db,
+            new FakeOrganizationAccessService(membership),
+            CreateExtractionStatus(),
+            CreateChunkingStatus(),
+            new FakeDocumentDiagnosticsAccessService());
 
         // Act
         var documents = await handler.Handle(new GetDocumentsQuery(), CancellationToken.None);
@@ -45,6 +51,9 @@ public sealed class GetDocumentsQueryHandlerTests
 
         return new KnowledgeDbContext(options);
     }
+
+    private static DocumentChunkingStatusResolver CreateChunkingStatus() => new(
+        new DocumentChunkerRegistry([]), Options.Create(new DocumentChunkingOptions()), Options.Create(new DocumentChunkingWorkerOptions()));
 
     private static DocumentTextExtractionStatusResolver CreateExtractionStatus() => new(
         Options.Create(new DocumentTextExtractionOptions()), Options.Create(new DocumentTextExtractionWorkerOptions()));

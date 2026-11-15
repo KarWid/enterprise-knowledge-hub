@@ -7,6 +7,8 @@ using EnterpriseKnowledgeHub.Infrastructure.DocumentUploads.Validation;
 using EnterpriseKnowledgeHub.Infrastructure.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.Chunking;
+using EnterpriseKnowledgeHub.Infrastructure.Chunking;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -49,8 +51,10 @@ public static class EnterpriseKnowledgeHubInfrastructureModule
         services.AddSingleton<IDocumentContentValidator, MarkdownDocumentContentValidator>();
         services.AddSingleton<IDocumentBlobStorage, AzureBlobDocumentStorage>();
         services.AddSingleton<IDocumentTextExtractor, MarkdownDocumentTextExtractor>();
+        services.AddSingleton<IDocumentChunker, MarkdownDocumentChunker>();
         services.AddHostedService<DocumentUploadWorker>();
         services.AddHostedService<DocumentTextExtractionWorker>();
+        services.AddHostedService<DocumentChunkingWorker>();
 
         return services;
     }

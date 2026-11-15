@@ -2,8 +2,9 @@
 
 Markdown (`.md`) uploads now produce durable extracted text in Azure SQL.
 PDF uploads still verify, but PDF extraction is disabled and no PDF extractor is
-registered. Chunking, embeddings, and retrieval remain future slices. The agreed
-MVP retrieval backend is Azure SQL with chunk-owned vectors, replacing the earlier
+registered. Markdown [chunking](DocumentChunking.md) is a separate durable stage;
+embeddings and retrieval remain future slices. The agreed MVP retrieval backend
+is Azure SQL with chunk-owned vectors, replacing the earlier
 Azure AI Search plan.
 
 ## Processing and ownership
@@ -72,7 +73,7 @@ numbers, and format flags use actual values. Both upload formats are enabled.
 },
 "DocumentTextExtractionWorker": {
   "Enabled": true,
-  "PollSeconds": 5,
+  "PollSeconds": 60,
   "BatchSize": 10,
   "MaxAttempts": 8,
   "RetryBaseSeconds": 10,
@@ -106,12 +107,17 @@ or Paused when the format/worker is disabled and extraction is pending.
 `GET /api/documents/{documentId}/text-preview` returns up to 4,000 UTF-16 code units
 without a trailing split surrogate, full character count, truncation flag, and
 completion time. SQL projects only that bounded substring. Unavailable/inaccessible
-results return 404. Both endpoints require Documents.Read and validated membership;
+results return 404. `IDocumentDiagnosticsAccessService` also gates the preview:
+access requires `DocumentDiagnostics:Enabled` (currently `true` in `appsettings.json`,
+`false` if absent) and the `Documents.Diagnostics` policy, which requires an
+authenticated `OrganizationOwner` in the validated current Organization.
+Denied diagnostics access returns 404 for text and chunk previews without stopping
+extraction/chunking or hiding basic extraction status. Both endpoints require Documents.Read and validated membership;
 queries join/filter by Organization, Document, and matching source ETag. They never
 expose storage references, SAS values, or lease internals.
 
 React separates query caches by selected Organization, renders previews as escaped
-text, and polls for up to two minutes after page load/upload/Refresh. Poll expiry
+text, and polls every 15 seconds for up to 90 seconds after page load/upload/Refresh. Poll expiry
 only stops browser refresh; durable processing continues. Manual Refresh restarts
 the window. Do not interpret source text as Markdown/HTML in the preview.
 

@@ -10,7 +10,11 @@ interface DocumentTextPreviewProps {
   onClose: () => void;
 }
 
-export function DocumentTextPreview({ documentId, open, onClose }: DocumentTextPreviewProps) {
+export function DocumentTextPreview({
+  documentId,
+  open,
+  onClose,
+}: DocumentTextPreviewProps) {
   const { t } = useTranslation();
   const organizationId = useAppSelector(selectCurrentOrganizationId);
   const preview = useGetDocumentTextPreviewQuery(
@@ -18,11 +22,14 @@ export function DocumentTextPreview({ documentId, open, onClose }: DocumentTextP
     { skip: !open || !organizationId, refetchOnMountOrArgChange: true },
   );
   const previewData = preview.currentData;
-  const errorMessage = preview.error !== undefined
-    ? t("documents.extraction.previewError")
-    : undefined;
+  const errorMessage =
+    preview.error !== undefined
+      ? t("documents.extraction.previewError")
+      : undefined;
   const caption = previewData
-    ? t("documents.extraction.characterCount", { count: previewData.characterCount }) +
+    ? t("documents.extraction.characterCount", {
+        count: previewData.characterCount,
+      }) +
       (previewData.isTruncated ? ` ${t("documents.extraction.truncated")}` : "")
     : undefined;
 
@@ -38,7 +45,6 @@ export function DocumentTextPreview({ documentId, open, onClose }: DocumentTextP
       text={previewData?.text}
       caption={caption}
       isLoading={preview.isFetching}
-      loadingMessage={t("app.pleaseWait")}
       errorMessage={errorMessage}
       retryText={t("errorModal.retry")}
       onRetry={retry}

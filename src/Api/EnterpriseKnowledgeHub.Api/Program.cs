@@ -10,6 +10,7 @@ using EnterpriseKnowledgeHub.BuildingBlocks.Application.Security;
 using EnterpriseKnowledgeHub.Infrastructure;
 using EnterpriseKnowledgeHub.Modules.Identity;
 using EnterpriseKnowledgeHub.Modules.Knowledge;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi;
@@ -98,8 +99,14 @@ static void ConfigureAuthorization(WebApplicationBuilder builder)
             policy => policy
                 .RequireAuthenticatedUser()
                 .AddRequirements(DocumentAccessRequirement.Upload));
+        options.AddPolicy(
+            Policies.Documents.Diagnostics,
+            policy => policy
+                .RequireAuthenticatedUser()
+                .AddRequirements(DocumentAccessRequirement.Diagnostics));
     });
     builder.Services.AddScoped<IAuthorizationHandler, DocumentAccessAuthorizationHandler>();
+    builder.Services.AddScoped<IDocumentDiagnosticsAccessService, DocumentDiagnosticsAccessService>();
 }
 
 static void ConfigureControllers(WebApplicationBuilder builder)

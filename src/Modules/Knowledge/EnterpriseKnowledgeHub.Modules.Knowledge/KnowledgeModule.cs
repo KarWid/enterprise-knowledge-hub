@@ -1,4 +1,5 @@
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.Chunking;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +15,13 @@ public static class KnowledgeModule
         IConfiguration configuration,
         string connectionStringName)
     {
+        services.AddOptions<DocumentDiagnosticsOptions>()
+            .Bind(configuration.GetSection(DocumentDiagnosticsOptions.SectionName))
+            .ValidateOnStart();
+
         AddDocumentUpload(services, configuration);
         AddDocumentTextExtraction(services, configuration);
+        AddDocumentChunking(services, configuration);
         AddPersistence(services, configuration, connectionStringName);
 
         return services;
@@ -63,6 +69,27 @@ public static class KnowledgeModule
         services.AddScoped<IDocumentTextExtractionQueue, DocumentTextExtractionQueue>();
         services.AddScoped<IDocumentTextExtractionProcessor, DocumentTextExtractionProcessor>();
         services.AddScoped<DocumentTextExtractionStatusResolver>();
+    }
+
+    private static void AddDocumentChunking(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<DocumentChunkerRegistry>();
+        services.AddOptions<DocumentChunkingOptions>()
+            .Bind(configuration.GetSection(DocumentChunkingOptions.SectionName))
+            .Validate(options => options.IsValid(), "Invalid chunking token, count, source limits, or format identifiers.")
+            .Validate<DocumentChunkerRegistry>((options, chunkers) => chunkers.SupportsEnabledFormats(options),
+                "Every enabled chunking format requires a registered, versioned chunker.")
+            .ValidateOnStart();
+
+        services.AddOptions<DocumentChunkingWorkerOptions>()
+            .Bind(configuration.GetSection(DocumentChunkingWorkerOptions.SectionName))
+            .Validate(options => options.IsValid(), "Invalid chunking worker timing, lease, batch, or retry options.")
+            .ValidateOnStart();
+            
+        services.AddScoped<IDocumentChunkingScheduler, DocumentChunkingScheduler>();
+        services.AddScoped<IDocumentChunkingQueue, DocumentChunkingQueue>();
+        services.AddScoped<IDocumentChunkingProcessor, DocumentChunkingProcessor>();
+        services.AddScoped<DocumentChunkingStatusResolver>();
     }
 
     private static void AddPersistence(

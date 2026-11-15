@@ -1,0 +1,2 @@
+export const DOCUMENT_POLL_INTERVAL_MS = 15_000;
+export const DOCUMENT_POLL_DURATION_MS = 90_000;

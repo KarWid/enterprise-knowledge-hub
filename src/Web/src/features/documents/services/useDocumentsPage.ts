@@ -8,6 +8,7 @@ import {
 } from "../../../services/api/generated/api";
 import { isValidUploadFile } from "../utils/isValidUploadFile";
 import { useDocumentUpload } from "./useDocumentUpload";
+import { DOCUMENT_POLL_DURATION_MS, DOCUMENT_POLL_INTERVAL_MS } from "./documentPolling";
 import { useAppSelector } from "../../../services/hooks";
 import { selectCurrentOrganizationId } from "../../../services/organization/organizationSlice";
 
@@ -20,7 +21,7 @@ export function useDocumentsPage() {
   const documentsQuery = useGetDocumentsQuery(organizationHeaders, {
     skip: !organizationId,
     refetchOnMountOrArgChange: true,
-    pollingInterval: pollingExpired ? 0 : 5000,
+    pollingInterval: pollingExpired ? 0 : DOCUMENT_POLL_INTERVAL_MS,
     skipPollingIfUnfocused: true,
   });
 
@@ -34,7 +35,7 @@ export function useDocumentsPage() {
 
   useEffect(() => {
     setPollingExpired(false);
-    const timer = window.setTimeout(() => setPollingExpired(true), 20_000);
+    const timer = window.setTimeout(() => setPollingExpired(true), DOCUMENT_POLL_DURATION_MS);
     return () => window.clearTimeout(timer);
   }, [organizationId, pollingCycle]);
 

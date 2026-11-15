@@ -1,3 +1,5 @@
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.Chunking;
+using EnterpriseKnowledgeHub.Infrastructure.Chunking;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.TextExtraction;
 using EnterpriseKnowledgeHub.Infrastructure.TextExtraction;
@@ -5,7 +7,6 @@ using EnterpriseKnowledgeHub.Modules.Knowledge.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace EnterpriseKnowledgeHub.IntegrationTests.Documents;
 
@@ -73,8 +74,30 @@ internal sealed class UploadTestDatabase : IDisposable
     public IDocumentTextExtractionProcessor ExtractionProcessor(KnowledgeDbContext db) => new DocumentTextExtractionProcessor(
         db, Storage, ExtractionQueue(db), Extractors, Microsoft.Extensions.Options.Options.Create(ExtractionOptions));
 
+    public DocumentChunkingOptions ChunkingOptions { get; } = new();
+    public DocumentChunkingWorkerOptions ChunkingWorkerOptions { get; } = new() { MaxAttempts = 3 };
+    public DocumentChunkerRegistry Chunkers { get; } = new([new MarkdownDocumentChunker()]);
+    public IDocumentChunkingScheduler ChunkingScheduler(KnowledgeDbContext db) => new DocumentChunkingScheduler(
+        db, Chunkers, Microsoft.Extensions.Options.Options.Create(ChunkingOptions),
+        Microsoft.Extensions.Options.Options.Create(ChunkingWorkerOptions), Clock);
+    public IDocumentChunkingQueue ChunkingQueue(KnowledgeDbContext db) => new DocumentChunkingQueue(
+        db, Clock, Microsoft.Extensions.Options.Options.Create(ChunkingOptions), Microsoft.Extensions.Options.Options.Create(ChunkingWorkerOptions));
+    public IDocumentChunkingProcessor ChunkingProcessor(KnowledgeDbContext db) => new DocumentChunkingProcessor(
+        db, ChunkingQueue(db), Chunkers, Microsoft.Extensions.Options.Options.Create(ChunkingOptions));
+    public DocumentChunkingStatusResolver ChunkingStatus() => new(
+        Chunkers, Microsoft.Extensions.Options.Options.Create(ChunkingOptions), Microsoft.Extensions.Options.Options.Create(ChunkingWorkerOptions));
+
     public DocumentTextExtractionStatusResolver ExtractionStatus() => new(
         Microsoft.Extensions.Options.Options.Create(ExtractionOptions), Microsoft.Extensions.Options.Options.Create(ExtractionWorkerOptions));
+
+    public IDocumentDiagnosticsAccessService Diagnostics(bool enabled = true) =>
+        new TestDiagnosticsAccess(enabled);
+
+    private sealed class TestDiagnosticsAccess(bool enabled) : IDocumentDiagnosticsAccessService
+    {
+        public ValueTask<bool> CanViewDiagnosticsAsync(CancellationToken cancellationToken) =>
+            ValueTask.FromResult(enabled);
+    }
 
     public void Dispose()
     {

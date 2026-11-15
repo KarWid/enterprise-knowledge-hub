@@ -8,7 +8,7 @@ namespace EnterpriseKnowledgeHub.BuildingBlocks.Application;
 public class DurableWorkerOptions
 {
     public bool Enabled { get; init; } = true;
-    public int PollSeconds { get; init; } = 5;
+    public int PollSeconds { get; init; } = 60;
     public int BatchSize { get; init; } = 10;
     public int MaxAttempts { get; init; } = 8;
     public int RetryBaseSeconds { get; init; } = 10;

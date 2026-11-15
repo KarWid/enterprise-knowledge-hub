@@ -2,6 +2,7 @@ using EnterpriseKnowledgeHub.Contracts.Knowledge;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentUploadCapabilities;
 using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentTextPreview;
+using EnterpriseKnowledgeHub.Modules.Knowledge.Application.Documents.GetDocumentChunks;
 
 namespace EnterpriseKnowledgeHub.Api.Mappers;
 
@@ -15,7 +16,17 @@ internal static class DocumentMapper
         document.CreatedAt,
         document.TextExtraction is { } extraction
             ? new DocumentTextExtractionResponse(extraction.Status, extraction.CharacterCount, extraction.CompletedAt, extraction.FailureCode)
+            : null,
+        document.Chunking is { } chunking
+            ? new DocumentChunkingResponse(chunking.Status, chunking.ChunkCount, chunking.CompletedAt, chunking.FailureCode)
             : null);
+
+    internal static DocumentChunksResponse MapToDocumentChunksResponse(DocumentChunksResult chunks) =>
+        new([.. chunks.Items.Select(MapToDocumentChunkPreviewResponse)],
+            chunks.ChunkCount, chunks.Offset, chunks.HasMore);
+
+    internal static DocumentChunkPreviewResponse MapToDocumentChunkPreviewResponse(DocumentChunkPreviewResult chunk) =>
+        new(chunk.Id, chunk.Ordinal, chunk.Content, chunk.HeadingPath, chunk.TokenCount, chunk.IsTruncated);
 
     internal static DocumentTextPreviewResponse MapToDocumentTextPreviewResponse(DocumentTextPreviewResult preview) =>
         new(preview.Text, preview.CharacterCount, preview.IsTruncated, preview.CompletedAt);
